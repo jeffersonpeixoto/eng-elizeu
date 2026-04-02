@@ -416,25 +416,41 @@ function bindFilters() {
 }
 
 function registerPWA() {
+let deferredPrompt;
+
+function registerPWA() {
+
+  // registra service worker
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("./service-worker.js");
     });
   }
 
-  window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
-    document.getElementById("installButton").classList.remove("hidden");
+  // captura evento de instalação
+  window.addEventListener("beforeinstallprompt", (e) => {
+    console.log("PWA disponível para instalação");
+
+    e.preventDefault(); // impede popup automático
+    deferredPrompt = e;
+
+    const btn = document.getElementById("installButton");
+    btn.classList.remove("hidden"); // mostra botão
   });
 
+  // clique no botão
   document.getElementById("installButton").addEventListener("click", async () => {
     if (!deferredPrompt) return;
+
     deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
+
+    const choice = await deferredPrompt.userChoice;
+    console.log("Resultado:", choice);
+
     deferredPrompt = null;
     document.getElementById("installButton").classList.add("hidden");
   });
+}
 }
 
 document.addEventListener("DOMContentLoaded", () => {
