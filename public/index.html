@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
   <meta name="description" content="Sistema corporativo de chamados de engenharia com Supabase." />
-  <title>Chamados de Engenharia • Nível Empresa</title>
+  <title>Chamados de Engenharia • Formulário Ajustado</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,7 +19,7 @@
         <div class="brand-logo">CE</div>
         <div>
           <h1>Chamados de Engenharia</h1>
-          <span>Nível Empresa • Supabase</span>
+          <span>Formulário Ajustado • Supabase</span>
         </div>
       </div>
 
@@ -31,8 +31,8 @@
       </nav>
 
       <div class="sidebar-card">
-        <strong>Modo de operação</strong>
-        <p>Ambiente corporativo com equipe responsável, técnico, SLA visual, filtros avançados e quadro por status.</p>
+        <strong>Estrutura atual</strong>
+        <p>Formulário simplificado, com unidade em lista suspensa fixa e operação sem equipe responsável, técnico responsável e observações internas.</p>
         <span class="dot online">Conectado ao Supabase</span>
       </div>
     </aside>
@@ -41,7 +41,7 @@
       <header class="topbar">
         <div>
           <h2>Painel Corporativo de Manutenção</h2>
-          <p>Gestão operacional para times Predial, Elétrica e Metalúrgica, com atribuição de equipe, responsável, datas e exportação.</p>
+          <p>Gestão operacional para times Predial, Elétrica e Metalúrgica, com formulário simplificado e unidades padronizadas.</p>
         </div>
         <div class="topbar-actions">
           <button id="installButton" class="btn btn-secondary hidden">Instalar aplicativo</button>
@@ -54,7 +54,7 @@
           <div>
             <span class="eyebrow">Visão executiva</span>
             <h3>Controle centralizado de chamados</h3>
-            <p>Acompanhe o volume, o status, as equipes responsáveis e a criticidade das ocorrências em um único painel responsivo.</p>
+            <p>Acompanhe o volume, o status e a criticidade das ocorrências em um único painel responsivo.</p>
           </div>
           <div class="hero-actions">
             <button class="btn btn-primary" onclick="switchView('novo')">Abrir chamado</button>
@@ -90,7 +90,7 @@
             <div class="section-header">
               <div>
                 <span class="eyebrow">Distribuição</span>
-                <h3>Equipes responsáveis</h3>
+                <h3>Resumo por setor</h3>
               </div>
             </div>
             <div id="teamSummary" class="team-summary"></div>
@@ -114,7 +114,7 @@
             <div>
               <span class="eyebrow">Cadastro operacional</span>
               <h3>Novo chamado</h3>
-              <p class="muted">Cadastre a ocorrência com equipe, tipo de manutenção, prioridade e técnico responsável.</p>
+              <p class="muted">Cadastre a ocorrência com unidade padronizada, setor, tipo de manutenção, prioridade e descrição.</p>
             </div>
           </div>
 
@@ -126,7 +126,20 @@
               </div>
               <div class="field-group">
                 <label for="unidade">Identificação da unidade</label>
-                <input id="unidade" required placeholder="Ex.: Unidade 01 / Bloco A" />
+                <select id="unidade" required>
+                  <option value="">Selecione</option>
+                  <option>LOJA 9</option>
+                  <option>LOJA 10</option>
+                  <option>LOJA 11</option>
+                  <option>LOJA 12</option>
+                  <option>LOJA 13</option>
+                  <option>LOJA 16</option>
+                  <option>LOJA 17</option>
+                  <option>LOJA 18</option>
+                  <option>CD SECOS</option>
+                  <option>CD FRIOS</option>
+                  <option>CENTRO ADM</option>
+                </select>
               </div>
             </div>
 
@@ -170,37 +183,14 @@
               </div>
             </div>
 
-            <div class="grid-2">
-              <div class="field-group">
-                <label for="equipeResponsavel">Equipe responsável</label>
-                <select id="equipeResponsavel" required>
-                  <option value="">Selecione</option>
-                  <option>Predial</option>
-                  <option>Elétrica</option>
-                  <option>Metalúrgica</option>
-                  <option>Terceirizada</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="responsavel">Técnico / responsável</label>
-                <input id="responsavel" placeholder="Ex.: Carlos Souza" />
-              </div>
-            </div>
-
             <div class="field-group">
               <label for="descricao">Descrição detalhada</label>
               <textarea id="descricao" required placeholder="Descreva o problema, impacto, risco e observações relevantes."></textarea>
             </div>
 
-            <div class="grid-2">
-              <div class="field-group">
-                <label for="observacoesInternas">Observações internas</label>
-                <textarea id="observacoesInternas" placeholder="Observações internas para a equipe técnica."></textarea>
-              </div>
-              <div class="field-group">
-                <label for="foto">Foto</label>
-                <input id="foto" type="file" accept="image/*" capture="environment" />
-              </div>
+            <div class="field-group">
+              <label for="foto">Foto</label>
+              <input id="foto" type="file" accept="image/*" capture="environment" />
             </div>
 
             <div class="actions">
@@ -217,13 +207,13 @@
             <div>
               <span class="eyebrow">Lista operacional</span>
               <h3>Chamados</h3>
-              <p class="muted">Use filtros, acompanhe responsáveis e atualize o andamento por modal.</p>
+              <p class="muted">Use filtros e acompanhe a operação por status, setor e prioridade.</p>
             </div>
             <button class="btn btn-secondary" onclick="exportarListaPDF()">Exportar PDF</button>
           </div>
 
-          <div class="toolbar toolbar-5">
-            <input id="busca" placeholder="Buscar por nome, unidade, setor, problema, ID ou responsável" />
+          <div class="toolbar toolbar-4">
+            <input id="busca" placeholder="Buscar por nome, unidade, setor, problema ou ID" />
             <select id="filtroStatus">
               <option value="">Todos os status</option>
               <option>Aberto</option>
@@ -243,13 +233,6 @@
               <option>Elétrica</option>
               <option>Metalúrgica</option>
             </select>
-            <select id="filtroEquipe">
-              <option value="">Todas as equipes</option>
-              <option>Predial</option>
-              <option>Elétrica</option>
-              <option>Metalúrgica</option>
-              <option>Terceirizada</option>
-            </select>
           </div>
 
           <div id="ticketList" class="ticket-list"></div>
@@ -262,7 +245,7 @@
             <div>
               <span class="eyebrow">Quadro operacional</span>
               <h3>Status por coluna</h3>
-              <p class="muted">Visualização rápida da operação para acompanhamento diário da equipe.</p>
+              <p class="muted">Visualização rápida da operação para acompanhamento diário.</p>
             </div>
           </div>
           <div class="kanban-grid">
@@ -296,35 +279,13 @@
     <div class="modal-body">
       <div id="detailGrid" class="detail-grid"></div>
 
-      <div class="grid-2">
-        <div class="field-group">
-          <label for="modalStatusSelect">Status</label>
-          <select id="modalStatusSelect">
-            <option>Aberto</option>
-            <option>Em andamento</option>
-            <option>Concluído</option>
-          </select>
-        </div>
-        <div class="field-group">
-          <label for="modalEquipeResponsavel">Equipe responsável</label>
-          <select id="modalEquipeResponsavel">
-            <option>Predial</option>
-            <option>Elétrica</option>
-            <option>Metalúrgica</option>
-            <option>Terceirizada</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="field-group">
-          <label for="modalResponsavel">Técnico / responsável</label>
-          <input id="modalResponsavel" />
-        </div>
-        <div class="field-group">
-          <label for="modalObservacoesInternas">Observações internas</label>
-          <textarea id="modalObservacoesInternas"></textarea>
-        </div>
+      <div class="field-group">
+        <label for="modalStatusSelect">Status</label>
+        <select id="modalStatusSelect">
+          <option>Aberto</option>
+          <option>Em andamento</option>
+          <option>Concluído</option>
+        </select>
       </div>
 
       <div class="field-group">

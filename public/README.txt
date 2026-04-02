@@ -5,7 +5,7 @@ CONFIGURAÇÃO DO SUPABASE
    const SUPABASE_URL = "https://SEU-PROJETO.supabase.co";
    const SUPABASE_KEY = "SUA_ANON_KEY";
 
-SQL DA TABELA
+SQL DA TABELA (VERSÃO AJUSTADA)
 
 create table if not exists chamados (
   id text primary key,
@@ -36,7 +36,13 @@ on chamados for update to anon using (true) with check (true);
 
 STORAGE
 - Criar bucket: chamados-fotos
-- Permitir insert/select no bucket para anon, se desejar uso sem login
+- Permitir insert/select para anon, se usar sem login
+
+OBSERVAÇÃO
+Esta versão remove:
+- equipe_responsavel
+- responsavel
+- observacoes_internas
 
 EXECUÇÃO LOCAL
 python -m http.server 8000

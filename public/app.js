@@ -90,14 +90,11 @@ async function salvarChamado(event) {
     const chamado = {
       id: "CH-" + Date.now(),
       nome: document.getElementById("nome").value.trim(),
-      unidade: document.getElementById("unidade").value.trim(),
+      unidade: document.getElementById("unidade").value,
       setor: document.getElementById("setor").value,
       setor_problema: document.getElementById("setorProblema").value.trim(),
       tipo_manutencao: document.getElementById("tipoManutencao").value,
       gravidade: document.getElementById("gravidade").value,
-      equipe_responsavel: document.getElementById("equipeResponsavel").value,
-      responsavel: document.getElementById("responsavel").value.trim(),
-      observacoes_internas: document.getElementById("observacoesInternas").value.trim(),
       descricao: document.getElementById("descricao").value.trim(),
       foto_url: fotoUrl,
       status: "Aberto",
@@ -126,19 +123,17 @@ function getFilteredTickets() {
   const filtroStatus = document.getElementById("filtroStatus")?.value || "";
   const filtroGravidade = document.getElementById("filtroGravidade")?.value || "";
   const filtroSetor = document.getElementById("filtroSetor")?.value || "";
-  const filtroEquipe = document.getElementById("filtroEquipe")?.value || "";
 
   return ticketsCache.filter(ticket => {
     const target = [
       ticket.id, ticket.nome, ticket.unidade, ticket.setor, ticket.setor_problema,
-      ticket.tipo_manutencao, ticket.descricao, ticket.responsavel, ticket.equipe_responsavel
+      ticket.tipo_manutencao, ticket.descricao
     ].join(" ").toLowerCase();
 
     return (!busca || target.includes(busca))
       && (!filtroStatus || ticket.status === filtroStatus)
       && (!filtroGravidade || ticket.gravidade === filtroGravidade)
-      && (!filtroSetor || ticket.setor === filtroSetor)
-      && (!filtroEquipe || ticket.equipe_responsavel === filtroEquipe);
+      && (!filtroSetor || ticket.setor === filtroSetor);
   });
 }
 
@@ -150,15 +145,15 @@ function renderMetrics() {
   document.getElementById("metricCriticos").textContent = ticketsCache.filter(t => t.gravidade === "Crítica").length;
 }
 
-function renderTeamSummary() {
+function renderSectorSummary() {
   const target = document.getElementById("teamSummary");
-  const teams = ["Predial", "Elétrica", "Metalúrgica", "Terceirizada"];
-  const html = teams.map(team => {
-    const total = ticketsCache.filter(t => (t.equipe_responsavel || "") === team).length;
-    const andamento = ticketsCache.filter(t => (t.equipe_responsavel || "") === team && t.status === "Em andamento").length;
-    return `<article class="team-item"><strong>${escapeHtml(team)}</strong><span>Total: ${total} • Em andamento: ${andamento}</span></article>`;
+  const sectors = ["Predial", "Elétrica", "Metalúrgica"];
+  const html = sectors.map(sector => {
+    const total = ticketsCache.filter(t => (t.setor || "") === sector).length;
+    const andamento = ticketsCache.filter(t => (t.setor || "") === sector && t.status === "Em andamento").length;
+    return `<article class="team-item"><strong>${escapeHtml(sector)}</strong><span>Total: ${total} • Em andamento: ${andamento}</span></article>`;
   }).join("");
-  target.innerHTML = html || '<div class="empty-state">Sem dados de equipe.</div>';
+  target.innerHTML = html || '<div class="empty-state">Sem dados por setor.</div>';
 }
 
 function renderRecentList() {
@@ -171,14 +166,14 @@ function renderRecentList() {
   list.innerHTML = recent.map(item => `
     <article class="recent-item">
       <strong>${escapeHtml(item.unidade)} • ${escapeHtml(item.setor)}</strong>
-      <span>${escapeHtml(item.status)} • ${escapeHtml(item.equipe_responsavel || "Sem equipe")} • ${formatDateTime(item.data_criacao)}</span>
+      <span>${escapeHtml(item.status)} • ${formatDateTime(item.data_criacao)}</span>
     </article>
   `).join("");
 }
 
 function renderDashboard() {
   renderMetrics();
-  renderTeamSummary();
+  renderSectorSummary();
   renderRecentList();
 }
 
@@ -198,8 +193,7 @@ function renderTicketList() {
         <div class="ticket-meta">
           <span class="badge badge-soft">${escapeHtml(ticket.id)}</span>
           <span class="badge badge-soft">${escapeHtml(ticket.nome || "Sem nome")}</span>
-          <span class="badge badge-soft">${escapeHtml(ticket.equipe_responsavel || "Sem equipe")}</span>
-          <span class="badge badge-soft">${escapeHtml(ticket.responsavel || "Sem técnico")}</span>
+          <span class="badge badge-soft">${escapeHtml(ticket.tipo_manutencao || "—")}</span>
           <span class="badge ${statusClass(ticket.status)}">${escapeHtml(ticket.status || "Aberto")}</span>
           <span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade || "Baixa")}</span>
         </div>
@@ -244,7 +238,7 @@ function renderKanbanColumn(targetId, items) {
         <span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade || "Baixa")}</span>
       </div>
       <div>${escapeHtml(ticket.setor_problema || "—")}</div>
-      <small>${escapeHtml(ticket.equipe_responsavel || "Sem equipe")} • ${escapeHtml(ticket.responsavel || "Sem técnico")}</small>
+      <small>${escapeHtml(ticket.setor || "—")} • ${escapeHtml(ticket.tipo_manutencao || "—")}</small>
     </article>
   `).join("");
 }
@@ -256,9 +250,6 @@ function abrirDetalhes(id) {
   selectedTicket = ticket;
   document.getElementById("modalTicketId").textContent = ticket.id;
   document.getElementById("modalStatusSelect").value = ticket.status || "Aberto";
-  document.getElementById("modalEquipeResponsavel").value = ticket.equipe_responsavel || "Predial";
-  document.getElementById("modalResponsavel").value = ticket.responsavel || "";
-  document.getElementById("modalObservacoesInternas").value = ticket.observacoes_internas || "";
   document.getElementById("modalDescricao").textContent = ticket.descricao || "";
 
   const fields = [
@@ -268,12 +259,9 @@ function abrirDetalhes(id) {
     ["Setor do problema", ticket.setor_problema],
     ["Tipo de manutenção", ticket.tipo_manutencao],
     ["Gravidade", ticket.gravidade],
-    ["Equipe responsável", ticket.equipe_responsavel],
-    ["Técnico", ticket.responsavel],
     ["Criação", formatDateTime(ticket.data_criacao)],
     ["Início", formatDateTime(ticket.data_inicio)],
-    ["Finalização", formatDateTime(ticket.data_finalizacao)],
-    ["Observações internas", ticket.observacoes_internas || "—"]
+    ["Finalização", formatDateTime(ticket.data_finalizacao)]
   ];
 
   document.getElementById("detailGrid").innerHTML = fields.map(([label, value]) => `
@@ -302,17 +290,8 @@ async function atualizarChamadoModal() {
   if (!selectedTicket) return;
 
   const novoStatus = document.getElementById("modalStatusSelect").value;
-  const novaEquipe = document.getElementById("modalEquipeResponsavel").value;
-  const novoResponsavel = document.getElementById("modalResponsavel").value.trim();
-  const novasObs = document.getElementById("modalObservacoesInternas").value.trim();
   const agora = new Date().toISOString();
-
-  const payload = {
-    status: novoStatus,
-    equipe_responsavel: novaEquipe,
-    responsavel: novoResponsavel,
-    observacoes_internas: novasObs
-  };
+  const payload = { status: novoStatus };
 
   if (novoStatus === "Em andamento") {
     payload.data_inicio = selectedTicket.data_inicio || agora;
@@ -372,8 +351,6 @@ function exportarListaPDF() {
       <td>${escapeHtml(ticket.setor || "")}</td>
       <td>${escapeHtml(ticket.setor_problema || "")}</td>
       <td>${escapeHtml(ticket.tipo_manutencao || "")}</td>
-      <td>${escapeHtml(ticket.equipe_responsavel || "")}</td>
-      <td>${escapeHtml(ticket.responsavel || "")}</td>
       <td>${escapeHtml(ticket.gravidade || "")}</td>
       <td>${escapeHtml(ticket.status || "")}</td>
       <td>${escapeHtml(formatDateTime(ticket.data_criacao))}</td>
@@ -411,13 +388,12 @@ function exportarListaPDF() {
         <thead>
           <tr>
             <th>ID</th><th>Solicitante</th><th>Unidade</th><th>Setor</th><th>Problema</th>
-            <th>Manutenção</th><th>Equipe</th><th>Técnico</th><th>Prioridade</th><th>Status</th>
-            <th>Criação</th><th>Início</th><th>Finalização</th>
+            <th>Manutenção</th><th>Prioridade</th><th>Status</th><th>Criação</th><th>Início</th><th>Finalização</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
-      <script>window.onload = () => window.print();<\/script>
+      <script>window.onload = () => window.print();</script>
     </body>
     </html>
   `);
@@ -425,7 +401,7 @@ function exportarListaPDF() {
 }
 
 function bindFilters() {
-  ["busca", "filtroStatus", "filtroGravidade", "filtroSetor", "filtroEquipe"].forEach(id => {
+  ["busca", "filtroStatus", "filtroGravidade", "filtroSetor"].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener("input", () => {
