@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="description" content="Painel premium de chamados de engenharia com Supabase." />
+  <title>Chamados de Engenharia • Painel Premium</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="supabase.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">CE</div>
+        <div>
+          <h1>Chamados de Engenharia</h1>
+          <span>Painel Premium • Supabase</span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn active" data-view-btn="dashboard">Dashboard</button>
+        <button class="nav-btn" data-view-btn="novo">Novo Chamado</button>
+        <button class="nav-btn" data-view-btn="lista">Lista de Chamados</button>
+      </nav>
+
+      <div class="sidebar-card">
+        <strong>Status da conexão</strong>
+        <p>Projeto configurado para salvar diretamente na nuvem pelo Supabase, sem login.</p>
+        <span class="dot online">Online</span>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <h2>Gestão de Chamados</h2>
+          <p>Acompanhe métricas, filtre ocorrências e abra novos chamados em uma interface corporativa responsiva.</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="installButton" class="btn btn-secondary hidden">Instalar aplicativo</button>
+          <button class="btn btn-primary" onclick="carregarDados()">Atualizar dados</button>
+        </div>
+      </header>
+
+      <section id="dashboardView" class="view">
+        <div class="hero card">
+          <div>
+            <span class="eyebrow">Visão geral</span>
+            <h3>Painel administrativo de manutenção</h3>
+            <p>Centralize chamados prediais, elétricos e metalúrgicos em um único ambiente, com visual premium e operação em qualquer celular.</p>
+          </div>
+          <button class="btn btn-primary" onclick="switchView('novo')">Abrir novo chamado</button>
+        </div>
+
+        <div class="metrics-grid">
+          <article class="metric-card">
+            <span class="metric-label">Total de chamados</span>
+            <strong class="metric-value" id="metricTotal">0</strong>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Abertos</span>
+            <strong class="metric-value" id="metricAbertos">0</strong>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Em andamento</span>
+            <strong class="metric-value" id="metricAndamento">0</strong>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">Concluídos</span>
+            <strong class="metric-value" id="metricConcluidos">0</strong>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="card">
+            <div class="section-header">
+              <div>
+                <span class="eyebrow">Setores</span>
+                <h3>Atalhos rápidos</h3>
+              </div>
+            </div>
+
+            <div class="sector-grid">
+              <button class="sector-card" onclick="abrirFormularioComSetor('Predial')">
+                <strong>Predial</strong>
+                <span>Estrutura, cobertura, salas e áreas comuns</span>
+              </button>
+              <button class="sector-card" onclick="abrirFormularioComSetor('Elétrica')">
+                <strong>Elétrica</strong>
+                <span>Tomadas, iluminação, quadros e rede</span>
+              </button>
+              <button class="sector-card" onclick="abrirFormularioComSetor('Metalúrgica')">
+                <strong>Metalúrgica</strong>
+                <span>Soldagem, portões, corrimãos e estruturas</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="section-header">
+              <div>
+                <span class="eyebrow">Últimos registros</span>
+                <h3>Chamados recentes</h3>
+              </div>
+            </div>
+            <div id="recentList" class="recent-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="novoView" class="view hidden">
+        <div class="card form-card">
+          <div class="section-header">
+            <div>
+              <span class="eyebrow">Cadastro</span>
+              <h3>Novo chamado</h3>
+              <p class="muted">Preencha os dados da ocorrência. O sistema grava a data e hora da criação automaticamente.</p>
+            </div>
+          </div>
+
+          <form id="ticketForm" class="form-grid">
+            <div class="grid-2">
+              <div class="field-group">
+                <label for="nome">Nome do solicitante</label>
+                <input id="nome" required placeholder="Ex.: João Silva" />
+              </div>
+              <div class="field-group">
+                <label for="unidade">Identificação da unidade</label>
+                <input id="unidade" required placeholder="Ex.: Unidade 01 / Bloco A" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field-group">
+                <label for="setor">Setor</label>
+                <select id="setor" required>
+                  <option value="">Selecione</option>
+                  <option>Predial</option>
+                  <option>Elétrica</option>
+                  <option>Metalúrgica</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="gravidade">Gravidade</label>
+                <select id="gravidade" required>
+                  <option value="">Selecione</option>
+                  <option>Baixa</option>
+                  <option>Média</option>
+                  <option>Alta</option>
+                  <option>Crítica</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field-group">
+                <label for="setorProblema">Setor do problema</label>
+                <input id="setorProblema" required placeholder="Ex.: Banheiro, Quadro de energia, Soldagem" />
+              </div>
+              <div class="field-group">
+                <label for="tipoManutencao">Tipo de manutenção</label>
+                <select id="tipoManutencao" required>
+                  <option value="">Selecione</option>
+                  <option>Corretiva</option>
+                  <option>Preventiva</option>
+                  <option>Emergencial</option>
+                  <option>Inspeção</option>
+                  <option>Instalação</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="descricao">Descrição detalhada</label>
+              <textarea id="descricao" required placeholder="Descreva o problema, impacto e observações relevantes."></textarea>
+            </div>
+
+            <div class="field-group">
+              <label for="foto">Foto</label>
+              <input id="foto" type="file" accept="image/*" capture="environment" />
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn btn-primary">Salvar chamado</button>
+              <button type="button" class="btn btn-secondary" onclick="resetarFormulario(); switchView('dashboard')">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="listaView" class="view hidden">
+        <div class="card">
+          <div class="section-header">
+            <div>
+              <span class="eyebrow">Operação</span>
+              <h3>Lista de chamados</h3>
+              <p class="muted">Filtre, atualize status e acompanhe as datas da operação.</p>
+            </div>
+            <button class="btn btn-secondary" onclick="exportarListaPDF()">Exportar PDF</button>
+          </div>
+
+          <div class="toolbar">
+            <input id="busca" placeholder="Buscar por nome, unidade, setor, descrição ou ID" />
+            <select id="filtroStatus">
+              <option value="">Todos os status</option>
+              <option>Aberto</option>
+              <option>Em andamento</option>
+              <option>Concluído</option>
+            </select>
+            <select id="filtroGravidade">
+              <option value="">Todas as prioridades</option>
+              <option>Baixa</option>
+              <option>Média</option>
+              <option>Alta</option>
+              <option>Crítica</option>
+            </select>
+            <select id="filtroSetor">
+              <option value="">Todos os setores</option>
+              <option>Predial</option>
+              <option>Elétrica</option>
+              <option>Metalúrgica</option>
+            </select>
+          </div>
+
+          <div id="ticketList" class="ticket-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="detailModal">
+    <div class="modal-header">
+      <div>
+        <h3>Detalhes do chamado</h3>
+        <p id="modalTicketId"></p>
+      </div>
+      <button class="btn btn-secondary" onclick="fecharModal()">Fechar</button>
+    </div>
+
+    <div class="modal-body">
+      <div id="detailGrid" class="detail-grid"></div>
+      <div class="field-group">
+        <label>Descrição</label>
+        <div id="modalDescricao" class="detail-box detail-description"></div>
+      </div>
+      <img id="modalFoto" class="modal-image hidden" alt="Foto do chamado" />
+    </div>
+
+    <div class="modal-footer">
+      <div class="actions">
+        <select id="modalStatusSelect">
+          <option>Aberto</option>
+          <option>Em andamento</option>
+          <option>Concluído</option>
+        </select>
+        <button class="btn btn-primary" onclick="atualizarStatusModal()">Atualizar status</button>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>
