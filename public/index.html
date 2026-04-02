@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0f172a" />
-  <meta name="description" content="Painel premium de chamados de engenharia com Supabase." />
-  <title>Chamados de Engenharia • Painel Premium</title>
+  <meta name="description" content="Sistema corporativo de chamados de engenharia com Supabase." />
+  <title>Chamados de Engenharia • Nível Empresa</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,7 +19,7 @@
         <div class="brand-logo">CE</div>
         <div>
           <h1>Chamados de Engenharia</h1>
-          <span>Painel Premium • Supabase</span>
+          <span>Nível Empresa • Supabase</span>
         </div>
       </div>
 
@@ -27,20 +27,21 @@
         <button class="nav-btn active" data-view-btn="dashboard">Dashboard</button>
         <button class="nav-btn" data-view-btn="novo">Novo Chamado</button>
         <button class="nav-btn" data-view-btn="lista">Lista de Chamados</button>
+        <button class="nav-btn" data-view-btn="kanban">Quadro Operacional</button>
       </nav>
 
       <div class="sidebar-card">
-        <strong>Status da conexão</strong>
-        <p>Projeto configurado para salvar diretamente na nuvem pelo Supabase, sem login.</p>
-        <span class="dot online">Online</span>
+        <strong>Modo de operação</strong>
+        <p>Ambiente corporativo com equipe responsável, técnico, SLA visual, filtros avançados e quadro por status.</p>
+        <span class="dot online">Conectado ao Supabase</span>
       </div>
     </aside>
 
     <main class="content">
       <header class="topbar">
         <div>
-          <h2>Gestão de Chamados</h2>
-          <p>Acompanhe métricas, filtre ocorrências e abra novos chamados em uma interface corporativa responsiva.</p>
+          <h2>Painel Corporativo de Manutenção</h2>
+          <p>Gestão operacional para times Predial, Elétrica e Metalúrgica, com atribuição de equipe, responsável, datas e exportação.</p>
         </div>
         <div class="topbar-actions">
           <button id="installButton" class="btn btn-secondary hidden">Instalar aplicativo</button>
@@ -51,16 +52,19 @@
       <section id="dashboardView" class="view">
         <div class="hero card">
           <div>
-            <span class="eyebrow">Visão geral</span>
-            <h3>Painel administrativo de manutenção</h3>
-            <p>Centralize chamados prediais, elétricos e metalúrgicos em um único ambiente, com visual premium e operação em qualquer celular.</p>
+            <span class="eyebrow">Visão executiva</span>
+            <h3>Controle centralizado de chamados</h3>
+            <p>Acompanhe o volume, o status, as equipes responsáveis e a criticidade das ocorrências em um único painel responsivo.</p>
           </div>
-          <button class="btn btn-primary" onclick="switchView('novo')">Abrir novo chamado</button>
+          <div class="hero-actions">
+            <button class="btn btn-primary" onclick="switchView('novo')">Abrir chamado</button>
+            <button class="btn btn-secondary" onclick="switchView('kanban')">Ver quadro</button>
+          </div>
         </div>
 
         <div class="metrics-grid">
           <article class="metric-card">
-            <span class="metric-label">Total de chamados</span>
+            <span class="metric-label">Total</span>
             <strong class="metric-value" id="metricTotal">0</strong>
           </article>
           <article class="metric-card">
@@ -75,38 +79,28 @@
             <span class="metric-label">Concluídos</span>
             <strong class="metric-value" id="metricConcluidos">0</strong>
           </article>
+          <article class="metric-card danger">
+            <span class="metric-label">Críticos</span>
+            <strong class="metric-value" id="metricCriticos">0</strong>
+          </article>
         </div>
 
         <div class="dashboard-grid">
           <section class="card">
             <div class="section-header">
               <div>
-                <span class="eyebrow">Setores</span>
-                <h3>Atalhos rápidos</h3>
+                <span class="eyebrow">Distribuição</span>
+                <h3>Equipes responsáveis</h3>
               </div>
             </div>
-
-            <div class="sector-grid">
-              <button class="sector-card" onclick="abrirFormularioComSetor('Predial')">
-                <strong>Predial</strong>
-                <span>Estrutura, cobertura, salas e áreas comuns</span>
-              </button>
-              <button class="sector-card" onclick="abrirFormularioComSetor('Elétrica')">
-                <strong>Elétrica</strong>
-                <span>Tomadas, iluminação, quadros e rede</span>
-              </button>
-              <button class="sector-card" onclick="abrirFormularioComSetor('Metalúrgica')">
-                <strong>Metalúrgica</strong>
-                <span>Soldagem, portões, corrimãos e estruturas</span>
-              </button>
-            </div>
+            <div id="teamSummary" class="team-summary"></div>
           </section>
 
           <section class="card">
             <div class="section-header">
               <div>
-                <span class="eyebrow">Últimos registros</span>
-                <h3>Chamados recentes</h3>
+                <span class="eyebrow">Chamados recentes</span>
+                <h3>Últimos registros</h3>
               </div>
             </div>
             <div id="recentList" class="recent-list"></div>
@@ -118,9 +112,9 @@
         <div class="card form-card">
           <div class="section-header">
             <div>
-              <span class="eyebrow">Cadastro</span>
+              <span class="eyebrow">Cadastro operacional</span>
               <h3>Novo chamado</h3>
-              <p class="muted">Preencha os dados da ocorrência. O sistema grava a data e hora da criação automaticamente.</p>
+              <p class="muted">Cadastre a ocorrência com equipe, tipo de manutenção, prioridade e técnico responsável.</p>
             </div>
           </div>
 
@@ -176,14 +170,37 @@
               </div>
             </div>
 
-            <div class="field-group">
-              <label for="descricao">Descrição detalhada</label>
-              <textarea id="descricao" required placeholder="Descreva o problema, impacto e observações relevantes."></textarea>
+            <div class="grid-2">
+              <div class="field-group">
+                <label for="equipeResponsavel">Equipe responsável</label>
+                <select id="equipeResponsavel" required>
+                  <option value="">Selecione</option>
+                  <option>Predial</option>
+                  <option>Elétrica</option>
+                  <option>Metalúrgica</option>
+                  <option>Terceirizada</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="responsavel">Técnico / responsável</label>
+                <input id="responsavel" placeholder="Ex.: Carlos Souza" />
+              </div>
             </div>
 
             <div class="field-group">
-              <label for="foto">Foto</label>
-              <input id="foto" type="file" accept="image/*" capture="environment" />
+              <label for="descricao">Descrição detalhada</label>
+              <textarea id="descricao" required placeholder="Descreva o problema, impacto, risco e observações relevantes."></textarea>
+            </div>
+
+            <div class="grid-2">
+              <div class="field-group">
+                <label for="observacoesInternas">Observações internas</label>
+                <textarea id="observacoesInternas" placeholder="Observações internas para a equipe técnica."></textarea>
+              </div>
+              <div class="field-group">
+                <label for="foto">Foto</label>
+                <input id="foto" type="file" accept="image/*" capture="environment" />
+              </div>
             </div>
 
             <div class="actions">
@@ -198,15 +215,15 @@
         <div class="card">
           <div class="section-header">
             <div>
-              <span class="eyebrow">Operação</span>
-              <h3>Lista de chamados</h3>
-              <p class="muted">Filtre, atualize status e acompanhe as datas da operação.</p>
+              <span class="eyebrow">Lista operacional</span>
+              <h3>Chamados</h3>
+              <p class="muted">Use filtros, acompanhe responsáveis e atualize o andamento por modal.</p>
             </div>
             <button class="btn btn-secondary" onclick="exportarListaPDF()">Exportar PDF</button>
           </div>
 
-          <div class="toolbar">
-            <input id="busca" placeholder="Buscar por nome, unidade, setor, descrição ou ID" />
+          <div class="toolbar toolbar-5">
+            <input id="busca" placeholder="Buscar por nome, unidade, setor, problema, ID ou responsável" />
             <select id="filtroStatus">
               <option value="">Todos os status</option>
               <option>Aberto</option>
@@ -226,9 +243,42 @@
               <option>Elétrica</option>
               <option>Metalúrgica</option>
             </select>
+            <select id="filtroEquipe">
+              <option value="">Todas as equipes</option>
+              <option>Predial</option>
+              <option>Elétrica</option>
+              <option>Metalúrgica</option>
+              <option>Terceirizada</option>
+            </select>
           </div>
 
           <div id="ticketList" class="ticket-list"></div>
+        </div>
+      </section>
+
+      <section id="kanbanView" class="view hidden">
+        <div class="card">
+          <div class="section-header">
+            <div>
+              <span class="eyebrow">Quadro operacional</span>
+              <h3>Status por coluna</h3>
+              <p class="muted">Visualização rápida da operação para acompanhamento diário da equipe.</p>
+            </div>
+          </div>
+          <div class="kanban-grid">
+            <div class="kanban-column">
+              <div class="kanban-header"><span>Aberto</span><strong id="kanbanCountAberto">0</strong></div>
+              <div id="kanbanAberto" class="kanban-list"></div>
+            </div>
+            <div class="kanban-column">
+              <div class="kanban-header"><span>Em andamento</span><strong id="kanbanCountAndamento">0</strong></div>
+              <div id="kanbanAndamento" class="kanban-list"></div>
+            </div>
+            <div class="kanban-column">
+              <div class="kanban-header"><span>Concluído</span><strong id="kanbanCountConcluido">0</strong></div>
+              <div id="kanbanConcluido" class="kanban-list"></div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -245,21 +295,49 @@
 
     <div class="modal-body">
       <div id="detailGrid" class="detail-grid"></div>
+
+      <div class="grid-2">
+        <div class="field-group">
+          <label for="modalStatusSelect">Status</label>
+          <select id="modalStatusSelect">
+            <option>Aberto</option>
+            <option>Em andamento</option>
+            <option>Concluído</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="modalEquipeResponsavel">Equipe responsável</label>
+          <select id="modalEquipeResponsavel">
+            <option>Predial</option>
+            <option>Elétrica</option>
+            <option>Metalúrgica</option>
+            <option>Terceirizada</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field-group">
+          <label for="modalResponsavel">Técnico / responsável</label>
+          <input id="modalResponsavel" />
+        </div>
+        <div class="field-group">
+          <label for="modalObservacoesInternas">Observações internas</label>
+          <textarea id="modalObservacoesInternas"></textarea>
+        </div>
+      </div>
+
       <div class="field-group">
         <label>Descrição</label>
         <div id="modalDescricao" class="detail-box detail-description"></div>
       </div>
+
       <img id="modalFoto" class="modal-image hidden" alt="Foto do chamado" />
     </div>
 
     <div class="modal-footer">
       <div class="actions">
-        <select id="modalStatusSelect">
-          <option>Aberto</option>
-          <option>Em andamento</option>
-          <option>Concluído</option>
-        </select>
-        <button class="btn btn-primary" onclick="atualizarStatusModal()">Atualizar status</button>
+        <button class="btn btn-primary" onclick="atualizarChamadoModal()">Salvar atualização</button>
       </div>
     </div>
   </dialog>

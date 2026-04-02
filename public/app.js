@@ -36,24 +36,18 @@ function priorityClass(priority) {
 function switchView(view) {
   document.querySelectorAll(".view").forEach(el => el.classList.add("hidden"));
   document.getElementById(view + "View").classList.remove("hidden");
-
   document.querySelectorAll("[data-view-btn]").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.viewBtn === view);
   });
-
-  if (view === "lista") renderTicketList();
   if (view === "dashboard") renderDashboard();
+  if (view === "lista") renderTicketList();
+  if (view === "kanban") renderKanban();
 }
 
 function bindViewButtons() {
   document.querySelectorAll("[data-view-btn]").forEach(btn => {
     btn.addEventListener("click", () => switchView(btn.dataset.viewBtn));
   });
-}
-
-function abrirFormularioComSetor(setor) {
-  switchView("novo");
-  document.getElementById("setor").value = setor;
 }
 
 function resetarFormulario() {
@@ -65,7 +59,7 @@ async function uploadFoto(file) {
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const fileName = "foto_" + Date.now() + "." + ext;
 
-  const { error } = await supabase.storage
+  const { error } = await window.supabaseClient.storage
     .from("chamados-fotos")
     .upload(fileName, file, {
       cacheControl: "3600",
@@ -75,7 +69,7 @@ async function uploadFoto(file) {
 
   if (error) throw error;
 
-  const { data } = supabase.storage
+  const { data } = window.supabaseClient.storage
     .from("chamados-fotos")
     .getPublicUrl(fileName);
 
@@ -84,6 +78,7 @@ async function uploadFoto(file) {
 
 async function salvarChamado(event) {
   event.preventDefault();
+
   const submitBtn = event.target.querySelector("button[type='submit']");
   submitBtn.disabled = true;
   submitBtn.textContent = "Salvando...";
@@ -100,6 +95,9 @@ async function salvarChamado(event) {
       setor_problema: document.getElementById("setorProblema").value.trim(),
       tipo_manutencao: document.getElementById("tipoManutencao").value,
       gravidade: document.getElementById("gravidade").value,
+      equipe_responsavel: document.getElementById("equipeResponsavel").value,
+      responsavel: document.getElementById("responsavel").value.trim(),
+      observacoes_internas: document.getElementById("observacoesInternas").value.trim(),
       descricao: document.getElementById("descricao").value.trim(),
       foto_url: fotoUrl,
       status: "Aberto",
@@ -108,7 +106,7 @@ async function salvarChamado(event) {
       data_finalizacao: null
     };
 
-    const { error } = await supabase.from("chamados").insert([chamado]);
+    const { error } = await window.supabaseClient.from("chamados").insert([chamado]);
     if (error) throw error;
 
     alert("Chamado salvo com sucesso.");
@@ -128,17 +126,19 @@ function getFilteredTickets() {
   const filtroStatus = document.getElementById("filtroStatus")?.value || "";
   const filtroGravidade = document.getElementById("filtroGravidade")?.value || "";
   const filtroSetor = document.getElementById("filtroSetor")?.value || "";
+  const filtroEquipe = document.getElementById("filtroEquipe")?.value || "";
 
   return ticketsCache.filter(ticket => {
     const target = [
       ticket.id, ticket.nome, ticket.unidade, ticket.setor, ticket.setor_problema,
-      ticket.tipo_manutencao, ticket.descricao
+      ticket.tipo_manutencao, ticket.descricao, ticket.responsavel, ticket.equipe_responsavel
     ].join(" ").toLowerCase();
 
     return (!busca || target.includes(busca))
       && (!filtroStatus || ticket.status === filtroStatus)
       && (!filtroGravidade || ticket.gravidade === filtroGravidade)
-      && (!filtroSetor || ticket.setor === filtroSetor);
+      && (!filtroSetor || ticket.setor === filtroSetor)
+      && (!filtroEquipe || ticket.equipe_responsavel === filtroEquipe);
   });
 }
 
@@ -147,27 +147,38 @@ function renderMetrics() {
   document.getElementById("metricAbertos").textContent = ticketsCache.filter(t => t.status === "Aberto").length;
   document.getElementById("metricAndamento").textContent = ticketsCache.filter(t => t.status === "Em andamento").length;
   document.getElementById("metricConcluidos").textContent = ticketsCache.filter(t => t.status === "Concluído").length;
+  document.getElementById("metricCriticos").textContent = ticketsCache.filter(t => t.gravidade === "Crítica").length;
+}
+
+function renderTeamSummary() {
+  const target = document.getElementById("teamSummary");
+  const teams = ["Predial", "Elétrica", "Metalúrgica", "Terceirizada"];
+  const html = teams.map(team => {
+    const total = ticketsCache.filter(t => (t.equipe_responsavel || "") === team).length;
+    const andamento = ticketsCache.filter(t => (t.equipe_responsavel || "") === team && t.status === "Em andamento").length;
+    return `<article class="team-item"><strong>${escapeHtml(team)}</strong><span>Total: ${total} • Em andamento: ${andamento}</span></article>`;
+  }).join("");
+  target.innerHTML = html || '<div class="empty-state">Sem dados de equipe.</div>';
 }
 
 function renderRecentList() {
   const list = document.getElementById("recentList");
-  const recent = ticketsCache.slice(0, 4);
-
+  const recent = ticketsCache.slice(0, 5);
   if (!recent.length) {
     list.innerHTML = '<div class="empty-state">Nenhum chamado recente encontrado.</div>';
     return;
   }
-
   list.innerHTML = recent.map(item => `
     <article class="recent-item">
       <strong>${escapeHtml(item.unidade)} • ${escapeHtml(item.setor)}</strong>
-      <span>${escapeHtml(item.status)} • ${formatDateTime(item.data_criacao)}</span>
+      <span>${escapeHtml(item.status)} • ${escapeHtml(item.equipe_responsavel || "Sem equipe")} • ${formatDateTime(item.data_criacao)}</span>
     </article>
   `).join("");
 }
 
 function renderDashboard() {
   renderMetrics();
+  renderTeamSummary();
   renderRecentList();
 }
 
@@ -187,7 +198,8 @@ function renderTicketList() {
         <div class="ticket-meta">
           <span class="badge badge-soft">${escapeHtml(ticket.id)}</span>
           <span class="badge badge-soft">${escapeHtml(ticket.nome || "Sem nome")}</span>
-          <span class="badge badge-soft">${escapeHtml(ticket.tipo_manutencao || "—")}</span>
+          <span class="badge badge-soft">${escapeHtml(ticket.equipe_responsavel || "Sem equipe")}</span>
+          <span class="badge badge-soft">${escapeHtml(ticket.responsavel || "Sem técnico")}</span>
           <span class="badge ${statusClass(ticket.status)}">${escapeHtml(ticket.status || "Aberto")}</span>
           <span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade || "Baixa")}</span>
         </div>
@@ -205,6 +217,38 @@ function renderTicketList() {
   `).join("");
 }
 
+function renderKanban() {
+  const aberto = ticketsCache.filter(t => t.status === "Aberto");
+  const andamento = ticketsCache.filter(t => t.status === "Em andamento");
+  const concluido = ticketsCache.filter(t => t.status === "Concluído");
+
+  document.getElementById("kanbanCountAberto").textContent = aberto.length;
+  document.getElementById("kanbanCountAndamento").textContent = andamento.length;
+  document.getElementById("kanbanCountConcluido").textContent = concluido.length;
+
+  renderKanbanColumn("kanbanAberto", aberto);
+  renderKanbanColumn("kanbanAndamento", andamento);
+  renderKanbanColumn("kanbanConcluido", concluido);
+}
+
+function renderKanbanColumn(targetId, items) {
+  const target = document.getElementById(targetId);
+  if (!items.length) {
+    target.innerHTML = '<div class="empty-state">Sem chamados nesta coluna.</div>';
+    return;
+  }
+  target.innerHTML = items.map(ticket => `
+    <article class="kanban-card" onclick="abrirDetalhes('${escapeHtml(ticket.id)}')">
+      <strong>${escapeHtml(ticket.unidade)}</strong>
+      <div class="ticket-meta">
+        <span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade || "Baixa")}</span>
+      </div>
+      <div>${escapeHtml(ticket.setor_problema || "—")}</div>
+      <small>${escapeHtml(ticket.equipe_responsavel || "Sem equipe")} • ${escapeHtml(ticket.responsavel || "Sem técnico")}</small>
+    </article>
+  `).join("");
+}
+
 function abrirDetalhes(id) {
   const ticket = ticketsCache.find(t => t.id === id);
   if (!ticket) return;
@@ -212,9 +256,11 @@ function abrirDetalhes(id) {
   selectedTicket = ticket;
   document.getElementById("modalTicketId").textContent = ticket.id;
   document.getElementById("modalStatusSelect").value = ticket.status || "Aberto";
+  document.getElementById("modalEquipeResponsavel").value = ticket.equipe_responsavel || "Predial";
+  document.getElementById("modalResponsavel").value = ticket.responsavel || "";
+  document.getElementById("modalObservacoesInternas").value = ticket.observacoes_internas || "";
   document.getElementById("modalDescricao").textContent = ticket.descricao || "";
 
-  const detailGrid = document.getElementById("detailGrid");
   const fields = [
     ["Solicitante", ticket.nome],
     ["Unidade", ticket.unidade],
@@ -222,13 +268,15 @@ function abrirDetalhes(id) {
     ["Setor do problema", ticket.setor_problema],
     ["Tipo de manutenção", ticket.tipo_manutencao],
     ["Gravidade", ticket.gravidade],
-    ["Status", ticket.status],
-    ["Data da criação", formatDateTime(ticket.data_criacao)],
-    ["Data de início", formatDateTime(ticket.data_inicio)],
-    ["Data de finalização", formatDateTime(ticket.data_finalizacao)]
+    ["Equipe responsável", ticket.equipe_responsavel],
+    ["Técnico", ticket.responsavel],
+    ["Criação", formatDateTime(ticket.data_criacao)],
+    ["Início", formatDateTime(ticket.data_inicio)],
+    ["Finalização", formatDateTime(ticket.data_finalizacao)],
+    ["Observações internas", ticket.observacoes_internas || "—"]
   ];
 
-  detailGrid.innerHTML = fields.map(([label, value]) => `
+  document.getElementById("detailGrid").innerHTML = fields.map(([label, value]) => `
     <div class="detail-box">
       <strong>${escapeHtml(label)}</strong>
       <div>${escapeHtml(value || "—")}</div>
@@ -250,41 +298,50 @@ function fecharModal() {
   document.getElementById("detailModal").close();
 }
 
-async function atualizarStatusModal() {
+async function atualizarChamadoModal() {
   if (!selectedTicket) return;
 
   const novoStatus = document.getElementById("modalStatusSelect").value;
+  const novaEquipe = document.getElementById("modalEquipeResponsavel").value;
+  const novoResponsavel = document.getElementById("modalResponsavel").value.trim();
+  const novasObs = document.getElementById("modalObservacoesInternas").value.trim();
   const agora = new Date().toISOString();
-  const updateData = { status: novoStatus };
+
+  const payload = {
+    status: novoStatus,
+    equipe_responsavel: novaEquipe,
+    responsavel: novoResponsavel,
+    observacoes_internas: novasObs
+  };
 
   if (novoStatus === "Em andamento") {
-    updateData.data_inicio = selectedTicket.data_inicio || agora;
-    updateData.data_finalizacao = null;
+    payload.data_inicio = selectedTicket.data_inicio || agora;
+    payload.data_finalizacao = null;
   } else if (novoStatus === "Concluído") {
-    updateData.data_inicio = selectedTicket.data_inicio || agora;
-    updateData.data_finalizacao = agora;
+    payload.data_inicio = selectedTicket.data_inicio || agora;
+    payload.data_finalizacao = agora;
   } else {
-    updateData.data_inicio = null;
-    updateData.data_finalizacao = null;
+    payload.data_inicio = null;
+    payload.data_finalizacao = null;
   }
 
-  const { error } = await supabase
+  const { error } = await window.supabaseClient
     .from("chamados")
-    .update(updateData)
+    .update(payload)
     .eq("id", selectedTicket.id);
 
   if (error) {
-    alert("Erro ao atualizar status: " + error.message);
+    alert("Erro ao atualizar chamado: " + error.message);
     return;
   }
 
   fecharModal();
   await carregarDados();
-  alert("Status atualizado com sucesso.");
+  alert("Chamado atualizado com sucesso.");
 }
 
 async function carregarDados() {
-  const { data, error } = await supabase
+  const { data, error } = await window.supabaseClient
     .from("chamados")
     .select("*")
     .order("data_criacao", { ascending: false });
@@ -297,6 +354,7 @@ async function carregarDados() {
   ticketsCache = Array.isArray(data) ? data : [];
   renderDashboard();
   renderTicketList();
+  renderKanban();
 }
 
 function exportarListaPDF() {
@@ -314,6 +372,8 @@ function exportarListaPDF() {
       <td>${escapeHtml(ticket.setor || "")}</td>
       <td>${escapeHtml(ticket.setor_problema || "")}</td>
       <td>${escapeHtml(ticket.tipo_manutencao || "")}</td>
+      <td>${escapeHtml(ticket.equipe_responsavel || "")}</td>
+      <td>${escapeHtml(ticket.responsavel || "")}</td>
       <td>${escapeHtml(ticket.gravidade || "")}</td>
       <td>${escapeHtml(ticket.status || "")}</td>
       <td>${escapeHtml(formatDateTime(ticket.data_criacao))}</td>
@@ -351,7 +411,8 @@ function exportarListaPDF() {
         <thead>
           <tr>
             <th>ID</th><th>Solicitante</th><th>Unidade</th><th>Setor</th><th>Problema</th>
-            <th>Manutenção</th><th>Prioridade</th><th>Status</th><th>Criação</th><th>Início</th><th>Finalização</th>
+            <th>Manutenção</th><th>Equipe</th><th>Técnico</th><th>Prioridade</th><th>Status</th>
+            <th>Criação</th><th>Início</th><th>Finalização</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -364,11 +425,17 @@ function exportarListaPDF() {
 }
 
 function bindFilters() {
-  ["busca", "filtroStatus", "filtroGravidade", "filtroSetor"].forEach(id => {
+  ["busca", "filtroStatus", "filtroGravidade", "filtroSetor", "filtroEquipe"].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.addEventListener("input", renderTicketList);
-    el.addEventListener("change", renderTicketList);
+    el.addEventListener("input", () => {
+      renderTicketList();
+      renderKanban();
+    });
+    el.addEventListener("change", () => {
+      renderTicketList();
+      renderKanban();
+    });
   });
 }
 
@@ -395,6 +462,11 @@ function registerPWA() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (!window.supabaseClient) {
+    alert("Supabase não foi inicializado. Verifique o arquivo supabase.js.");
+    return;
+  }
+
   bindViewButtons();
   bindFilters();
   registerPWA();
