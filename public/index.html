@@ -39,28 +39,14 @@
 
     <main class="content">
       <header class="topbar">
-        <div>
-          <h2>Painel de Chamados</h2>
-          <p>Gestão operacional com formulário simplificado, instalação PWA, exportação em PDF, quadro operacional e detalhes.</p>
-        </div>
-        <div class="topbar-actions">
+             <div class="topbar-actions">
           <button id="installButton" class="btn btn-secondary hidden" type="button">Instalar aplicativo</button>
           <button class="btn btn-primary" onclick="carregarDados()">Atualizar dados</button>
         </div>
       </header>
 
       <section id="dashboardView" class="view">
-        <div class="hero card">
-          <div>
-            <span class="eyebrow">Visão geral</span>
-            <h3>Controle centralizado de chamados</h3>
-            <p>Acompanhe o volume, o status e a criticidade das ocorrências em um único painel responsivo.</p>
-          </div>
-          <div class="hero-actions">
-            <button class="btn btn-primary" onclick="switchView('novo')">Abrir chamado</button>
-            <button class="btn btn-secondary" onclick="switchView('kanban')">Ver quadro</button>
-          </div>
-        </div>
+  
 
         <div class="metrics-grid">
           <article class="metric-card"><span class="metric-label">Total</span><strong class="metric-value" id="metricTotal">0</strong></article>
