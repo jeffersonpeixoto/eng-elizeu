@@ -51,14 +51,20 @@ async function exportarRelatorioMensal() {
     const mes = hoje.getMonth();
     const ano = hoje.getFullYear();
 
+    // ✅ FILTRO: mês atual + apenas CONCLUÍDOS
     const chamadosMes = data.filter(c => {
       if (!c.data_criacao) return false;
       const d = new Date(c.data_criacao);
-      return d.getMonth() === mes && d.getFullYear() === ano;
+
+      return (
+        d.getMonth() === mes &&
+        d.getFullYear() === ano &&
+        c.status === "Concluído"
+      );
     });
 
     if (!chamadosMes.length) {
-      alert("Nenhum chamado neste mês.");
+      alert("Nenhum chamado concluído neste mês.");
       return;
     }
 
@@ -66,13 +72,9 @@ async function exportarRelatorioMensal() {
     const doc = new jsPDF("landscape");
 
     // 🔧 CONFIG
-    const CUSTO_HORA = 128;
+    const CUSTO_HORA = 81;
 
     let custoTotal = 0;
-    let criticos = 0;
-    let concluidos = 0;
-    let andamento = 0;
-
     const custoPorLoja = {};
     const chamadosPorLoja = {};
 
@@ -97,10 +99,6 @@ async function exportarRelatorioMensal() {
       if (!chamadosPorLoja[c.unidade]) chamadosPorLoja[c.unidade] = 0;
       chamadosPorLoja[c.unidade]++;
 
-      if (c.gravidade === "Crítica") criticos++;
-      if (c.status === "Concluído") concluidos++;
-      if (c.status === "Em andamento") andamento++;
-
       return [
         c.id,
         c.nome,
@@ -114,35 +112,31 @@ async function exportarRelatorioMensal() {
         formatDateTime(c.data_inicio),
         formatDateTime(c.data_finalizacao),
         duracao ? duracao.toFixed(2) : "",
-        "Equipe 1 + Equipe 2",
+        "Equipe",
         `R$ ${CUSTO_HORA}`,
         custo ? `R$ ${custo.toFixed(2)}` : "",
         c.descricao || ""
       ];
     });
 
-    // 🧾 ===== PÁGINA 1 - EXECUTIVO =====
+    // 🧾 ===== PÁGINA 1 - RESUMO =====
     doc.setFontSize(18);
-    doc.text("RELATÓRIO MENSAL - ENGENHARIA", 14, 20);
+    doc.text("RELATÓRIO MENSAL - CHAMADOS CONCLUÍDOS", 14, 20);
 
     doc.setFontSize(12);
     doc.text(`Mês: ${mes + 1}/${ano}`, 14, 30);
 
-    doc.text(`Total de chamados: ${chamadosMes.length}`, 14, 40);
-    doc.text(`Críticos: ${criticos}`, 14, 48);
-    doc.text(`Concluídos: ${concluidos}`, 14, 56);
-    doc.text(`Em andamento: ${andamento}`, 14, 64);
+    doc.text(`Total concluídos: ${chamadosMes.length}`, 14, 40);
+    doc.text(`CUSTO TOTAL: R$ ${custoTotal.toFixed(2)}`, 14, 50);
 
-    doc.text(`CUSTO TOTAL: R$ ${custoTotal.toFixed(2)}`, 14, 80);
-
-    // 🏆 Ranking
+    // 🏆 Ranking por custo
     const ranking = Object.entries(custoPorLoja)
       .sort((a, b) => b[1] - a[1])
       .map(([loja, valor]) => [loja, `R$ ${valor.toFixed(2)}`]);
 
     doc.autoTable({
-      startY: 90,
-      head: [["Ranking por Custo", "Valor"]],
+      startY: 60,
+      head: [["Loja", "Custo Total"]],
       body: ranking
     });
 
@@ -159,21 +153,21 @@ async function exportarRelatorioMensal() {
 
     doc.autoTable({
       startY: 25,
-      head: [["Loja", "Chamados", "Custo"]],
+      head: [["Loja", "Qtd Chamados", "Custo"]],
       body: resumo
     });
 
     // 📋 ===== PÁGINA 3 =====
     doc.addPage();
 
-    doc.text("Detalhamento dos Chamados", 14, 20);
+    doc.text("Detalhamento dos Chamados Concluídos", 14, 20);
 
     doc.autoTable({
       startY: 25,
       head: [[
         "ID","Solicitante","Unidade","Setor","Problema","Tipo",
         "Gravidade","Status","Criação","Início","Final",
-        "Duração","Equipe","Custo Hora","Custo","Descrição"
+        "Duração (h)","Equipe","Custo Hora","Custo","Descrição"
       ]],
       body: linhas,
       styles: { fontSize: 6 },
@@ -182,7 +176,8 @@ async function exportarRelatorioMensal() {
       }
     });
 
-    doc.save(`Relatorio_Executivo_${mes + 1}_${ano}.pdf`);
+    // 📥 DOWNLOAD
+    doc.save(`Relatorio_Concluidos_${mes + 1}_${ano}.pdf`);
 
   } catch (err) {
     console.error(err);
