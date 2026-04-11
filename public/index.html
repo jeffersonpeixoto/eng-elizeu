@@ -201,15 +201,7 @@
     <div class="modal-body">
       <div id="detailGrid" class="detail-grid"></div>
 
-      <div class="field-group">
-        <label for="modalStatusSelect">Status</label>
-        <select id="modalStatusSelect">
-          <option>Aberto</option>
-          <option>Em andamento</option>
-          <option>Concluído</option>
-        </select>
-      </div>
-
+  
       <div class="field-group">
         <label>Descrição</label>
         <div id="modalDescricao" class="detail-box detail-description"></div>
@@ -218,12 +210,16 @@
       <img id="modalFoto" class="modal-image hidden" alt="Foto do chamado" />
     </div>
 
-   <div class="modal-footer" style="display:flex; gap:10px; flex-wrap:wrap;">
-  <button class="btn btn-primary" onclick="iniciarChamado()">▶️ Iniciar</button>
-  <button class="btn btn-secondary" onclick="pausarChamado()">⏸️ Pausar</button>
-  <button class="btn btn-primary" onclick="retomarChamado()">▶️ Retomar</button>
-  <button class="btn btn-success" onclick="finalizarChamado()">✅ Finalizar</button>
-  <button class="btn btn-primary" onclick="atualizarChamadoModal()">Salvar atualização</button>
+ <div class="modal-footer" style="display:flex; gap:10px; flex-wrap:wrap;">
+
+  <button id="btnIniciar" class="btn btn-primary" onclick="iniciarChamado()">▶️ Iniciar</button>
+
+  <button id="btnPausar" class="btn btn-warning" onclick="pausarChamado()">⏸️ Pausar</button>
+
+  <button id="btnRetomar" class="btn btn-primary" onclick="retomarChamado()">▶️ Retomar</button>
+
+  <button id="btnFinalizar" class="btn btn-success" onclick="finalizarChamado()">✅ Finalizar</button>
+
 </div>
   </dialog>
 </body>

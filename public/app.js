@@ -21,7 +21,21 @@ function renderTicketList(){const list=document.getElementById("ticketList");con
 function renderKanban(){const aberto=ticketsCache.filter(t=>t.status==="Aberto");const andamento=ticketsCache.filter(t=>t.status==="Em andamento");const concluido=ticketsCache.filter(t=>t.status==="Concluído");document.getElementById("kanbanCountAberto").textContent=aberto.length;document.getElementById("kanbanCountAndamento").textContent=andamento.length;document.getElementById("kanbanCountConcluido").textContent=concluido.length;renderKanbanColumn("kanbanAberto",aberto);renderKanbanColumn("kanbanAndamento",andamento);renderKanbanColumn("kanbanConcluido",concluido)}
 function renderKanbanColumn(id,items){const target=document.getElementById(id);if(!items.length){target.innerHTML='<div class="empty-state">Sem chamados nesta coluna.</div>';return}target.innerHTML=items.map(ticket=>`<article class="kanban-card" onclick="abrirDetalhes('${escapeHtml(ticket.id)}')"><strong>${escapeHtml(ticket.unidade)}</strong><div class="ticket-meta"><span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span></div><div>${escapeHtml(ticket.setor_problema||"—")}</div><small>${escapeHtml(ticket.setor||"—")} • ${escapeHtml(ticket.tipo_manutencao||"—")}</small></article>`).join("")}
 
-function abrirDetalhes(id){const ticket=ticketsCache.find(t=>t.id===id);if(!ticket)return;selectedTicket=ticket;document.getElementById("modalTicketId").textContent=ticket.id;document.getElementById("modalStatusSelect").value=ticket.status||"Aberto";document.getElementById("modalDescricao").textContent=ticket.descricao||"";const fields=[["Solicitante",ticket.nome],["Unidade",ticket.unidade],["Setor",ticket.setor],["Setor do problema",ticket.setor_problema],["Tipo de manutenção",ticket.tipo_manutencao],["Gravidade",ticket.gravidade],["Criação",formatDateTime(ticket.data_criacao)],["Início",formatDateTime(ticket.data_inicio)],["Finalização",formatDateTime(ticket.data_finalizacao)]];document.getElementById("detailGrid").innerHTML=fields.map(([l,v])=>`<div class="detail-box"><strong>${escapeHtml(l)}</strong><div>${escapeHtml(v||"—")}</div></div>`).join("");const modalFoto=document.getElementById("modalFoto");if(ticket.foto_url){modalFoto.src=ticket.foto_url;modalFoto.classList.remove("hidden")}else{modalFoto.classList.add("hidden")}document.getElementById("detailModal").showModal()}
+function abrirDetalhes(id){
+  const ticket = ticketsCache.find(t => t.id === id);
+  if(!ticket) return;
+
+  selectedTicket = ticket;
+
+  document.getElementById("modalTicketId").textContent = ticket.id;
+
+  // ... resto do seu código
+
+  document.getElementById("detailModal").showModal();
+
+  // 🔥 ESSA LINHA É A OPÇÃO 3
+  atualizarBotoesStatus();
+}
 function fecharModal(){document.getElementById("detailModal").close()}
 
 async function atualizarChamadoModal(){if(!selectedTicket)return;const novoStatus=document.getElementById("modalStatusSelect").value;const agora=new Date().toISOString();const payload={status:novoStatus};if(novoStatus==="Em andamento"){payload.data_inicio=selectedTicket.data_inicio||agora;payload.data_finalizacao=null}else if(novoStatus==="Concluído"){payload.data_inicio=selectedTicket.data_inicio||agora;payload.data_finalizacao=agora}else{payload.data_inicio=null;payload.data_finalizacao=null}const {error}=await window.supabaseClient.from("chamados").update(payload).eq("id",selectedTicket.id);if(error){alert("Erro ao atualizar chamado: "+error.message);return}fecharModal();await carregarDados();alert("Chamado atualizado com sucesso.")}
@@ -184,6 +198,40 @@ async function exportarRelatorioMensal() {
     alert("Erro ao gerar relatório.");
   }
 }
+function atualizarBotoesStatus() {
+  if (!selectedTicket) return;
+
+  const status = selectedTicket.status;
+
+  const btnIniciar = document.getElementById("btnIniciar");
+  const btnPausar = document.getElementById("btnPausar");
+  const btnRetomar = document.getElementById("btnRetomar");
+  const btnFinalizar = document.getElementById("btnFinalizar");
+
+  // Esconde todos
+  btnIniciar.style.display = "none";
+  btnPausar.style.display = "none";
+  btnRetomar.style.display = "none";
+  btnFinalizar.style.display = "none";
+
+  if (status === "Aberto") {
+    btnIniciar.style.display = "inline-block";
+  }
+
+  if (status === "Em andamento") {
+    btnPausar.style.display = "inline-block";
+    btnFinalizar.style.display = "inline-block";
+  }
+
+  if (status === "Pausado") {
+    btnRetomar.style.display = "inline-block";
+    btnFinalizar.style.display = "inline-block";
+  }
+
+  if (status === "Concluído") {
+    // nenhum botão aparece
+  }
+}
  // ✅ INICIAR
 async function iniciarChamado() {
   if (!selectedTicket) return;
@@ -218,7 +266,10 @@ async function iniciarChamado() {
     alert("Nenhum período em andamento.");
     return;
   }
-
+await window.supabaseClient
+  .from("chamados")
+  .update({ status: "Pausado" })
+  .eq("id", selectedTicket.id);
   await window.supabaseClient
     .from("chamado_tempo")
     .update({ fim: new Date().toISOString() })
@@ -236,7 +287,10 @@ async function iniciarChamado() {
       chamado_id: selectedTicket.id,
       inicio: new Date().toISOString()
     }]);
-
+await window.supabaseClient
+  .from("chamados")
+  .update({ status: "Em andamento" })
+  .eq("id", selectedTicket.id);
   alert("Chamado retomado!");
 }
  // ✅ FINALIZAR
