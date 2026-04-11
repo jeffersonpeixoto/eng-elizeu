@@ -151,7 +151,13 @@
 
           <div class="toolbar toolbar-4">
             <input id="busca" placeholder="Buscar por nome, unidade, setor, problema ou ID" />
-            <select id="filtroStatus"><option value="">Todos os status</option><option>Aberto</option><option>Em andamento</option><option>Concluído</option></select>
+            <select id="filtroStatus">
+  <option value="">Todos os status</option>
+  <option>Aberto</option>
+  <option>Em andamento</option>
+  <option>Pausado</option> <!-- 🔥 ADICIONE -->
+  <option>Concluído</option>
+</select>
             <select id="filtroGravidade"><option value="">Todas as prioridades</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select>
             <select id="filtroSetor"><option value="">Todos os setores</option><option>Predial</option><option>Elétrica</option><option>Metalúrgica</option></select>
           </div>
