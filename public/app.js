@@ -264,29 +264,55 @@ function atualizarBotoesStatus() {
 }
  // ✅ INICIAR
 async function iniciarChamado() {
-  if (!selectedTicket) return;
+  try {
+    if (!selectedTicket) return;
 
-  const agora = new Date().toISOString();
+    const agora = new Date().toISOString();
 
-  await window.supabaseClient
-    .from("chamado_tempo")
-    .insert([{
-      chamado_id: selectedTicket.id,
-      inicio: agora
-    }]);
+    // 🔍 VERIFICA SE JÁ EXISTE PERÍODO ABERTO
+    const { data: aberto } = await window.supabaseClient
+      .from("chamado_tempo")
+      .select("*")
+      .eq("chamado_id", selectedTicket.id)
+      .is("fim", null);
 
-  await window.supabaseClient
-    .from("chamados")
-    .update({
-      status: "Em andamento",
-      data_inicio: selectedTicket.data_inicio || agora
-    })
-    .eq("id", selectedTicket.id);
+    if (aberto && aberto.length > 0) {
+      alert("⚠️ Já existe um período em andamento.");
+      return;
+    }
 
-  fecharModal(); // 🔥 FECHA A TELA
-  await carregarDados();
+    // ✅ CRIA PERÍODO CORRETO
+    const { error } = await window.supabaseClient
+      .from("chamado_tempo")
+      .insert([{
+        chamado_id: selectedTicket.id,
+        inicio: agora,
+        fim: null // 🔥 GARANTE QUE ESTÁ ABERTO
+      }]);
 
-  alert("Chamado iniciado!");
+    if (error) {
+      console.error(error);
+      alert("Erro ao iniciar.");
+      return;
+    }
+
+    await window.supabaseClient
+      .from("chamados")
+      .update({
+        status: "Em andamento",
+        data_inicio: selectedTicket.data_inicio || agora
+      })
+      .eq("id", selectedTicket.id);
+
+    fecharModal();
+    await carregarDados();
+
+    alert("▶️ Chamado iniciado!");
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro inesperado.");
+  }
 }
 
  // ✅ PAUSAR
