@@ -52,7 +52,7 @@ async function exportarRelatorioMensal() {
       return;
     }
 
-    // 📅 Filtrar mês atual
+    // 📅 filtrar mês atual
     const hoje = new Date();
     const mes = hoje.getMonth();
     const ano = hoje.getFullYear();
@@ -68,63 +68,45 @@ async function exportarRelatorioMensal() {
       return;
     }
 
-    // 📊 MONTAR PLANILHA BONITA
-    const dados = chamadosMes.map(c => ({
-      "ID": c.id,
-      "Solicitante": c.nome,
-      "Unidade": c.unidade,
-      "Setor": c.setor,
-      "Problema": c.setor_problema,
-      "Manutenção": c.tipo_manutencao,
-      "Gravidade": c.gravidade,
-      "Status": c.status,
-      "Data Criação": formatDateTime(c.data_criacao),
-      "Data Início": formatDateTime(c.data_inicio),
-      "Data Finalização": formatDateTime(c.data_finalizacao)
-    }));
+    // 📥 carregar planilha modelo
+    const response = await fetch("planilha_modelo.xlsx");
+    const arrayBuffer = await response.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: "array" });
 
-    // 📄 Criar planilha
-    const ws = XLSX.utils.json_to_sheet(dados);
+    const sheet = workbook.Sheets["Chamados"];
 
-    // Ajustar largura das colunas
-    ws["!cols"] = [
-      { wch: 15 }, // ID
-      { wch: 25 }, // Nome
-      { wch: 15 }, // Unidade
-      { wch: 15 }, // Setor
-      { wch: 30 }, // Problema
-      { wch: 20 }, // Manutenção
-      { wch: 12 }, // Gravidade
-      { wch: 15 }, // Status
-      { wch: 20 }, // Criação
-      { wch: 20 }, // Início
-      { wch: 20 }  // Finalização
-    ];
+    // 🔥 PREENCHER DADOS (linha 2 pra baixo)
+    let row = 2;
 
-    // 📊 RESUMO POR LOJA
-    const resumo = {};
     chamadosMes.forEach(c => {
-      if (!resumo[c.unidade]) resumo[c.unidade] = 0;
-      resumo[c.unidade]++;
+      sheet[`A${row}`] = { v: c.id };
+      sheet[`B${row}`] = { v: c.data_criacao };
+      sheet[`C${row}`] = { v: c.unidade };
+      sheet[`D${row}`] = { v: c.nome };
+      sheet[`E${row}`] = { v: c.descricao };
+      sheet[`F${row}`] = { v: c.gravidade };
+      sheet[`G${row}`] = { v: c.status };
+      sheet[`L${row}`] = { v: calcularDuracao(c) }; // duração
+
+      row++;
     });
 
-    const resumoData = Object.keys(resumo).map(loja => ({
-      "Unidade": loja,
-      "Total de Chamados": resumo[loja]
-    }));
+    // Atualiza range da planilha
+    sheet["!ref"] = `A1:O${row}`;
 
-    const wsResumo = XLSX.utils.json_to_sheet(resumoData);
-
-    // 📦 Criar arquivo Excel
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Chamados");
-    XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
-
-    // 📥 Download
-    XLSX.writeFile(wb, `Relatorio_Mensal_${mes + 1}_${ano}.xlsx`);
+    // 📥 baixar mantendo TUDO (fórmulas intactas)
+    XLSX.writeFile(workbook, `Relatorio_Mensal_${mes + 1}_${ano}.xlsx`);
 
   } catch (err) {
     console.error(err);
     alert("Erro ao gerar relatório.");
   }
+}
+
+// função auxiliar
+function calcularDuracao(c) {
+  if (!c.data_inicio || !c.data_finalizacao) return "";
+  const inicio = new Date(c.data_inicio);
+  const fim = new Date(c.data_finalizacao);
+  return ((fim - inicio) / (1000 * 60 * 60)).toFixed(2);
 }
