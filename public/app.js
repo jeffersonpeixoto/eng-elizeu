@@ -291,32 +291,61 @@ async function iniciarChamado() {
 
  // ✅ PAUSAR
 async function pausarChamado() {
-  if (!selectedTicket) return;
+  try {
+    if (!selectedTicket) return;
 
-  const { data } = await window.supabaseClient
-    .from("chamado_tempo")
-    .select("*")
-    .eq("chamado_id", selectedTicket.id)
-    .is("fim", null);
+    // 🔍 busca todos períodos abertos
+    const { data, error } = await window.supabaseClient
+      .from("chamado_tempo")
+      .select("*")
+      .eq("chamado_id", selectedTicket.id)
+      .is("fim", null)
+      .order("inicio", { ascending: false })
+      .limit(1);
 
-  if (!data || data.length === 0) return;
+    if (error) {
+      console.error(error);
+      alert("Erro ao buscar período.");
+      return;
+    }
 
-  const ultimo = data[data.length - 1];
+    if (!data || data.length === 0) {
+      alert("⚠️ Nenhum período em andamento.");
+      return;
+    }
 
-  await window.supabaseClient
-    .from("chamado_tempo")
-    .update({ fim: new Date().toISOString() })
-    .eq("id", ultimo.id);
+    const periodo = data[0];
 
-  await window.supabaseClient
-    .from("chamados")
-    .update({ status: "Pausado" })
-    .eq("id", selectedTicket.id);
+    // ⏹️ fecha o período
+    const { error: updateError } = await window.supabaseClient
+      .from("chamado_tempo")
+      .update({ fim: new Date().toISOString() })
+      .eq("id", periodo.id);
 
-  fecharModal(); // 🔥 FECHA
-  await carregarDados();
+    if (updateError) {
+      console.error(updateError);
+      alert("Erro ao pausar.");
+      return;
+    }
 
-  alert("Chamado pausado!");
+    // 🔄 atualiza status
+    await window.supabaseClient
+      .from("chamados")
+      .update({ status: "Pausado" })
+      .eq("id", selectedTicket.id);
+
+    // 🔥 atualiza tela
+    selectedTicket.status = "Pausado";
+
+    fecharModal();
+    await carregarDados();
+
+    alert("⏸️ Chamado pausado com sucesso!");
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro inesperado ao pausar.");
+  }
 }
  // ✅ RETOMAR
 async function retomarChamado() {
