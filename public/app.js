@@ -278,11 +278,17 @@ async function iniciarChamado() {
     .update({ status: "Em andamento" })
     .eq("id", selectedTicket.id);
 
+  // 🔥 ATUALIZAÇÃO NA TELA
+  selectedTicket.status = "Em andamento";
+
+  atualizarBotoesStatus();
+  await carregarDados();
+
   alert("Chamado iniciado!");
 }
 
  // ✅ PAUSAR
- async function pausarChamado() {
+async function pausarChamado() {
   if (!selectedTicket) return;
 
   const { data } = await window.supabaseClient
@@ -292,23 +298,28 @@ async function iniciarChamado() {
     .is("fim", null)
     .single();
 
-  if (!data) {
-    alert("Nenhum período em andamento.");
-    return;
-  }
-await window.supabaseClient
-  .from("chamados")
-  .update({ status: "Pausado" })
-  .eq("id", selectedTicket.id);
+  if (!data) return;
+
   await window.supabaseClient
     .from("chamado_tempo")
     .update({ fim: new Date().toISOString() })
     .eq("id", data.id);
 
+  await window.supabaseClient
+    .from("chamados")
+    .update({ status: "Pausado" })
+    .eq("id", selectedTicket.id);
+
+  // 🔥 ATUALIZAÇÃO
+  selectedTicket.status = "Pausado";
+
+  atualizarBotoesStatus();
+  await carregarDados();
+
   alert("Chamado pausado!");
 }
  // ✅ RETOMAR
- async function retomarChamado() {
+async function retomarChamado() {
   if (!selectedTicket) return;
 
   await window.supabaseClient
@@ -317,17 +328,23 @@ await window.supabaseClient
       chamado_id: selectedTicket.id,
       inicio: new Date().toISOString()
     }]);
-await window.supabaseClient
-  .from("chamados")
-  .update({ status: "Em andamento" })
-  .eq("id", selectedTicket.id);
+
+  await window.supabaseClient
+    .from("chamados")
+    .update({ status: "Em andamento" })
+    .eq("id", selectedTicket.id);
+
+  selectedTicket.status = "Em andamento";
+
+  atualizarBotoesStatus();
+  await carregarDados();
+
   alert("Chamado retomado!");
 }
  // ✅ FINALIZAR
- async function finalizarChamado() {
+async function finalizarChamado() {
   if (!selectedTicket) return;
 
-  // fecha período aberto
   const { data } = await window.supabaseClient
     .from("chamado_tempo")
     .select("*")
@@ -350,9 +367,12 @@ await window.supabaseClient
     })
     .eq("id", selectedTicket.id);
 
-  alert("Chamado finalizado!");
-  fecharModal();
+  selectedTicket.status = "Concluído";
+
+  atualizarBotoesStatus();
   await carregarDados();
+
+  alert("Chamado finalizado!");
 }
  // ✅ CALCULAR TEMPO REAL
 async function calcularDuracaoReal(chamadoId) {
