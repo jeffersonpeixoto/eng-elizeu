@@ -43,7 +43,6 @@ async function exportarRelatorioMensal() {
       .select("*");
 
     if (error) {
-      console.error("Erro Supabase:", error);
       alert("Erro ao buscar dados: " + error.message);
       return;
     }
@@ -69,24 +68,63 @@ async function exportarRelatorioMensal() {
       return;
     }
 
-    // 📊 Montar CSV (abre no Excel)
-    let csv = "ID,Nome,Unidade,Setor,Problema,Manutenção,Gravidade,Status,Data Criação,Data Início,Data Finalização\n";
+    // 📊 MONTAR PLANILHA BONITA
+    const dados = chamadosMes.map(c => ({
+      "ID": c.id,
+      "Solicitante": c.nome,
+      "Unidade": c.unidade,
+      "Setor": c.setor,
+      "Problema": c.setor_problema,
+      "Manutenção": c.tipo_manutencao,
+      "Gravidade": c.gravidade,
+      "Status": c.status,
+      "Data Criação": formatDateTime(c.data_criacao),
+      "Data Início": formatDateTime(c.data_inicio),
+      "Data Finalização": formatDateTime(c.data_finalizacao)
+    }));
 
+    // 📄 Criar planilha
+    const ws = XLSX.utils.json_to_sheet(dados);
+
+    // Ajustar largura das colunas
+    ws["!cols"] = [
+      { wch: 15 }, // ID
+      { wch: 25 }, // Nome
+      { wch: 15 }, // Unidade
+      { wch: 15 }, // Setor
+      { wch: 30 }, // Problema
+      { wch: 20 }, // Manutenção
+      { wch: 12 }, // Gravidade
+      { wch: 15 }, // Status
+      { wch: 20 }, // Criação
+      { wch: 20 }, // Início
+      { wch: 20 }  // Finalização
+    ];
+
+    // 📊 RESUMO POR LOJA
+    const resumo = {};
     chamadosMes.forEach(c => {
-      csv += `${c.id || ""},${c.nome || ""},${c.unidade || ""},${c.setor || ""},${c.setor_problema || ""},${c.tipo_manutencao || ""},${c.gravidade || ""},${c.status || ""},${c.data_criacao || ""},${c.data_inicio || ""},${c.data_finalizacao || ""}\n`;
+      if (!resumo[c.unidade]) resumo[c.unidade] = 0;
+      resumo[c.unidade]++;
     });
 
-    // 📥 Download automático
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `Relatorio_Mensal_${mes + 1}_${ano}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const resumoData = Object.keys(resumo).map(loja => ({
+      "Unidade": loja,
+      "Total de Chamados": resumo[loja]
+    }));
+
+    const wsResumo = XLSX.utils.json_to_sheet(resumoData);
+
+    // 📦 Criar arquivo Excel
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Chamados");
+    XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
+
+    // 📥 Download
+    XLSX.writeFile(wb, `Relatorio_Mensal_${mes + 1}_${ano}.xlsx`);
 
   } catch (err) {
-    console.error("Erro geral:", err);
+    console.error(err);
     alert("Erro ao gerar relatório.");
   }
 }
