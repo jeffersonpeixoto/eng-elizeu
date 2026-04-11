@@ -184,3 +184,106 @@ async function exportarRelatorioMensal() {
     alert("Erro ao gerar relatório.");
   }
 }
+ // ✅ INICIAR
+async function iniciarChamado() {
+  if (!selectedTicket) return;
+
+  await window.supabaseClient
+    .from("chamado_tempo")
+    .insert([{
+      chamado_id: selectedTicket.id,
+      inicio: new Date().toISOString()
+    }]);
+
+  await window.supabaseClient
+    .from("chamados")
+    .update({ status: "Em andamento" })
+    .eq("id", selectedTicket.id);
+
+  alert("Chamado iniciado!");
+}
+
+ // ✅ PAUSAR
+ async function pausarChamado() {
+  if (!selectedTicket) return;
+
+  const { data } = await window.supabaseClient
+    .from("chamado_tempo")
+    .select("*")
+    .eq("chamado_id", selectedTicket.id)
+    .is("fim", null)
+    .single();
+
+  if (!data) {
+    alert("Nenhum período em andamento.");
+    return;
+  }
+
+  await window.supabaseClient
+    .from("chamado_tempo")
+    .update({ fim: new Date().toISOString() })
+    .eq("id", data.id);
+
+  alert("Chamado pausado!");
+}
+ // ✅ RETOMAR
+ async function retomarChamado() {
+  if (!selectedTicket) return;
+
+  await window.supabaseClient
+    .from("chamado_tempo")
+    .insert([{
+      chamado_id: selectedTicket.id,
+      inicio: new Date().toISOString()
+    }]);
+
+  alert("Chamado retomado!");
+}
+ // ✅ FINALIZAR
+ async function finalizarChamado() {
+  if (!selectedTicket) return;
+
+  // fecha período aberto
+  const { data } = await window.supabaseClient
+    .from("chamado_tempo")
+    .select("*")
+    .eq("chamado_id", selectedTicket.id)
+    .is("fim", null)
+    .single();
+
+  if (data) {
+    await window.supabaseClient
+      .from("chamado_tempo")
+      .update({ fim: new Date().toISOString() })
+      .eq("id", data.id);
+  }
+
+  await window.supabaseClient
+    .from("chamados")
+    .update({
+      status: "Concluído",
+      data_finalizacao: new Date().toISOString()
+    })
+    .eq("id", selectedTicket.id);
+
+  alert("Chamado finalizado!");
+  fecharModal();
+  await carregarDados();
+}
+ // ✅ CALCULAR TEMPO REAL
+async function calcularDuracaoReal(chamadoId) {
+  const { data } = await window.supabaseClient
+    .from("chamado_tempo")
+    .select("*")
+    .eq("chamado_id", chamadoId);
+
+  let total = 0;
+
+  data.forEach(t => {
+    if (t.inicio && t.fim) {
+      total += (new Date(t.fim) - new Date(t.inicio));
+    }
+  });
+
+  return (total / (1000 * 60 * 60)).toFixed(2);
+}
