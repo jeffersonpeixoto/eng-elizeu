@@ -35,27 +35,33 @@ function bindFilters(){["busca","filtroStatus","filtroGravidade","filtroSetor"].
 function registerPWA(){if("serviceWorker"in navigator){window.addEventListener("load",async()=>{try{await navigator.serviceWorker.register("./service-worker.js");console.log("Service Worker registrado")}catch(error){console.error("Erro ao registrar Service Worker:",error)}})}window.addEventListener("beforeinstallprompt",(event)=>{event.preventDefault();deferredPrompt=event;document.getElementById("installButton").classList.remove("hidden")});const installButton=document.getElementById("installButton");installButton.addEventListener("click",async()=>{if(!deferredPrompt){alert("O navegador ainda não liberou a instalação. Abra via HTTPS ou localhost e use o app por alguns instantes.");return}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installButton.classList.add("hidden")});window.addEventListener("appinstalled",()=>{installButton.classList.add("hidden")})}
 
 document.addEventListener("DOMContentLoaded",()=>{if(!window.supabaseClient){alert("Supabase não foi inicializado. Verifique o arquivo supabase.js.");return}bindViewButtons();bindFilters();registerPWA();document.getElementById("ticketForm").addEventListener("submit",salvarChamado);switchView("dashboard");carregarDados()})
+// 🔥 EXPORTAR RELATÓRIO MENSAL (CORRIGIDO)
 async function exportarRelatorioMensal() {
   try {
-    const { data, error } = await supabase
-      .from('chamados')
-      .select('*');
+    const { data, error } = await window.supabaseClient
+      .from("chamados")
+      .select("*");
 
-    if (error) throw error;
+    if (error) {
+      console.error("Erro Supabase:", error);
+      alert("Erro ao buscar dados: " + error.message);
+      return;
+    }
 
     if (!data || data.length === 0) {
       alert("Nenhum chamado encontrado.");
       return;
     }
 
-    // Filtrar mês atual
+    // 📅 Filtrar mês atual
     const hoje = new Date();
     const mes = hoje.getMonth();
     const ano = hoje.getFullYear();
 
-    const chamadosMes = data.filter(chamado => {
-      const dataChamado = new Date(chamado.created_at);
-      return dataChamado.getMonth() === mes && dataChamado.getFullYear() === ano;
+    const chamadosMes = data.filter(c => {
+      if (!c.data_criacao) return false;
+      const d = new Date(c.data_criacao);
+      return d.getMonth() === mes && d.getFullYear() === ano;
     });
 
     if (chamadosMes.length === 0) {
@@ -63,22 +69,24 @@ async function exportarRelatorioMensal() {
       return;
     }
 
-    // Converter para CSV (abre no Excel)
-    let csv = "ID,Nome,Unidade,Setor,Gravidade,Status,Descrição,Data\n";
+    // 📊 Montar CSV (abre no Excel)
+    let csv = "ID,Nome,Unidade,Setor,Problema,Manutenção,Gravidade,Status,Data Criação,Data Início,Data Finalização\n";
 
     chamadosMes.forEach(c => {
-      csv += `${c.id},${c.nome},${c.unidade},${c.setor},${c.gravidade},${c.status},"${c.descricao}",${c.created_at}\n`;
+      csv += `${c.id || ""},${c.nome || ""},${c.unidade || ""},${c.setor || ""},${c.setor_problema || ""},${c.tipo_manutencao || ""},${c.gravidade || ""},${c.status || ""},${c.data_criacao || ""},${c.data_inicio || ""},${c.data_finalizacao || ""}\n`;
     });
 
-    // Download automático
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    // 📥 Download automático
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `Relatorio_Mensal_${mes + 1}_${ano}.csv`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
 
   } catch (err) {
-    console.error(err);
+    console.error("Erro geral:", err);
     alert("Erro ao gerar relatório.");
   }
 }
