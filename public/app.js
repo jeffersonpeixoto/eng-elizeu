@@ -78,7 +78,7 @@ function bindFilters(){["busca","filtroStatus","filtroGravidade","filtroSetor"].
 
 function registerPWA(){if("serviceWorker"in navigator){window.addEventListener("load",async()=>{try{await navigator.serviceWorker.register("./service-worker.js");console.log("Service Worker registrado")}catch(error){console.error("Erro ao registrar Service Worker:",error)}})}window.addEventListener("beforeinstallprompt",(event)=>{event.preventDefault();deferredPrompt=event;document.getElementById("installButton").classList.remove("hidden")});const installButton=document.getElementById("installButton");installButton.addEventListener("click",async()=>{if(!deferredPrompt){alert("O navegador ainda não liberou a instalação. Abra via HTTPS ou localhost e use o app por alguns instantes.");return}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installButton.classList.add("hidden")});window.addEventListener("appinstalled",()=>{installButton.classList.add("hidden")})}
 
-document.addEventListener("DOMContentLoaded",()=>{if(!window.supabaseClient){alert("Supabase não foi inicializado. Verifique o arquivo supabase.js.");return}bindViewButtons();bindFilters();registerPWA();document.getElementById("ticketForm").addEventListener("submit",salvarChamado);switchView("dashboard");carregarDados()})
+document.addEventListener("DOMContentLoaded",()=>{if(!window.supabaseClient){alert("Supabase não foi inicializado. Verifique o arquivo supabase.js.");return}bindViewButtons();bindFilters();registerPWA();document.getElementById("ticketForm").addEventListener("submit",salvarChamado);switchView("dashboard");carregarDados()} ativarNotificacoes();escutarChamados();)
 // 🔥 EXPORTAR RELATÓRIO MENSAL (CORRIGIDO)
 async function exportarRelatorioMensal() {
   try {
@@ -442,4 +442,53 @@ async function calcularDuracaoReal(chamadoId) {
   });
 
   return (total / (1000 * 60 * 60)).toFixed(2);
+}
+// notificações
+async function ativarNotificacoes() {
+  const perm = await Notification.requestPermission();
+
+  if (perm === "granted") {
+    console.log("🔔 Notificações ativadas");
+  } else {
+    alert("Ative as notificações para receber alertas.");
+  }
+}
+
+function notificar(titulo, mensagem) {
+  if (Notification.permission === "granted") {
+    new Notification(titulo, {
+      body: mensagem,
+      icon: "/logo.png"
+    });
+  }
+}
+
+function escutarChamados() {
+  window.supabaseClient
+    .channel('chamados-realtime')
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'chamados'
+    }, payload => {
+      const c = payload.new;
+
+      notificar(
+        "🚨 Novo chamado",
+        `${c.unidade} - ${c.setor}`
+      );
+    })
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'chamados'
+    }, payload => {
+      const c = payload.new;
+
+      notificar(
+        "🔄 Status atualizado",
+        `${c.unidade} - ${c.status}`
+      );
+    })
+    .subscribe();
 }
