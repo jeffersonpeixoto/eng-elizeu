@@ -269,30 +269,17 @@ async function iniciarChamado() {
 
     const agora = new Date().toISOString();
 
-    // 🔍 VERIFICA SE JÁ EXISTE PERÍODO ABERTO
-    const { data: aberto } = await window.supabaseClient
-      .from("chamado_tempo")
-      .select("*")
-      .eq("chamado_id", selectedTicket.id)
-      .is("fim", null);
-
-    if (aberto && aberto.length > 0) {
-      alert("⚠️ Já existe um período em andamento.");
-      return;
-    }
-
-    // ✅ CRIA PERÍODO CORRETO
     const { error } = await window.supabaseClient
       .from("chamado_tempo")
       .insert([{
         chamado_id: selectedTicket.id,
         inicio: agora,
-        fim: null // 🔥 GARANTE QUE ESTÁ ABERTO
+        fim: null
       }]);
 
     if (error) {
       console.error(error);
-      alert("Erro ao iniciar.");
+      alert("Erro ao iniciar: " + error.message);
       return;
     }
 
@@ -321,13 +308,13 @@ async function pausarChamado() {
     if (!selectedTicket) return;
 
     // 🔍 busca todos períodos abertos
-    const { data, error } = await window.supabaseClient
-      .from("chamado_tempo")
-      .select("*")
-      .eq("chamado_id", selectedTicket.id)
-      .is("fim", null)
-      .order("inicio", { ascending: false })
-      .limit(1);
+const { data } = await window.supabaseClient
+  .from("chamado_tempo")
+  .select("*")
+  .eq("chamado_id", selectedTicket.id)
+  .is("fim", null)
+  .order("inicio", { ascending: false })
+  .limit(1);
 
     if (error) {
       console.error(error);
