@@ -218,9 +218,13 @@
       <img id="modalFoto" class="modal-image hidden" alt="Foto do chamado" />
     </div>
 
-    <div class="modal-footer">
-      <button class="btn btn-primary" onclick="atualizarChamadoModal()">Salvar atualização</button>
-    </div>
+   <div class="modal-footer" style="display:flex; gap:10px; flex-wrap:wrap;">
+  <button class="btn btn-primary" onclick="iniciarChamado()">▶️ Iniciar</button>
+  <button class="btn btn-secondary" onclick="pausarChamado()">⏸️ Pausar</button>
+  <button class="btn btn-primary" onclick="retomarChamado()">▶️ Retomar</button>
+  <button class="btn btn-success" onclick="finalizarChamado()">✅ Finalizar</button>
+  <button class="btn btn-primary" onclick="atualizarChamadoModal()">Salvar atualização</button>
+</div>
   </dialog>
 </body>
 </html>
