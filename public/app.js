@@ -52,7 +52,7 @@ async function exportarRelatorioMensal() {
       return;
     }
 
-    // 📅 FILTRAR MÊS ATUAL
+    // FILTRO MÊS ATUAL
     const hoje = new Date();
     const mes = hoje.getMonth();
     const ano = hoje.getFullYear();
@@ -68,66 +68,51 @@ async function exportarRelatorioMensal() {
       return;
     }
 
-    // 📄 CRIAR PDF
+    // 🔥 VERIFICA SE LIBS EXISTEM
+    if (!window.jspdf) {
+      alert("Erro: jsPDF não carregado.");
+      return;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("landscape");
 
-    // 🔥 CABEÇALHO
-    doc.setFontSize(16);
-    doc.text("Relatório Mensal de Chamados - Engenharia", 14, 15);
+    // CABEÇALHO
+    doc.setFontSize(14);
+    doc.text("Relatório Mensal de Chamados", 14, 15);
 
     doc.setFontSize(10);
-    doc.text(`Data de emissão: ${new Date().toLocaleString("pt-BR")}`, 14, 22);
-    doc.text(`Total de chamados: ${chamadosMes.length}`, 14, 28);
+    doc.text(`Total: ${chamadosMes.length}`, 14, 22);
+    doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 14, 28);
 
-    // 📊 DADOS DA TABELA
+    // DADOS
     const rows = chamadosMes.map(c => [
-      c.id,
-      c.nome,
-      c.unidade,
-      c.setor,
-      c.setor_problema,
-      c.tipo_manutencao,
-      c.gravidade,
-      c.status,
-      formatDateTime(c.data_criacao),
-      formatDateTime(c.data_inicio),
-      formatDateTime(c.data_finalizacao)
+      c.id || "",
+      c.nome || "",
+      c.unidade || "",
+      c.setor || "",
+      c.gravidade || "",
+      c.status || "",
+      c.data_criacao ? new Date(c.data_criacao).toLocaleString("pt-BR") : ""
     ]);
 
-    // 📋 TABELA
-    doc.autoTable({
-      startY: 32,
-      head: [[
-        "ID",
-        "Solicitante",
-        "Unidade",
-        "Setor",
-        "Problema",
-        "Manutenção",
-        "Prioridade",
-        "Status",
-        "Criação",
-        "Início",
-        "Finalização"
-      ]],
-      body: rows,
-      styles: {
-        fontSize: 7
-      },
-      headStyles: {
-        fillColor: [15, 23, 42] // cor escura padrão
-      },
-      alternateRowStyles: {
-        fillColor: [240, 240, 240]
-      }
-    });
+    // 🔥 TABELA (FORMA SEGURA)
+    if (doc.autoTable) {
+      doc.autoTable({
+        startY: 32,
+        head: [["ID","Nome","Unidade","Setor","Prioridade","Status","Data"]],
+        body: rows,
+        styles: { fontSize: 8 }
+      });
+    } else {
+      alert("Erro: autoTable não carregado.");
+      return;
+    }
 
-    // 📥 BAIXAR PDF
-    doc.save(`Relatorio_Mensal_${mes + 1}_${ano}.pdf`);
+    doc.save(`Relatorio_${mes + 1}_${ano}.pdf`);
 
   } catch (err) {
-    console.error(err);
-    alert("Erro ao gerar relatório.");
+    console.error("Erro real:", err);
+    alert("Erro ao gerar relatório. Veja o console (F12).");
   }
 }
