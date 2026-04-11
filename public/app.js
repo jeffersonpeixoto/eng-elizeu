@@ -47,12 +47,6 @@ async function exportarRelatorioMensal() {
       return;
     }
 
-    if (!data || data.length === 0) {
-      alert("Nenhum chamado encontrado.");
-      return;
-    }
-
-    // FILTRO MÊS ATUAL
     const hoje = new Date();
     const mes = hoje.getMonth();
     const ano = hoje.getFullYear();
@@ -63,56 +57,135 @@ async function exportarRelatorioMensal() {
       return d.getMonth() === mes && d.getFullYear() === ano;
     });
 
-    if (chamadosMes.length === 0) {
+    if (!chamadosMes.length) {
       alert("Nenhum chamado neste mês.");
-      return;
-    }
-
-    // 🔥 VERIFICA SE LIBS EXISTEM
-    if (!window.jspdf) {
-      alert("Erro: jsPDF não carregado.");
       return;
     }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("landscape");
 
-    // CABEÇALHO
-    doc.setFontSize(14);
-    doc.text("Relatório Mensal de Chamados", 14, 15);
+    // 🔧 CONFIG
+    const CUSTO_HORA = 128;
 
-    doc.setFontSize(10);
-    doc.text(`Total: ${chamadosMes.length}`, 14, 22);
-    doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, 14, 28);
+    let custoTotal = 0;
+    let criticos = 0;
+    let concluidos = 0;
+    let andamento = 0;
 
-    // DADOS
-    const rows = chamadosMes.map(c => [
-      c.id || "",
-      c.nome || "",
-      c.unidade || "",
-      c.setor || "",
-      c.gravidade || "",
-      c.status || "",
-      c.data_criacao ? new Date(c.data_criacao).toLocaleString("pt-BR") : ""
+    const custoPorLoja = {};
+    const chamadosPorLoja = {};
+
+    // 🔥 PROCESSAMENTO
+    const linhas = chamadosMes.map(c => {
+      let duracao = 0;
+      let custo = 0;
+
+      if (c.data_inicio && c.data_finalizacao) {
+        const inicio = new Date(c.data_inicio);
+        const fim = new Date(c.data_finalizacao);
+
+        duracao = (fim - inicio) / (1000 * 60 * 60);
+        custo = duracao * CUSTO_HORA;
+
+        custoTotal += custo;
+
+        if (!custoPorLoja[c.unidade]) custoPorLoja[c.unidade] = 0;
+        custoPorLoja[c.unidade] += custo;
+      }
+
+      if (!chamadosPorLoja[c.unidade]) chamadosPorLoja[c.unidade] = 0;
+      chamadosPorLoja[c.unidade]++;
+
+      if (c.gravidade === "Crítica") criticos++;
+      if (c.status === "Concluído") concluidos++;
+      if (c.status === "Em andamento") andamento++;
+
+      return [
+        c.id,
+        c.nome,
+        c.unidade,
+        c.setor,
+        c.setor_problema,
+        c.tipo_manutencao,
+        c.gravidade,
+        c.status,
+        formatDateTime(c.data_criacao),
+        formatDateTime(c.data_inicio),
+        formatDateTime(c.data_finalizacao),
+        duracao ? duracao.toFixed(2) : "",
+        "Equipe 1 + Equipe 2",
+        `R$ ${CUSTO_HORA}`,
+        custo ? `R$ ${custo.toFixed(2)}` : "",
+        c.descricao || ""
+      ];
+    });
+
+    // 🧾 ===== PÁGINA 1 - EXECUTIVO =====
+    doc.setFontSize(18);
+    doc.text("RELATÓRIO MENSAL - ENGENHARIA", 14, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Mês: ${mes + 1}/${ano}`, 14, 30);
+
+    doc.text(`Total de chamados: ${chamadosMes.length}`, 14, 40);
+    doc.text(`Críticos: ${criticos}`, 14, 48);
+    doc.text(`Concluídos: ${concluidos}`, 14, 56);
+    doc.text(`Em andamento: ${andamento}`, 14, 64);
+
+    doc.text(`CUSTO TOTAL: R$ ${custoTotal.toFixed(2)}`, 14, 80);
+
+    // 🏆 Ranking
+    const ranking = Object.entries(custoPorLoja)
+      .sort((a, b) => b[1] - a[1])
+      .map(([loja, valor]) => [loja, `R$ ${valor.toFixed(2)}`]);
+
+    doc.autoTable({
+      startY: 90,
+      head: [["Ranking por Custo", "Valor"]],
+      body: ranking
+    });
+
+    // 📊 ===== PÁGINA 2 =====
+    doc.addPage();
+
+    const resumo = Object.keys(chamadosPorLoja).map(loja => [
+      loja,
+      chamadosPorLoja[loja],
+      `R$ ${(custoPorLoja[loja] || 0).toFixed(2)}`
     ]);
 
-    // 🔥 TABELA (FORMA SEGURA)
-    if (doc.autoTable) {
-      doc.autoTable({
-        startY: 32,
-        head: [["ID","Nome","Unidade","Setor","Prioridade","Status","Data"]],
-        body: rows,
-        styles: { fontSize: 8 }
-      });
-    } else {
-      alert("Erro: autoTable não carregado.");
-      return;
-    }
+    doc.text("Resumo por Loja", 14, 20);
 
-    doc.save(`Relatorio_${mes + 1}_${ano}.pdf`);
+    doc.autoTable({
+      startY: 25,
+      head: [["Loja", "Chamados", "Custo"]],
+      body: resumo
+    });
+
+    // 📋 ===== PÁGINA 3 =====
+    doc.addPage();
+
+    doc.text("Detalhamento dos Chamados", 14, 20);
+
+    doc.autoTable({
+      startY: 25,
+      head: [[
+        "ID","Solicitante","Unidade","Setor","Problema","Tipo",
+        "Gravidade","Status","Criação","Início","Final",
+        "Duração","Equipe","Custo Hora","Custo","Descrição"
+      ]],
+      body: linhas,
+      styles: { fontSize: 6 },
+      columnStyles: {
+        15: { cellWidth: 50 }
+      }
+    });
+
+    doc.save(`Relatorio_Executivo_${mes + 1}_${ano}.pdf`);
 
   } catch (err) {
-    console.error("Erro real:", err);
-    alert("Erro ao gerar relatório. Veja o console (F12).");
+    console.error(err);
+    alert("Erro ao gerar relatório.");
   }
 }
