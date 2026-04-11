@@ -266,22 +266,24 @@ function atualizarBotoesStatus() {
 async function iniciarChamado() {
   if (!selectedTicket) return;
 
+  const agora = new Date().toISOString();
+
   await window.supabaseClient
     .from("chamado_tempo")
     .insert([{
       chamado_id: selectedTicket.id,
-      inicio: new Date().toISOString()
+      inicio: agora
     }]);
 
   await window.supabaseClient
     .from("chamados")
-    .update({ status: "Em andamento" })
+    .update({
+      status: "Em andamento",
+      data_inicio: selectedTicket.data_inicio || agora
+    })
     .eq("id", selectedTicket.id);
 
-  // 🔥 ATUALIZAÇÃO NA TELA
-  selectedTicket.status = "Em andamento";
-
-  atualizarBotoesStatus();
+  fecharModal(); // 🔥 FECHA A TELA
   await carregarDados();
 
   alert("Chamado iniciado!");
@@ -295,25 +297,23 @@ async function pausarChamado() {
     .from("chamado_tempo")
     .select("*")
     .eq("chamado_id", selectedTicket.id)
-    .is("fim", null)
-    .single();
+    .is("fim", null);
 
-  if (!data) return;
+  if (!data || data.length === 0) return;
+
+  const ultimo = data[data.length - 1];
 
   await window.supabaseClient
     .from("chamado_tempo")
     .update({ fim: new Date().toISOString() })
-    .eq("id", data.id);
+    .eq("id", ultimo.id);
 
   await window.supabaseClient
     .from("chamados")
     .update({ status: "Pausado" })
     .eq("id", selectedTicket.id);
 
-  // 🔥 ATUALIZAÇÃO
-  selectedTicket.status = "Pausado";
-
-  atualizarBotoesStatus();
+  fecharModal(); // 🔥 FECHA
   await carregarDados();
 
   alert("Chamado pausado!");
@@ -334,9 +334,7 @@ async function retomarChamado() {
     .update({ status: "Em andamento" })
     .eq("id", selectedTicket.id);
 
-  selectedTicket.status = "Em andamento";
-
-  atualizarBotoesStatus();
+  fecharModal(); // 🔥 FECHA
   await carregarDados();
 
   alert("Chamado retomado!");
@@ -349,14 +347,15 @@ async function finalizarChamado() {
     .from("chamado_tempo")
     .select("*")
     .eq("chamado_id", selectedTicket.id)
-    .is("fim", null)
-    .single();
+    .is("fim", null);
 
-  if (data) {
+  if (data && data.length > 0) {
+    const ultimo = data[data.length - 1];
+
     await window.supabaseClient
       .from("chamado_tempo")
       .update({ fim: new Date().toISOString() })
-      .eq("id", data.id);
+      .eq("id", ultimo.id);
   }
 
   await window.supabaseClient
@@ -367,9 +366,7 @@ async function finalizarChamado() {
     })
     .eq("id", selectedTicket.id);
 
-  selectedTicket.status = "Concluído";
-
-  atualizarBotoesStatus();
+  fecharModal(); // 🔥 FECHA
   await carregarDados();
 
   alert("Chamado finalizado!");
