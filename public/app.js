@@ -29,11 +29,41 @@ function abrirDetalhes(id){
 
   document.getElementById("modalTicketId").textContent = ticket.id;
 
-  // ... resto do seu código
+  // 🔥 RECONSTRUIR OS CAMPOS
+  const fields = [
+    ["Solicitante", ticket.nome],
+    ["Unidade", ticket.unidade],
+    ["Setor", ticket.setor],
+    ["Setor do problema", ticket.setor_problema],
+    ["Tipo de manutenção", ticket.tipo_manutencao],
+    ["Gravidade", ticket.gravidade],
+    ["Criação", formatDateTime(ticket.data_criacao)],
+    ["Início", formatDateTime(ticket.data_inicio)],
+    ["Finalização", formatDateTime(ticket.data_finalizacao)]
+  ];
+
+  document.getElementById("detailGrid").innerHTML = fields.map(([label, value]) => `
+    <div class="detail-box">
+      <strong>${label}</strong>
+      <div>${value || "—"}</div>
+    </div>
+  `).join("");
+
+  // descrição
+  document.getElementById("modalDescricao").textContent = ticket.descricao || "";
+
+  // foto
+  const modalFoto = document.getElementById("modalFoto");
+  if(ticket.foto_url){
+    modalFoto.src = ticket.foto_url;
+    modalFoto.classList.remove("hidden");
+  } else {
+    modalFoto.classList.add("hidden");
+  }
 
   document.getElementById("detailModal").showModal();
 
-  // 🔥 ESSA LINHA É A OPÇÃO 3
+  // 🔥 IMPORTANTE (botões)
   atualizarBotoesStatus();
 }
 function fecharModal(){document.getElementById("detailModal").close()}
