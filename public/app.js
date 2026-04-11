@@ -52,7 +52,7 @@ async function exportarRelatorioMensal() {
       return;
     }
 
-    // 📅 filtrar mês atual
+    // 📅 FILTRAR MÊS ATUAL
     const hoje = new Date();
     const mes = hoje.getMonth();
     const ano = hoje.getFullYear();
@@ -68,45 +68,66 @@ async function exportarRelatorioMensal() {
       return;
     }
 
-    // 📥 carregar planilha modelo
-    const response = await fetch("planilha_modelo.xlsx");
-    const arrayBuffer = await response.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: "array" });
+    // 📄 CRIAR PDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("landscape");
 
-    const sheet = workbook.Sheets["Chamados"];
+    // 🔥 CABEÇALHO
+    doc.setFontSize(16);
+    doc.text("Relatório Mensal de Chamados - Engenharia", 14, 15);
 
-    // 🔥 PREENCHER DADOS (linha 2 pra baixo)
-    let row = 2;
+    doc.setFontSize(10);
+    doc.text(`Data de emissão: ${new Date().toLocaleString("pt-BR")}`, 14, 22);
+    doc.text(`Total de chamados: ${chamadosMes.length}`, 14, 28);
 
-    chamadosMes.forEach(c => {
-      sheet[`A${row}`] = { v: c.id };
-      sheet[`B${row}`] = { v: c.data_criacao };
-      sheet[`C${row}`] = { v: c.unidade };
-      sheet[`D${row}`] = { v: c.nome };
-      sheet[`E${row}`] = { v: c.descricao };
-      sheet[`F${row}`] = { v: c.gravidade };
-      sheet[`G${row}`] = { v: c.status };
-      sheet[`L${row}`] = { v: calcularDuracao(c) }; // duração
+    // 📊 DADOS DA TABELA
+    const rows = chamadosMes.map(c => [
+      c.id,
+      c.nome,
+      c.unidade,
+      c.setor,
+      c.setor_problema,
+      c.tipo_manutencao,
+      c.gravidade,
+      c.status,
+      formatDateTime(c.data_criacao),
+      formatDateTime(c.data_inicio),
+      formatDateTime(c.data_finalizacao)
+    ]);
 
-      row++;
+    // 📋 TABELA
+    doc.autoTable({
+      startY: 32,
+      head: [[
+        "ID",
+        "Solicitante",
+        "Unidade",
+        "Setor",
+        "Problema",
+        "Manutenção",
+        "Prioridade",
+        "Status",
+        "Criação",
+        "Início",
+        "Finalização"
+      ]],
+      body: rows,
+      styles: {
+        fontSize: 7
+      },
+      headStyles: {
+        fillColor: [15, 23, 42] // cor escura padrão
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
+      }
     });
 
-    // Atualiza range da planilha
-    sheet["!ref"] = `A1:O${row}`;
-
-    // 📥 baixar mantendo TUDO (fórmulas intactas)
-    XLSX.writeFile(workbook, `Relatorio_Mensal_${mes + 1}_${ano}.xlsx`);
+    // 📥 BAIXAR PDF
+    doc.save(`Relatorio_Mensal_${mes + 1}_${ano}.pdf`);
 
   } catch (err) {
     console.error(err);
     alert("Erro ao gerar relatório.");
   }
-}
-
-// função auxiliar
-function calcularDuracao(c) {
-  if (!c.data_inicio || !c.data_finalizacao) return "";
-  const inicio = new Date(c.data_inicio);
-  const fim = new Date(c.data_finalizacao);
-  return ((fim - inicio) / (1000 * 60 * 60)).toFixed(2);
 }
