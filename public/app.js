@@ -307,18 +307,18 @@ async function pausarChamado() {
   try {
     if (!selectedTicket) return;
 
-    // 🔍 busca todos períodos abertos
-const { data } = await window.supabaseClient
-  .from("chamado_tempo")
-  .select("*")
-  .eq("chamado_id", selectedTicket.id)
-  .is("fim", null)
-  .order("inicio", { ascending: false })
-  .limit(1);
+    // 🔍 CORRIGIDO: agora tem data + error
+    const { data, error } = await window.supabaseClient
+      .from("chamado_tempo")
+      .select("*")
+      .eq("chamado_id", selectedTicket.id)
+      .is("fim", null)
+      .order("inicio", { ascending: false })
+      .limit(1);
 
     if (error) {
       console.error(error);
-      alert("Erro ao buscar período.");
+      alert("Erro ao buscar período: " + error.message);
       return;
     }
 
@@ -329,7 +329,6 @@ const { data } = await window.supabaseClient
 
     const periodo = data[0];
 
-    // ⏹️ fecha o período
     const { error: updateError } = await window.supabaseClient
       .from("chamado_tempo")
       .update({ fim: new Date().toISOString() })
@@ -337,17 +336,15 @@ const { data } = await window.supabaseClient
 
     if (updateError) {
       console.error(updateError);
-      alert("Erro ao pausar.");
+      alert("Erro ao pausar: " + updateError.message);
       return;
     }
 
-    // 🔄 atualiza status
     await window.supabaseClient
       .from("chamados")
       .update({ status: "Pausado" })
       .eq("id", selectedTicket.id);
 
-    // 🔥 atualiza tela
     selectedTicket.status = "Pausado";
 
     fecharModal();
@@ -356,7 +353,7 @@ const { data } = await window.supabaseClient
     alert("⏸️ Chamado pausado com sucesso!");
 
   } catch (err) {
-    console.error(err);
+    console.error("Erro real:", err);
     alert("Erro inesperado ao pausar.");
   }
 }
