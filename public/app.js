@@ -36,7 +36,6 @@ async function salvarChamado(event){
 // 🔥 AQUI É O LUGAR CERTO
 enviarWhatsApp(
   `🚨 NOVO CHAMADO\n\nLoja: ${chamado.unidade}\nSetor: ${chamado.setor}\nProblema: ${chamado.setor_problema}`
-);
 );}
 
 function getFilteredTickets(){const busca=document.getElementById("busca")?.value.toLowerCase().trim()||"";const filtroStatus=document.getElementById("filtroStatus")?.value||"";const filtroGravidade=document.getElementById("filtroGravidade")?.value||"";const filtroSetor=document.getElementById("filtroSetor")?.value||"";return ticketsCache.filter(ticket=>{const target=[ticket.id,ticket.nome,ticket.unidade,ticket.setor,ticket.setor_problema,ticket.tipo_manutencao,ticket.descricao].join(" ").toLowerCase();return (!busca||target.includes(busca))&&(!filtroStatus||ticket.status===filtroStatus)&&(!filtroGravidade||ticket.gravidade===filtroGravidade)&&(!filtroSetor||ticket.setor===filtroSetor)})}
