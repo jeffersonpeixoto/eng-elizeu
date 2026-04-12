@@ -589,7 +589,7 @@ async function enviarWhatsApp(mensagem) {
   const instanceId = "3F18330F3791724F480CBE4FDF68D33E";
   const token = "589BC2DFE42C57968A672E6D";
 
-  const telefone = "5586998110012"; // 🔥 COLOQUE SEU NÚMERO REAL
+  const telefone = "5586998110012";
 
   try {
     const response = await fetch(`https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`, {
@@ -602,6 +602,8 @@ async function enviarWhatsApp(mensagem) {
         message: mensagem
       })
     });
+
+    console.log("STATUS HTTP:", response.status);
 
     const result = await response.json();
     console.log("Z-API retorno:", result);
