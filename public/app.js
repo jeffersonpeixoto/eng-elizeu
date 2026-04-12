@@ -11,32 +11,62 @@ function resetarFormulario(){document.getElementById("ticketForm").reset()}
 async function uploadFoto(file){if(!file)return null;const ext=(file.name.split(".").pop()||"jpg").toLowerCase();const fileName="foto_"+Date.now()+"."+ext;const {error}=await window.supabaseClient.storage.from("chamados-fotos").upload(fileName,file,{cacheControl:"3600",upsert:false,contentType:file.type||"image/jpeg"});if(error)throw error;const {data}=window.supabaseClient.storage.from("chamados-fotos").getPublicUrl(fileName);return data.publicUrl}
 
 async function salvarChamado(event){
-	event.preventDefault();
-	const btn=event.target.querySelector("button[type='submit']");
-	btn.disabled=true;
-	btn.textContent="Salvando...";
-	try{const file=document.getElementById("foto").files[0];
-	const fotoUrl=await uploadFoto(file);
-	const chamado = {
-  id:"CH-"+Date.now(),
-  nome:document.getElementById("nome").value.trim(),
-  unidade:document.getElementById("unidade").value,
-  setor:document.getElementById("setor").value,
-  setor_problema:document.getElementById("setorProblema").value.trim(),
-  tipo_manutencao:document.getElementById("tipoManutencao").value,
-  gravidade:document.getElementById("gravidade").value,
-  descricao:document.getElementById("descricao").value.trim(),
-  foto_url:fotoUrl,
-  status:"Aberto",
-  data_criacao:new Date().toISOString(),
-  data_inicio:null,
-  data_finalizacao:null
-};
+  event.preventDefault();
 
-// 🔥 AQUI É O LUGAR CERTO
-enviarWhatsApp(
-  `🚨 NOVO CHAMADO\n\nLoja: ${chamado.unidade}\nSetor: ${chamado.setor}\nProblema: ${chamado.setor_problema}`
-);}
+  const btn = event.target.querySelector("button[type='submit']");
+  btn.disabled = true;
+  btn.textContent = "Salvando...";
+
+  try {
+    const file = document.getElementById("foto").files[0];
+    const fotoUrl = await uploadFoto(file);
+
+    const chamado = {
+      id: "CH-" + Date.now(),
+      nome: document.getElementById("nome").value.trim(),
+      unidade: document.getElementById("unidade").value,
+      setor: document.getElementById("setor").value,
+      setor_problema: document.getElementById("setorProblema").value.trim(),
+      tipo_manutencao: document.getElementById("tipoManutencao").value,
+      gravidade: document.getElementById("gravidade").value,
+      descricao: document.getElementById("descricao").value.trim(),
+      foto_url: fotoUrl,
+      status: "Aberto",
+      data_criacao: new Date().toISOString(),
+      data_inicio: null,
+      data_finalizacao: null
+    };
+
+    // 🔥 SALVA NO SUPABASE (FALTAVA ISSO)
+    const { error } = await window.supabaseClient
+      .from("chamados")
+      .insert([chamado]);
+
+    if (error) {
+      console.error(error);
+      alert("Erro ao salvar chamado: " + error.message);
+      return;
+    }
+
+    // 🔥 ENVIA WHATSAPP
+    enviarWhatsApp(
+      `🚨 NOVO CHAMADO\n\n📍 Loja: ${chamado.unidade}\n🏢 Setor: ${chamado.setor}\n⚠️ Problema: ${chamado.setor_problema}`
+    );
+
+    alert("Chamado salvo com sucesso!");
+
+    resetarFormulario();
+    await carregarDados();
+    switchView("lista");
+
+  } catch (error) {
+    console.error(error);
+    alert("Erro ao salvar chamado.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Salvar chamado";
+  }
+}
 
 function getFilteredTickets(){const busca=document.getElementById("busca")?.value.toLowerCase().trim()||"";const filtroStatus=document.getElementById("filtroStatus")?.value||"";const filtroGravidade=document.getElementById("filtroGravidade")?.value||"";const filtroSetor=document.getElementById("filtroSetor")?.value||"";return ticketsCache.filter(ticket=>{const target=[ticket.id,ticket.nome,ticket.unidade,ticket.setor,ticket.setor_problema,ticket.tipo_manutencao,ticket.descricao].join(" ").toLowerCase();return (!busca||target.includes(busca))&&(!filtroStatus||ticket.status===filtroStatus)&&(!filtroGravidade||ticket.gravidade===filtroGravidade)&&(!filtroSetor||ticket.setor===filtroSetor)})}
 
@@ -296,12 +326,16 @@ async function iniciarChamado() {
   try {
     if (!selectedTicket) return;
 
+    const idChamado = selectedTicket.id; // 🔥 salva antes
+    const unidade = selectedTicket.unidade;
+    const setor = selectedTicket.setor;
+
     const agora = new Date().toISOString();
 
     const { error } = await window.supabaseClient
       .from("chamado_tempo")
       .insert([{
-        chamado_id: selectedTicket.id,
+        chamado_id: idChamado,
         inicio: agora,
         fim: null
       }]);
@@ -318,7 +352,12 @@ async function iniciarChamado() {
         status: "Em andamento",
         data_inicio: selectedTicket.data_inicio || agora
       })
-      .eq("id", selectedTicket.id);
+      .eq("id", idChamado);
+
+    // 🔥 ENVIA WHATSAPP NO MOMENTO CERTO
+    enviarWhatsApp(
+      `▶️ CHAMADO INICIADO\n\n📄 ID: ${idChamado}\n📍 Loja: ${unidade}\n🏢 Setor: ${setor}`
+    );
 
     fecharModal();
     await carregarDados();
@@ -329,9 +368,6 @@ async function iniciarChamado() {
     console.error(err);
     alert("Erro inesperado.");
   }
-  enviarWhatsApp(
-  `🔄 STATUS ATUALIZADO\n\nChamado: ${selectedTicket.id}\nStatus: INICIADO`
-);
 }
 
  // ✅ PAUSAR
@@ -339,11 +375,15 @@ async function pausarChamado() {
   try {
     if (!selectedTicket) return;
 
-    // 🔍 CORRIGIDO: agora tem data + error
+    const idChamado = selectedTicket.id;
+    const unidade = selectedTicket.unidade;
+    const setor = selectedTicket.setor;
+
+    // 🔍 buscar período aberto
     const { data, error } = await window.supabaseClient
       .from("chamado_tempo")
       .select("*")
-      .eq("chamado_id", selectedTicket.id)
+      .eq("chamado_id", idChamado)
       .is("fim", null)
       .order("inicio", { ascending: false })
       .limit(1);
@@ -375,9 +415,12 @@ async function pausarChamado() {
     await window.supabaseClient
       .from("chamados")
       .update({ status: "Pausado" })
-      .eq("id", selectedTicket.id);
+      .eq("id", idChamado);
 
-    selectedTicket.status = "Pausado";
+    // 🔥 ENVIA WHATSAPP NO MOMENTO CERTO
+    enviarWhatsApp(
+      `⏸️ CHAMADO PAUSADO\n\n📄 ID: ${idChamado}\n📍 Loja: ${unidade}\n🏢 Setor: ${setor}`
+    );
 
     fecharModal();
     await carregarDados();
@@ -388,42 +431,49 @@ async function pausarChamado() {
     console.error("Erro real:", err);
     alert("Erro inesperado ao pausar.");
   }
-  enviarWhatsApp(
-  `🔄 STATUS ATUALIZADO\n\nChamado: ${selectedTicket.id}\nStatus: CHAMADO PAUSADO`
-);
 }
  // ✅ RETOMAR
 async function retomarChamado() {
   if (!selectedTicket) return;
 
+  const idChamado = selectedTicket.id; // 🔥 salva antes
+  const unidade = selectedTicket.unidade;
+  const setor = selectedTicket.setor;
+
   await window.supabaseClient
     .from("chamado_tempo")
     .insert([{
-      chamado_id: selectedTicket.id,
+      chamado_id: idChamado,
       inicio: new Date().toISOString()
     }]);
 
   await window.supabaseClient
     .from("chamados")
     .update({ status: "Em andamento" })
-    .eq("id", selectedTicket.id);
+    .eq("id", idChamado);
 
-  fecharModal(); // 🔥 FECHA
+  // 🔥 envia antes de limpar a tela
+  enviarWhatsApp(
+    `▶️ CHAMADO RETOMADO\n\n📄 ID: ${idChamado}\n📍 Loja: ${unidade}\n🏢 Setor: ${setor}`
+  );
+
+  fecharModal();
   await carregarDados();
 
   alert("Chamado retomado!");
-  enviarWhatsApp(
-  `🔄 STATUS ATUALIZADO\n\nChamado: ${selectedTicket.id}\nStatus: CHAMADO RETOMADO`
-);
 }
  // ✅ FINALIZAR
 async function finalizarChamado() {
   if (!selectedTicket) return;
 
+  const idChamado = selectedTicket.id; // 🔥 GUARDA ANTES
+  const unidade = selectedTicket.unidade;
+  const setor = selectedTicket.setor;
+
   const { data } = await window.supabaseClient
     .from("chamado_tempo")
     .select("*")
-    .eq("chamado_id", selectedTicket.id)
+    .eq("chamado_id", idChamado)
     .is("fim", null);
 
   if (data && data.length > 0) {
@@ -441,15 +491,17 @@ async function finalizarChamado() {
       status: "Concluído",
       data_finalizacao: new Date().toISOString()
     })
-    .eq("id", selectedTicket.id);
+    .eq("id", idChamado);
 
-  fecharModal(); // 🔥 FECHA
+  // 🔥 ENVIA WHATSAPP ANTES DE LIMPAR TELA
+  enviarWhatsApp(
+    `✅ CHAMADO FINALIZADO\n\n📄 ID: ${idChamado}\n📍 Loja: ${unidade}\n🏢 Setor: ${setor}`
+  );
+
+  fecharModal();
   await carregarDados();
 
   alert("Chamado finalizado!");
-  enviarWhatsApp(
-  `🔄 STATUS ATUALIZADO\n\nChamado: ${selectedTicket.id}\nStatus: CHAMADO CONCLUÍDO`
-);
 }
  // ✅ CALCULAR TEMPO REAL
 async function calcularDuracaoReal(chamadoId) {
