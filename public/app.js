@@ -10,7 +10,15 @@ function resetarFormulario(){document.getElementById("ticketForm").reset()}
 
 async function uploadFoto(file){if(!file)return null;const ext=(file.name.split(".").pop()||"jpg").toLowerCase();const fileName="foto_"+Date.now()+"."+ext;const {error}=await window.supabaseClient.storage.from("chamados-fotos").upload(fileName,file,{cacheControl:"3600",upsert:false,contentType:file.type||"image/jpeg"});if(error)throw error;const {data}=window.supabaseClient.storage.from("chamados-fotos").getPublicUrl(fileName);return data.publicUrl}
 
-async function salvarChamado(event){event.preventDefault();const btn=event.target.querySelector("button[type='submit']");btn.disabled=true;btn.textContent="Salvando...";try{const file=document.getElementById("foto").files[0];const fotoUrl=await uploadFoto(file);const chamado={id:"CH-"+Date.now(),nome:document.getElementById("nome").value.trim(),unidade:document.getElementById("unidade").value,setor:document.getElementById("setor").value,setor_problema:document.getElementById("setorProblema").value.trim(),tipo_manutencao:document.getElementById("tipoManutencao").value,gravidade:document.getElementById("gravidade").value,descricao:document.getElementById("descricao").value.trim(),foto_url:fotoUrl,status:"Aberto",data_criacao:new Date().toISOString(),data_inicio:null,data_finalizacao:null};const {error}=await window.supabaseClient.from("chamados").insert([chamado]);if(error)throw error;alert("Chamado salvo com sucesso.");resetarFormulario();await carregarDados();switchView("lista")}catch(error){alert("Erro ao salvar chamado: "+error.message)}finally{btn.disabled=false;btn.textContent="Salvar chamado"}}
+async function salvarChamado(event){
+	event.preventDefault();
+	const btn=event.target.querySelector("button[type='submit']");
+	btn.disabled=true;
+	btn.textContent="Salvando...";
+	try{const file=document.getElementById("foto").files[0];
+	const fotoUrl=await uploadFoto(file);const chamado={id:"CH-"+Date.now(),nome:document.getElementById("nome").value.trim(),unidade:document.getElementById("unidade").value,setor:document.getElementById("setor").value,setor_problema:document.getElementById("setorProblema").value.trim(),tipo_manutencao:document.getElementById("tipoManutencao").value,gravidade:document.getElementById("gravidade").value,descricao:document.getElementById("descricao").value.trim(),foto_url:fotoUrl,status:"Aberto",data_criacao:new Date().toISOString(),data_inicio:null,data_finalizacao:null};const {error}=await window.supabaseClient.from("chamados").insert([chamado]);if(error)throw error;alert("Chamado salvo com sucesso.");resetarFormulario();await carregarDados();switchView("lista")}catch(error){alert("Erro ao salvar chamado: "+error.message)}finally{btn.disabled=false;btn.textContent="Salvar chamado"} enviarWhatsApp(
+  `🚨 NOVO CHAMADO\n\nLoja: ${chamado.unidade}\nSetor: ${chamado.setor}\nProblema: ${chamado.setor_problema}`
+);}
 
 function getFilteredTickets(){const busca=document.getElementById("busca")?.value.toLowerCase().trim()||"";const filtroStatus=document.getElementById("filtroStatus")?.value||"";const filtroGravidade=document.getElementById("filtroGravidade")?.value||"";const filtroSetor=document.getElementById("filtroSetor")?.value||"";return ticketsCache.filter(ticket=>{const target=[ticket.id,ticket.nome,ticket.unidade,ticket.setor,ticket.setor_problema,ticket.tipo_manutencao,ticket.descricao].join(" ").toLowerCase();return (!busca||target.includes(busca))&&(!filtroStatus||ticket.status===filtroStatus)&&(!filtroGravidade||ticket.gravidade===filtroGravidade)&&(!filtroSetor||ticket.setor===filtroSetor)})}
 
@@ -78,7 +86,10 @@ function bindFilters(){["busca","filtroStatus","filtroGravidade","filtroSetor"].
 
 function registerPWA(){if("serviceWorker"in navigator){window.addEventListener("load",async()=>{try{await navigator.serviceWorker.register("./service-worker.js");console.log("Service Worker registrado")}catch(error){console.error("Erro ao registrar Service Worker:",error)}})}window.addEventListener("beforeinstallprompt",(event)=>{event.preventDefault();deferredPrompt=event;document.getElementById("installButton").classList.remove("hidden")});const installButton=document.getElementById("installButton");installButton.addEventListener("click",async()=>{if(!deferredPrompt){alert("O navegador ainda não liberou a instalação. Abra via HTTPS ou localhost e use o app por alguns instantes.");return}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installButton.classList.add("hidden")});window.addEventListener("appinstalled",()=>{installButton.classList.add("hidden")})}
 
-document.addEventListener("DOMContentLoaded",()=>{if(!window.supabaseClient){alert("Supabase não foi inicializado. Verifique o arquivo supabase.js.");return}bindViewButtons();bindFilters();registerPWA();document.getElementById("ticketForm").addEventListener("submit",salvarChamado);switchView("dashboard");carregarDados(); ativarNotificacoes(); escutarChamados();} )
+document.addEventListener("DOMContentLoaded",()=>{if(!window.supabaseClient){alert("Supabase não foi inicializado. Verifique o arquivo supabase.js.");return}bindViewButtons();bindFilters();registerPWA();document.getElementById("ticketForm").addEventListener("submit",salvarChamado);switchView("dashboard");carregarDados(); setTimeout(() => {
+  ativarNotificacoesSeguro();
+  escutarChamadosSeguro();
+}, 1500);} )
 // 🔥 EXPORTAR RELATÓRIO MENSAL (CORRIGIDO)
 async function exportarRelatorioMensal() {
   try {
@@ -300,6 +311,9 @@ async function iniciarChamado() {
     console.error(err);
     alert("Erro inesperado.");
   }
+  enviarWhatsApp(
+  `🔄 STATUS ATUALIZADO\n\nChamado: ${selectedTicket.id}\nStatus: INICIADO`
+);
 }
 
  // ✅ PAUSAR
@@ -356,6 +370,9 @@ async function pausarChamado() {
     console.error("Erro real:", err);
     alert("Erro inesperado ao pausar.");
   }
+  enviarWhatsApp(
+  `🔄 STATUS ATUALIZADO\n\nChamado: ${selectedTicket.id}\nStatus: CHAMADO PAUSADO`
+);
 }
  // ✅ RETOMAR
 async function retomarChamado() {
@@ -377,6 +394,9 @@ async function retomarChamado() {
   await carregarDados();
 
   alert("Chamado retomado!");
+  enviarWhatsApp(
+  `🔄 STATUS ATUALIZADO\n\nChamado: ${selectedTicket.id}\nStatus: CHAMADO RETOMADO`
+);
 }
  // ✅ FINALIZAR
 async function finalizarChamado() {
@@ -409,6 +429,9 @@ async function finalizarChamado() {
   await carregarDados();
 
   alert("Chamado finalizado!");
+  enviarWhatsApp(
+  `🔄 STATUS ATUALIZADO\n\nChamado: ${selectedTicket.id}\nStatus: CHAMADO CONCLUÍDO`
+);
 }
  // ✅ CALCULAR TEMPO REAL
 async function calcularDuracaoReal(chamadoId) {
@@ -437,42 +460,79 @@ async function ativarNotificacoes() {
     alert("Ative as notificações para receber alertas.");
   }
 }
+function ativarNotificacoesSeguro() {
+  if (!("Notification" in window)) return;
 
+  Notification.requestPermission().then(permission => {
+    console.log("Permissão:", permission);
+  });
+}
 function notificar(titulo, mensagem) {
-  if (Notification.permission === "granted") {
-    new Notification(titulo, {
-      body: mensagem,
-      icon: "/logo.png"
-    });
+  try {
+    if (!("Notification" in window)) return;
+
+    if (Notification.permission === "granted") {
+      new Notification(titulo, {
+        body: mensagem,
+        icon: "/logo.png"
+      });
+    }
+  } catch (e) {
+    console.warn("Erro notificação:", e);
   }
 }
 
-function escutarChamados() {
-  window.supabaseClient
-    .channel('chamados-realtime')
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'chamados'
-    }, payload => {
-      const c = payload.new;
+function escutarChamadosSeguro() {
+  try {
+    if (!window.supabaseClient) return;
 
-      notificar(
-        "🚨 Novo chamado",
-        `${c.unidade} - ${c.setor}`
-      );
-    })
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'chamados'
-    }, payload => {
-      const c = payload.new;
+    window.supabaseClient
+      .channel("chamados")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "chamados",
+        },
+        (payload) => {
+          console.log("Realtime:", payload);
 
-      notificar(
-        "🔄 Status atualizado",
-        `${c.unidade} - ${c.status}`
-      );
-    })
-    .subscribe();
+          const c = payload.new;
+
+          if (payload.eventType === "INSERT") {
+            notificar("🚨 Novo chamado", `${c.unidade} - ${c.setor}`);
+          }
+
+          if (payload.eventType === "UPDATE") {
+            notificar("🔄 Status atualizado", `${c.unidade} - ${c.status}`);
+          }
+        }
+      )
+      .subscribe();
+  } catch (e) {
+    console.warn("Realtime desativado:", e);
+  }
+}
+
+async function enviarWhatsApp(mensagem) {
+  const instanceId = "3F18330F3791724F480CBE4FDF68D33E";
+  const token = "589BC2DFE42C57968A672E6D";
+
+  const telefone = "558698110012"; // 🔥 seu número com DDD
+
+  try {
+    await fetch(`https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        phone: telefone,
+        message: mensagem
+      })
+    });
+  } catch (err) {
+    console.error("Erro WhatsApp:", err);
+  }
 }
