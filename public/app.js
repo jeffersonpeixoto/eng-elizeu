@@ -16,7 +16,8 @@ async function salvarChamado(event){
 	btn.disabled=true;
 	btn.textContent="Salvando...";
 	try{const file=document.getElementById("foto").files[0];
-	const fotoUrl=await uploadFoto(file);const chamado={id:"CH-"+Date.now(),nome:document.getElementById("nome").value.trim(),unidade:document.getElementById("unidade").value,setor:document.getElementById("setor").value,setor_problema:document.getElementById("setorProblema").value.trim(),tipo_manutencao:document.getElementById("tipoManutencao").value,gravidade:document.getElementById("gravidade").value,descricao:document.getElementById("descricao").value.trim(),foto_url:fotoUrl,status:"Aberto",data_criacao:new Date().toISOString(),data_inicio:null,data_finalizacao:null};const {error}=await window.supabaseClient.from("chamados").insert([chamado]);if(error)throw error;alert("Chamado salvo com sucesso.");resetarFormulario();await carregarDados();switchView("lista")}catch(error){alert("Erro ao salvar chamado: "+error.message)}finally{btn.disabled=false;btn.textContent="Salvar chamado"} enviarWhatsApp(
+	const fotoUrl=await uploadFoto(file);
+	const chamado={id:"CH-"+Date.now(),nome:document.getElementById("nome").value.trim(),unidade:document.getElementById("unidade").value,setor:document.getElementById("setor").value,setor_problema:document.getElementById("setorProblema").value.trim(),tipo_manutencao:document.getElementById("tipoManutencao").value,gravidade:document.getElementById("gravidade").value,descricao:document.getElementById("descricao").value.trim(),foto_url:fotoUrl,status:"Aberto",data_criacao:new Date().toISOString(),data_inicio:null,data_finalizacao:null};const {error}=await window.supabaseClient.from("chamados").insert([chamado]);if(error)throw error;alert("Chamado salvo com sucesso.");resetarFormulario();await carregarDados();switchView("lista")}catch(error){alert("Erro ao salvar chamado: "+error.message)}finally{btn.disabled=false;btn.textContent="Salvar chamado"} enviarWhatsApp(
   `🚨 NOVO CHAMADO\n\nLoja: ${chamado.unidade}\nSetor: ${chamado.setor}\nProblema: ${chamado.setor_problema}`
 );}
 
@@ -519,10 +520,10 @@ async function enviarWhatsApp(mensagem) {
   const instanceId = "3F18330F3791724F480CBE4FDF68D33E";
   const token = "589BC2DFE42C57968A672E6D";
 
-  const telefone = "558698110012"; // 🔥 seu número com DDD
+  const telefone = "558698110012"; // 🔥 COLOQUE SEU NÚMERO REAL
 
   try {
-    await fetch(`https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`, {
+    const response = await fetch(`https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -532,6 +533,10 @@ async function enviarWhatsApp(mensagem) {
         message: mensagem
       })
     });
+
+    const result = await response.json();
+    console.log("Z-API retorno:", result);
+
   } catch (err) {
     console.error("Erro WhatsApp:", err);
   }
