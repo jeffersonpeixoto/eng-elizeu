@@ -488,11 +488,6 @@ function atualizarBotoesStatus() {
   const btnRetomar = document.getElementById("btnRetomar");if (btnRetomar) btnIniciar.style.display = "none";
   const btnFinalizar = document.getElementById("btnFinalizar");if (btnFinalizar) btnIniciar.style.display = "none";
 
-  // Esconde todos
-  btnIniciar.style.display = "none";
-  btnPausar.style.display = "none";
-  btnRetomar.style.display = "none";
-  btnFinalizar.style.display = "none";
 
   if (status === "Aberto") {
     btnIniciar.style.display = "inline-block";
