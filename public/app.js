@@ -814,9 +814,3 @@ function switchView(view, el) {
   document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
   el.classList.add('active');
 }
-const card = `
-  <div class="kanban-item prioridade-${chamado.gravidade.toLowerCase()}">
-    <h4>${chamado.setorProblema}</h4>
-    <p>${chamado.unidade} • ${chamado.setor}</p>
-  </div>
-`;
