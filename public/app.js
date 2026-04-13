@@ -623,7 +623,8 @@ async function enviarWhatsApp(mensagem) {
     if (response.status === 200) {
       console.log("✅ WhatsApp enviado com sucesso!");
     } else {
-      console.error("❌ Erro ao enviar:", result || text);
+      console.error("❌ Erro ao enviar COMPLETO:", JSON.stringify(result, null, 2));
+console.error("📨 TEXTO BRUTO:", text);
     }
 
   } catch (err) {
