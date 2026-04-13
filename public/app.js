@@ -137,7 +137,7 @@ function registerPWA(){if("serviceWorker"in navigator){window.addEventListener("
 document.addEventListener("DOMContentLoaded",()=>{if(!window.supabaseClient){alert("Supabase não foi inicializado. Verifique o arquivo supabase.js.");return}bindViewButtons();bindFilters();registerPWA();document.getElementById("ticketForm").addEventListener("submit",salvarChamado);switchView("dashboard");carregarDados(); setTimeout(() => {
   ativarNotificacoesSeguro();
   escutarChamadosSeguro();
-}, 1500); setTimeout(ativarPushOneSignal, 3000);} )
+}, 1500); } )
 // 🔥 EXPORTAR RELATÓRIO MENSAL (CORRIGIDO)
 async function exportarRelatorioMensal() {
   try {
@@ -607,15 +607,12 @@ if ("serviceWorker" in navigator) {
     .catch(err => console.error("Erro SW:", err));
 }
 
-async function ativarPush() {
-  const permission = await Notification.requestPermission();
+function ativarPushOneSignal() {
+  window.OneSignal = window.OneSignal || [];
 
-  if (permission !== "granted") {
-    alert("Permita notificações!");
-    return;
-  }
-
-  console.log("🔔 Push ativado");
+  OneSignal.push(function() {
+    OneSignal.showSlidedownPrompt();
+  });
 }
 
 async function enviarPushOneSignal(titulo, mensagem) {
