@@ -251,9 +251,7 @@ input[type="file"] {
 .card {
   background: #ffffff;
   border-radius: 16px;
-  padding: 25px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.05);
-  border-top: 5px solid #facc15;
+  
 }
 
 /* GRID KANBAN */
