@@ -343,8 +343,9 @@ async function iniciarChamado() {
   try {
     if (!selectedTicket) return;
 
-    const idChamado = selectedTicket.id;
+    const idChamado = selectedTicket.id; // 🔥 salva antes
     const unidade = selectedTicket.unidade;
+    const setor = selectedTicket.setor;
 
     const agora = new Date().toISOString();
 
@@ -357,7 +358,8 @@ async function iniciarChamado() {
       }]);
 
     if (error) {
-      alert(error.message);
+      console.error(error);
+      alert("Erro ao iniciar: " + error.message);
       return;
     }
 
@@ -369,15 +371,20 @@ async function iniciarChamado() {
       })
       .eq("id", idChamado);
 
-    // 🔥 PUSH NO LUGAR CERTO
-    enviarPushOneSignal("▶️ Chamado iniciado", `ID: ${idChamado} - ${unidade}`);
-
+    
     fecharModal();
     await carregarDados();
 
+    alert("▶️ Chamado iniciado!");
+
   } catch (err) {
     console.error(err);
+    alert("Erro inesperado.");
   }
+  enviarPushOneSignal(
+  "▶️ Chamado iniciado",
+  `ID: ${idChamado}`
+);
 }
 
  // ✅ PAUSAR
@@ -386,37 +393,62 @@ async function pausarChamado() {
     if (!selectedTicket) return;
 
     const idChamado = selectedTicket.id;
+    const unidade = selectedTicket.unidade;
+    const setor = selectedTicket.setor;
 
-    const { data } = await window.supabaseClient
+    // 🔍 buscar período aberto
+    const { data, error } = await window.supabaseClient
       .from("chamado_tempo")
       .select("*")
       .eq("chamado_id", idChamado)
       .is("fim", null)
+      .order("inicio", { ascending: false })
       .limit(1);
 
-    if (!data || !data.length) {
-      alert("Nenhum período ativo");
+    if (error) {
+      console.error(error);
+      alert("Erro ao buscar período: " + error.message);
       return;
     }
 
-    await window.supabaseClient
+    if (!data || data.length === 0) {
+      alert("⚠️ Nenhum período em andamento.");
+      return;
+    }
+
+    const periodo = data[0];
+
+    const { error: updateError } = await window.supabaseClient
       .from("chamado_tempo")
       .update({ fim: new Date().toISOString() })
-      .eq("id", data[0].id);
+      .eq("id", periodo.id);
+
+    if (updateError) {
+      console.error(updateError);
+      alert("Erro ao pausar: " + updateError.message);
+      return;
+    }
 
     await window.supabaseClient
       .from("chamados")
       .update({ status: "Pausado" })
       .eq("id", idChamado);
 
-    enviarPushOneSignal("⏸️ Chamado pausado", `ID: ${idChamado}`);
+
 
     fecharModal();
     await carregarDados();
 
+    alert("⏸️ Chamado pausado com sucesso!");
+
   } catch (err) {
-    console.error(err);
+    console.error("Erro real:", err);
+    alert("Erro inesperado ao pausar.");
   }
+  enviarPushOneSignal(
+  "⏸️ Chamado pausado",
+  `ID: ${idChamado}`
+);
 }
  // ✅ RETOMAR
 async function retomarChamado() {
@@ -452,7 +484,24 @@ async function retomarChamado() {
 async function finalizarChamado() {
   if (!selectedTicket) return;
 
-  const idChamado = selectedTicket.id;
+  const idChamado = selectedTicket.id; // 🔥 GUARDA ANTES
+  const unidade = selectedTicket.unidade;
+  const setor = selectedTicket.setor;
+
+  const { data } = await window.supabaseClient
+    .from("chamado_tempo")
+    .select("*")
+    .eq("chamado_id", idChamado)
+    .is("fim", null);
+
+  if (data && data.length > 0) {
+    const ultimo = data[data.length - 1];
+
+    await window.supabaseClient
+      .from("chamado_tempo")
+      .update({ fim: new Date().toISOString() })
+      .eq("id", ultimo.id);
+  }
 
   await window.supabaseClient
     .from("chamados")
@@ -462,10 +511,14 @@ async function finalizarChamado() {
     })
     .eq("id", idChamado);
 
-  enviarPushOneSignal("✅ Chamado finalizado", `ID: ${idChamado}`);
-
   fecharModal();
   await carregarDados();
+
+  alert("Chamado finalizado!");
+  enviarPushOneSignal(
+  "✅ Chamado finalizado",
+  `ID: ${idChamado}`
+);
 }
  // ✅ CALCULAR TEMPO REAL
 async function calcularDuracaoReal(chamadoId) {
