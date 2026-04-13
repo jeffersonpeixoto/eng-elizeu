@@ -548,7 +548,7 @@ input[type="file"] {
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+ 
 }
 /* HEADER */
 .modal-header {
@@ -656,45 +656,33 @@ input[type="file"] {
   background: #94a3b8;
 }
 
-/* BOTÕES */
+/* BASE */
 .btn {
   border: none;
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-radius: 10px;
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
-  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
-/* CORES */
-.btn-primary {
-  background: #ef4444;
-  color: #fff;
+/* HOVER GERAL */
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
 }
 
-.btn-primary:hover {
-  background: #dc2626;
+/* CLIQUE */
+.btn:active {
+  transform: scale(0.97);
 }
 
-.btn-warning {
-  background: #facc15;
-  color: #78350f;
-}
-
-.btn-warning:hover {
-  background: #eab308;
-}
-
-.btn-success {
-  background: #22c55e;
-  color: #fff;
-}
-
-.btn-success:hover {
-  background: #16a34a;
-}
-
+/* FECHAR */
 .btn-secondary {
   background: #e2e8f0;
   color: #1e293b;
@@ -702,6 +690,59 @@ input[type="file"] {
 
 .btn-secondary:hover {
   background: #cbd5e1;
+}
+
+/* INICIAR */
+.btn-primary {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+/* PAUSAR */
+.btn-warning {
+  background: linear-gradient(135deg, #facc15, #eab308);
+  color: #78350f;
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, #eab308, #ca8a04);
+}
+
+/* RETOMAR (diferente do iniciar) */
+.btn-retomar {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: #fff;
+}
+
+.btn-retomar:hover {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+
+/* FINALIZAR */
+.btn-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+/* ÍCONES MAIS ORGANIZADOS */
+.btn span {
+  font-size: 14px;
+}
+
+/* LAYOUT DO FOOTER */
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* RESPONSIVO */
