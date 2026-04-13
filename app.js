@@ -158,3 +158,34 @@ async function carregarDados(){
 document.addEventListener("DOMContentLoaded", async ()=>{
   await carregarDados();
 });
+function exportarListaPDF(){
+  if (!ticketsCache || ticketsCache.length === 0) {
+    alert("Não há chamados para exportar.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(14);
+  doc.text("Lista de Chamados", 10, 10);
+
+  let y = 20;
+
+  ticketsCache.forEach((t) => {
+    doc.setFontSize(10);
+    doc.text(`${t.id} - ${t.nome || ""}`, 10, y);
+    doc.text(`Unidade: ${t.unidade || ""}`, 10, y + 5);
+    doc.text(`Setor: ${t.setor || ""}`, 10, y + 10);
+    doc.text(`Status: ${t.status || ""}`, 10, y + 15);
+
+    y += 25;
+
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+  });
+
+  doc.save("chamados.pdf");
+}
