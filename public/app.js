@@ -852,10 +852,30 @@ function formatarHoras(horasDecimal) {
 
   return `${horas}h ${minutos}min`;
 }
-function switchView(view, el) {
+function switchView(view, el = null) {
+  // troca tela
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-  document.getElementById(view + 'View').classList.remove('hidden');
 
-  document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
-  el.classList.add('active');
+  const target = document.getElementById(view + 'View');
+  if (target) target.classList.remove('hidden');
+
+  // remove ativo
+  document.querySelectorAll('.menu-btn')
+    .forEach(btn => btn.classList.remove('active'));
+
+  // adiciona ativo (SE existir)
+  if (el) {
+    el.classList.add('active');
+  }
+
+  // fallback automático (caso venha do JS)
+  else {
+    const btn = document.querySelector(`.menu-btn[onclick*="${view}"]`);
+    if (btn) btn.classList.add('active');
+  }
+
+  // renderizações
+  if (view === "dashboard") renderDashboard();
+  if (view === "lista") renderTicketList();
+  if (view === "kanban") renderKanban();
 }
