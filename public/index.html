@@ -24,54 +24,38 @@
   });
 </script>
 </head>
+
 <body>
 
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-logo">CE</div>
-        <div>
-          <h1>Chamados de Engenharia</h1>
-          <span>PWA completo • Supabase</span>
-        </div>
+<div class="app-shell">
+
+  <div class="header">
+    <h1>Chamados de Engenharia</h1>
+  </div>
+
+  <div class="menu-grid">
+    <button class="menu-btn active" onclick="switchView('dashboard', this)">Dashboard</button>
+    <button class="menu-btn" onclick="switchView('novo', this)">Novo Chamado</button>
+    <button class="menu-btn" onclick="switchView('lista', this)">Lista de Chamados</button>
+    <button class="menu-btn" onclick="switchView('kanban', this)">Quadro Operacional</button>
+  </div>
+
+  <div class="dynamic-area">
+
+    <!-- DASHBOARD -->
+    <div id="dashboardView" class="view">
+      <div class="metrics-grid">
+        <div class="metric-card">Total <div class="metric-value" id="metricTotal">0</div></div>
+        <div class="metric-card">Abertos <div class="metric-value" id="metricAbertos">0</div></div>
+        <div class="metric-card">Andamento <div class="metric-value" id="metricAndamento">0</div></div>
+        <div class="metric-card">Concluídos <div class="metric-value" id="metricConcluidos">0</div></div>
       </div>
+    </div>
 
-      <nav class="nav">
-        <button class="nav-btn active" data-view-btn="dashboard">Dashboard</button>
-        <button class="nav-btn" data-view-btn="novo">Novo Chamado</button>
-        <button class="nav-btn" data-view-btn="lista">Lista de Chamados</button>
-        <button class="nav-btn" data-view-btn="kanban">Quadro Operacional</button>
-      </nav>
-
-      <div class="sidebar-card">
-        <strong>Recursos restaurados</strong>
-        <p>Esta versão mantém o botão de instalar o app, exportação em PDF, quadro operacional e tela de detalhes.</p>
-        <span class="dot online">PWA ativo</span>
-      </div>
-    </aside>
-
-    <main class="content">
-      <header class="topbar">
-             <div class="topbar-actions">
-          <button id="installButton" class="btn btn-secondary hidden" type="button">Instalar aplicativo</button>
-          <button class="btn btn-primary" onclick="carregarDados()">Atualizar dados</button>
-        </div>
-      </header>
-
-      <section id="dashboardView" class="view">
-  
-
-        <div class="metrics-grid">
-          <article class="metric-card"><span class="metric-label">Total</span><strong class="metric-value" id="metricTotal">0</strong></article>
-          <article class="metric-card"><span class="metric-label">Abertos</span><strong class="metric-value" id="metricAbertos">0</strong></article>
-          <article class="metric-card"><span class="metric-label">Em andamento</span><strong class="metric-value" id="metricAndamento">0</strong></article>
-          <article class="metric-card"><span class="metric-label">Concluídos</span><strong class="metric-value" id="metricConcluidos">0</strong></article>
-          <article class="metric-card danger"><span class="metric-label">Críticos</span><strong class="metric-value" id="metricCriticos">0</strong></article>
-        </div>
-      </section>
-
-      <section id="novoView" class="view hidden">
-        <div class="card form-card">
+    <!-- NOVO -->
+    <div id="novoView" class="view hidden">
+   
+      <div class="card form-card">
           <div class="section-header">
             <div>
               <span class="eyebrow">Cadastro</span>
@@ -144,10 +128,13 @@
             </div>
           </form>
         </div>
-      </section>
+    </div>
 
-      <section id="listaView" class="view hidden">
-        <div class="card">
+    <!-- LISTA -->
+    <div id="listaView" class="view hidden">
+     
+      <div id="ticketList"></div>
+	      <div class="card">
           <div class="section-header">
             <div>
               <span class="eyebrow">Operação</span>
@@ -175,10 +162,11 @@
 
           <div id="ticketList" class="ticket-list"></div>
         </div>
-      </section>
+    </div>
 
-      <section id="kanbanView" class="view hidden">
-        <div class="card">
+    <!-- KANBAN -->
+    <div id="kanbanView" class="view hidden">
+     <div class="card">
           <div class="section-header">
             <div>
               <span class="eyebrow">Quadro operacional</span>
@@ -196,55 +184,54 @@
               <div class="kanban-header"><span>Em andamento</span><strong id="kanbanCountAndamento">0</strong></div>
               <div id="kanbanAndamento" class="kanban-list"></div>
             </div>
+			<div class="kanban-column">
+				<div class="kanban-header">	<span>Pausado</span><strong id="kanbanCountPausado">0</strong>
+				<div id="kanbanAndamento" class="kanban-list"></div>
+			</div>
+  <div id="kanbanPausado" class="kanban-list"></div>
+</div>
             <div class="kanban-column">
               <div class="kanban-header"><span>Concluído</span><strong id="kanbanCountConcluido">0</strong></div>
               <div id="kanbanConcluido" class="kanban-list"></div>
             </div>
           </div>
         </div>
-      </section>
-    </main>
-  </div>
-
-  <dialog id="detailModal">
-    <div class="modal-header">
-      <div>
-        <h3>Detalhes do chamado</h3>
-        <p id="modalTicketId"></p>
-      </div>
-      <button class="btn btn-secondary" onclick="fecharModal()">Fechar</button>
-	  <button class="nav-btn" data-view-btn="lixeira">Lixeira</button>
-	  <section id="lixeiraView" class="view hidden">
-  <div class="card">
-    <h3>Lixeira</h3>
-    <div id="lixeiraList"></div>
-  </div>
-</section>
     </div>
 
-    <div class="modal-body">
-      <div id="detailGrid" class="detail-grid"></div>
+  </div> <!-- FECHA dynamic-area -->
 
-  
-      <div class="field-group">
-        <label>Descrição</label>
-        <div id="modalDescricao" class="detail-box detail-description"></div>
-      </div>
+</div> <!-- FECHA app-shell -->
 
-      <img id="modalFoto" class="modal-image hidden" alt="Foto do chamado" />
+
+<!-- MODAL (fora da estrutura principal - mais organizado) -->
+<dialog id="detailModal">
+  <div class="modal-header">
+    <div>
+      <h3>Detalhes do chamado</h3>
+      <p id="modalTicketId"></p>
+    </div>
+    <button onclick="fecharModal()">Fechar</button>
+  </div>
+
+  <div class="modal-body">
+    <div id="detailGrid"></div>
+
+    <div class="field-group">
+      <label>Descrição</label>
+      <div id="modalDescricao"></div>
     </div>
 
- <div class="modal-footer" style="display:flex; gap:10px; flex-wrap:wrap;">
+    <img id="modalFoto" class="hidden" />
+  </div>
 
-  <button id="btnIniciar" class="btn btn-primary" onclick="iniciarChamado()">▶️ Iniciar</button>
+  <div class="modal-footer">
+    <button onclick="iniciarChamado()">▶️ Iniciar</button>
+    <button onclick="pausarChamado()">⏸️ Pausar</button>
+    <button onclick="retomarChamado()">▶️ Retomar</button>
+    <button onclick="finalizarChamado()">✅ Finalizar</button>
+  </div>
+</dialog>
 
-  <button id="btnPausar" class="btn btn-warning" onclick="pausarChamado()">⏸️ Pausar</button>
 
-  <button id="btnRetomar" class="btn btn-primary" onclick="retomarChamado()">▶️ Retomar</button>
-
-  <button id="btnFinalizar" class="btn btn-success" onclick="finalizarChamado()">✅ Finalizar</button>
-
-</div>
-  </dialog>
 </body>
 </html>
