@@ -542,18 +542,17 @@ input[type="file"] {
   }
 }
 
-/* MODAL */
 #detailModal {
   border: none;
   border-radius: 16px;
   padding: 0;
   width: 95%;
   max-width: 900px;
-  height: 90vh; /* 🔥 ESSENCIAL */
+  height: 90vh;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
- 
+  overflow: hidden; /* 👈 IMPORTANTE */
 }
 /* HEADER */
 .modal-header {
@@ -763,6 +762,8 @@ input[type="file"] {
   }
 
   .modal-body {
-    padding: 16px;
+      flex: 1;
+  overflow-y: auto; /* 👈 SCROLL INTERNO */
+  padding: 20px;
   }
 }
