@@ -737,7 +737,7 @@ function notificar(titulo, mensagem) {
     console.warn("Erro notificação:", e);
   }
 }
-
+let canalChamados = null;
 function escutarChamadosSeguro() {
   try {
     if (!window.supabaseClient) {
@@ -745,14 +745,15 @@ function escutarChamadosSeguro() {
       return;
     }
 
-    const channel = window.supabaseClient.channel("chamados");
-
-    if (!channel) {
-      console.warn("Channel não criado");
+    // 🔥 NÃO CRIAR MAIS DE UM
+    if (canalChamados) {
+      console.log("Realtime já ativo");
       return;
     }
 
-    channel
+    canalChamados = window.supabaseClient.channel("chamados");
+
+    canalChamados
       .on(
         "postgres_changes",
         {
@@ -760,7 +761,7 @@ function escutarChamadosSeguro() {
           schema: "public",
           table: "chamados",
         },
-        (payload) => {
+        async (payload) => {
           console.log("Realtime:", payload);
 
           const c = payload.new;
@@ -772,6 +773,9 @@ function escutarChamadosSeguro() {
           if (payload.eventType === "UPDATE") {
             notificar("🔄 Status atualizado", `${c.unidade} - ${c.status}`);
           }
+
+          // 🔥 SINCRONIZA SEM DUPLICAR
+          await carregarDados();
         }
       )
       .subscribe();
@@ -781,13 +785,6 @@ function escutarChamadosSeguro() {
   }
 }
 
-function ativarPushOneSignal() {
-  window.OneSignal = window.OneSignal || [];
-
-  OneSignal.push(function() {
-    OneSignal.showSlidedownPrompt();
-  });
-}
 
 async function enviarPushOneSignal(titulo, mensagem) {
   try {
