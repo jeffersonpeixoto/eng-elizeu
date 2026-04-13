@@ -65,9 +65,8 @@ async function salvarChamado(event){
       alert("Chamado salvo com sucesso!");
 
     resetarFormulario();
-    await carregarDados();
-    switchView("lista");
-
+   await carregarDados();
+switchView("dashboard");
   } catch (error) {
     console.error(error);
     alert("Erro ao salvar chamado.");
@@ -281,8 +280,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("ticketForm")
     .addEventListener("submit", salvarChamado);
 
-  switchView("dashboard");
-  await carregarDados();
+ await carregarDados();
+switchView("dashboard");
 
   // 🔥 ORDEM CORRETA
   setTimeout(() => {
