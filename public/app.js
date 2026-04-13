@@ -586,28 +586,47 @@ function escutarChamadosSeguro() {
 }
 
 async function enviarWhatsApp(mensagem) {
-  const instanceId = "3F18330F3791724F480CBE4FDF68D33E";
-  const token = "4937D117D0073BED2DC18525";
+  const instanceId = "3F18330F3791724F480CBE4FDF68D33E"; // 🔥 SEU ID
+  const token = "4937D117D0073BED2DC18525"; // 🔥 SEU TOKEN
 
-  const telefone = "5586998525536"; // 🔥 coloque OUTRO número real
+  const telefone = "5586998110012"; // 🔥 COLOQUE UM NÚMERO VÁLIDO (OUTRO CELULAR)
 
   try {
-    const response = await fetch(`https://api.z-api.io/instances/3F18330F3791724F480CBE4FDF68D33E/token/4937D117D0073BED2DC18525/send-text`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        phone: telefone,
-        message: "teste"
-      })
-    });
+    const response = await fetch(
+      `https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          phone: telefone,
+          message: String(mensagem) // 🔥 garante que é string
+        })
+      }
+    );
 
+    // 🔥 pega resposta bruta (mais confiável)
     const text = await response.text();
-    console.log("STATUS:", response.status);
-    console.log("RESPOSTA BRUTA:", text);
+
+    console.log("📡 STATUS HTTP:", response.status);
+    console.log("📨 RESPOSTA BRUTA:", text);
+
+    // 🔥 tenta converter pra JSON
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      console.warn("Resposta não é JSON");
+    }
+
+    if (response.status === 200) {
+      console.log("✅ WhatsApp enviado com sucesso!");
+    } else {
+      console.error("❌ Erro ao enviar:", result || text);
+    }
 
   } catch (err) {
-    console.error("Erro WhatsApp:", err);
+    console.error("❌ Erro de conexão WhatsApp:", err);
   }
 }
