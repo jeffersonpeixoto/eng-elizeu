@@ -121,7 +121,68 @@ function fecharModal(){document.getElementById("detailModal").close()}
 
 async function atualizarChamadoModal(){if(!selectedTicket)return;const novoStatus=document.getElementById("modalStatusSelect").value;const agora=new Date().toISOString();const payload={status:novoStatus};if(novoStatus==="Em andamento"){payload.data_inicio=selectedTicket.data_inicio||agora;payload.data_finalizacao=null}else if(novoStatus==="Concluído"){payload.data_inicio=selectedTicket.data_inicio||agora;payload.data_finalizacao=agora}else{payload.data_inicio=null;payload.data_finalizacao=null}const {error}=await window.supabaseClient.from("chamados").update(payload).eq("id",selectedTicket.id);if(error){alert("Erro ao atualizar chamado: "+error.message);return}fecharModal();await carregarDados();alert("Chamado atualizado com sucesso.")}
 
-async function carregarDados(){const {data,error}=await window.supabaseClient.from("chamados").select("*").order("data_criacao",{ascending:false});if(error){alert("Erro ao carregar dados: "+error.message);return}ticketsCache=Array.isArray(data)?data:[];renderDashboard();renderTicketList();renderKanban()}
+async function carregarDados() {
+  const { data, error } = await window.supabaseClient
+    .from("chamados")
+    .select("*")
+    .eq("excluido", false) // 🔥 AQUI ESTÁ A MÁGICA
+    .order("data_criacao", { ascending: false });
+
+  if (error) {
+    alert("Erro ao carregar dados: " + error.message);
+    return;
+  }
+
+  ticketsCache = Array.isArray(data) ? data : [];
+
+  renderDashboard();
+  renderTicketList();
+  renderKanban();
+}
+async function deletarPermanente(id) {
+  const confirmar = confirm("Excluir definitivamente?");
+
+  if (!confirmar) return;
+
+  await window.supabaseClient
+    .from("chamados")
+    .delete()
+    .eq("id", id);
+
+  carregarLixeira();
+}
+async function carregarLixeira() {
+  const { data } = await window.supabaseClient
+    .from("chamados")
+    .select("*")
+    .eq("excluido", true);
+
+  const container = document.getElementById("lixeiraList");
+
+  container.innerHTML = data.map(c => `
+    <div class="ticket-card">
+      <strong>${c.unidade} - ${c.setor}</strong>
+      <p>${c.descricao || ""}</p>
+
+      <button class="btn btn-primary" onclick="restaurarChamado('${c.id}')">
+        ♻️ Restaurar
+      </button>
+
+      <button class="btn btn-danger" onclick="deletarPermanente('${c.id}')">
+        ❌ Excluir definitivo
+      </button>
+    </div>
+  `).join("");
+}
+async function restaurarChamado(id) {
+  await window.supabaseClient
+    .from("chamados")
+    .update({ excluido: false })
+    .eq("id", id);
+
+  carregarLixeira();
+  carregarDados();
+}
 
 function exportarListaPDF(){const tickets=getFilteredTickets();if(!tickets.length){alert("Não há chamados para exportar.");return}const rows=tickets.map(ticket=>`<tr><td>${escapeHtml(ticket.id)}</td><td>${escapeHtml(ticket.nome||"")}</td><td>${escapeHtml(ticket.unidade||"")}</td><td>${escapeHtml(ticket.setor||"")}</td><td>${escapeHtml(ticket.setor_problema||"")}</td><td>${escapeHtml(ticket.tipo_manutencao||"")}</td><td>${escapeHtml(ticket.gravidade||"")}</td><td>${escapeHtml(ticket.status||"")}</td><td>${escapeHtml(formatDateTime(ticket.data_criacao))}</td><td>${escapeHtml(formatDateTime(ticket.data_inicio))}</td><td>${escapeHtml(formatDateTime(ticket.data_finalizacao))}</td></tr>`).join("");const popup=window.open("","_blank");if(!popup){alert("Libere pop-ups para exportar o PDF.");return}popup.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Lista de Chamados</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#0f172a}h1{margin:0 0 8px}p{color:#475569;margin:0 0 16px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #cbd5e1;padding:8px;text-align:left;vertical-align:top}th{background:#e2e8f0}@page{size:A4 landscape;margin:12mm}</style></head><body><h1>Lista de Chamados de Engenharia</h1><p>Exportado em ${new Date().toLocaleString("pt-BR")}</p><table><thead><tr><th>ID</th><th>Solicitante</th><th>Unidade</th><th>Setor</th><th>Problema</th><th>Manutenção</th><th>Prioridade</th><th>Status</th><th>Criação</th><th>Início</th><th>Finalização</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>window.print();</script></body></html>`);popup.document.close()}
 
