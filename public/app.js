@@ -300,7 +300,7 @@ async function exportarRelatorioMensal() {
         formatDateTime(c.data_criacao),
         formatDateTime(c.data_inicio),
         formatDateTime(c.data_finalizacao),
-        duracao ? duracao.toFixed(2) : "",
+        duracao ? formatarHoras(duracao) : "",
         "Equipe",
         `R$ ${CUSTO_HORA}`,
         custo ? `R$ ${custo.toFixed(2)}` : "",
@@ -738,4 +738,12 @@ async function excluirChamado(id) {
     console.error(err);
     alert("Erro inesperado.");
   }
+}
+function formatarHoras(horasDecimal) {
+  if (!horasDecimal) return "—";
+
+  const horas = Math.floor(horasDecimal);
+  const minutos = Math.round((horasDecimal - horas) * 60);
+
+  return `${horas}h ${minutos}min`;
 }
