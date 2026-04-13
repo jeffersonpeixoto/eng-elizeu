@@ -154,7 +154,3 @@ async function carregarDados(){
   }
 }
 
-/* ================= INIT ================= */
-document.addEventListener("DOMContentLoaded", async ()=>{
-  await carregarDados();
-});
