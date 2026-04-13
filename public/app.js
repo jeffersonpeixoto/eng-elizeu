@@ -18,9 +18,17 @@ function formatDateTime(v){
 
 /* ================= VIEW ================= */
 function switchView(view, el = null){
-  document.querySelectorAll(".view").forEach(v=>v.classList.add("hidden"));
+  document.querySelectorAll(".view")
+    .forEach(v=>v.classList.add("hidden"));
 
-  document.getElementById(view+"View")?.classList.remove("hidden");
+  const target = document.getElementById(view+"View");
+
+  if (!target) {
+    console.warn("View não encontrada:", view);
+    return;
+  }
+
+  target.classList.remove("hidden");
 
   document.querySelectorAll(".menu-btn")
     .forEach(btn=>btn.classList.remove("active"));
@@ -52,13 +60,18 @@ function renderTicketList(){
       <strong>${escapeHtml(t.unidade)} - ${escapeHtml(t.setor)}</strong>
       <p>${escapeHtml(t.descricao || "")}</p>
 
-      <button class="btn" onclick="abrirDetalhes('${t.id}')">
+     <button class="btn" data-id="${t.id}">
         Detalhes
       </button>
     </div>
   `).join("");
 }
-
+document.addEventListener("click", function(e){
+  if(e.target.matches(".btn[data-id]")){
+    const id = e.target.getAttribute("data-id");
+    abrirDetalhes(id);
+  }
+});
 /* ================= MODAL ================= */
 function abrirDetalhes(id){
   const ticket = ticketsCache.find(t=>t.id===id);
@@ -113,15 +126,32 @@ function atualizarBotoesStatus() {
 
 /* ================= DADOS ================= */
 async function carregarDados(){
-  const { data } = await window.supabaseClient
-    .from("chamados")
-    .select("*")
-    .order("data_criacao",{ascending:false});
+  try {
+    if (!window.supabaseClient) {
+      console.error("Supabase não carregado");
+      return;
+    }
 
-  ticketsCache = data || [];
+    const { data, error } = await window.supabaseClient
+      .from("chamados")
+      .select("*")
+      .order("data_criacao",{ascending:false});
 
-  renderDashboard();
-  renderTicketList();
+    if (error) {
+      console.error(error);
+      alert("Erro ao carregar dados");
+      return;
+    }
+
+    ticketsCache = data || [];
+
+    renderDashboard();
+    renderTicketList();
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro inesperado");
+  }
 }
 
 /* ================= INIT ================= */
