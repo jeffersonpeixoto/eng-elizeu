@@ -9,7 +9,21 @@ function bindViewButtons(){document.querySelectorAll("[data-view-btn]").forEach(
 function resetarFormulario(){document.getElementById("ticketForm").reset()}
 
 async function uploadFoto(file){if(!file)return null;const ext=(file.name.split(".").pop()||"jpg").toLowerCase();const fileName="foto_"+Date.now()+"."+ext;const {error}=await window.supabaseClient.storage.from("chamados-fotos").upload(fileName,file,{cacheControl:"3600",upsert:false,contentType:file.type||"image/jpeg"});if(error)throw error;const {data}=window.supabaseClient.storage.from("chamados-fotos").getPublicUrl(fileName);return data.publicUrl}
+function renderDashboard(){
+  document.getElementById("metricTotal").textContent = ticketsCache.length;
 
+  document.getElementById("metricAbertos").textContent =
+    ticketsCache.filter(t => t.status === "Aberto").length;
+
+  document.getElementById("metricAndamento").textContent =
+    ticketsCache.filter(t => t.status === "Em andamento").length;
+
+  document.getElementById("metricConcluidos").textContent =
+    ticketsCache.filter(t => t.status === "Concluído").length;
+
+  document.getElementById("metricCriticos").textContent =
+    ticketsCache.filter(t => t.gravidade === "Crítica").length;
+}
 async function salvarChamado(event){
   event.preventDefault();
 
@@ -130,22 +144,31 @@ function fecharModal(){document.getElementById("detailModal").close()}
 async function atualizarChamadoModal(){if(!selectedTicket)return;const novoStatus=document.getElementById("modalStatusSelect").value;const agora=new Date().toISOString();const payload={status:novoStatus};if(novoStatus==="Em andamento"){payload.data_inicio=selectedTicket.data_inicio||agora;payload.data_finalizacao=null}else if(novoStatus==="Concluído"){payload.data_inicio=selectedTicket.data_inicio||agora;payload.data_finalizacao=agora}else{payload.data_inicio=null;payload.data_finalizacao=null}const {error}=await window.supabaseClient.from("chamados").update(payload).eq("id",selectedTicket.id);if(error){alert("Erro ao atualizar chamado: "+error.message);return}fecharModal();await carregarDados();alert("Chamado atualizado com sucesso.")}
 
 async function carregarDados() {
-  const { data, error } = await window.supabaseClient
-    .from("chamados")
-    .select("*")
-    .eq("excluido", false) // 🔥 AQUI ESTÁ A MÁGICA
-    .order("data_criacao", { ascending: false });
+  try {
+    const { data, error } = await window.supabaseClient
+      .from("chamados")
+      .select("*")
+      .or("excluido.is.null,excluido.eq.false") // 🔥 CORREÇÃO AQUI
+      .order("data_criacao", { ascending: false });
 
-  if (error) {
-    alert("Erro ao carregar dados: " + error.message);
-    return;
+    if (error) {
+      console.error("Erro Supabase:", error);
+      alert("Erro ao carregar dados: " + error.message);
+      return;
+    }
+
+    console.log("📦 Dados carregados:", data);
+
+    ticketsCache = Array.isArray(data) ? data : [];
+
+    renderDashboard();
+    renderTicketList();
+    renderKanban();
+
+  } catch (err) {
+    console.error("Erro geral:", err);
+    alert("Erro inesperado ao carregar dados.");
   }
-
-  ticketsCache = Array.isArray(data) ? data : [];
-
-  renderDashboard();
-  renderTicketList();
-  renderKanban();
 }
 async function deletarPermanente(id) {
   const confirmar = confirm("Excluir definitivamente?");
