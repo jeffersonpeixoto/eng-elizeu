@@ -587,9 +587,9 @@ function escutarChamadosSeguro() {
 
 async function enviarWhatsApp(mensagem) {
   const instanceId = "3F18330F3791724F480CBE4FDF68D33E";
-  const token = "589BC2DFE42C57968A672E6D";
+  const token = "308D7A30CAC0A476D8E0C5E0";
 
-  const telefone = "5586994802219"; // 🔥 coloque OUTRO número real
+  const telefone = "5586998525536"; // 🔥 coloque OUTRO número real
 
   try {
     const response = await fetch(`https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`, {
