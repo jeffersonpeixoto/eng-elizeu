@@ -241,22 +241,56 @@ async function exportarRelatorioMensal() {
     const ano = hoje.getFullYear();
 
     // ✅ FILTRO: mês atual + apenas CONCLUÍDOS
-    const chamadosMes = data.filter(c => {
-      if (!c.data_criacao) return false;
-      const d = new Date(c.data_criacao);
+ const chamadosMes = data.filter(c => {
+  if (!c.data_criacao) return false;
 
-      return (
-        d.getMonth() === mes &&
-        d.getFullYear() === ano &&
-        c.status === "Concluído"
-      );
-    });
+  const d = new Date(c.data_criacao);
 
+  return (
+    d.getMonth() === mes &&
+    d.getFullYear() === ano &&
+    c.status === "Concluído" &&
+    c.excluido !== true // 🔥 AQUI RESOLVE
+  );
+});
+const chamadosPorSetor = {};
+const custoPorSetor = {};
+
+chamadosMes.forEach(c => {
+  if (!chamadosPorSetor[c.setor]) {
+    chamadosPorSetor[c.setor] = 0;
+    custoPorSetor[c.setor] = 0;
+  }
+
+  chamadosPorSetor[c.setor]++;
+
+  if (c.data_inicio && c.data_finalizacao) {
+    const duracao = (new Date(c.data_finalizacao) - new Date(c.data_inicio)) / (1000 * 60 * 60);
+    const custo = duracao * 81;
+
+    custoPorSetor[c.setor] += custo;
+  }
+  
+});
     if (!chamadosMes.length) {
       alert("Nenhum chamado concluído neste mês.");
       return;
     }
+doc.addPage();
 
+doc.text("Resumo por Setor", 14, 20);
+
+const resumoSetor = Object.keys(chamadosPorSetor).map(setor => [
+  setor,
+  chamadosPorSetor[setor],
+  `R$ ${custoPorSetor[setor].toFixed(2)}`
+]);
+
+doc.autoTable({
+  startY: 25,
+  head: [["Setor", "Qtd Chamados", "Custo Total"]],
+  body: resumoSetor
+});
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("landscape");
 
