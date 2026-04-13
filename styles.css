@@ -547,33 +547,63 @@ input[type="file"] {
   align-items: center;
   justify-content: center;
 
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
 }
 
-.hidden {
-  display: none !important;
+/* caixa do modal */
+.modal-box {
+  width: 95%;
+  max-width: 900px;
+  max-height: 90vh;
+
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
 }
-/* HEADER */
+
+/* header */
 .modal-header {
-  background: linear-gradient(90deg, #e30613, #c40010);
+  background: #e30613;
   color: #fff;
-  padding: 16px 20px;
+  padding: 16px;
 
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+/* corpo */
+.modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
 }
 
-#modalTicketId {
-  font-size: 12px;
-  opacity: 0.85;
+/* footer */
+.modal-footer {
+  display: flex;
+  width: 100%;
 }
+
+/* botões */
+.modal-footer button {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* cores */
+.iniciar { background: #007bff; }
+.pausar { background: #ffc107; color: #000; }
+.retomar { background: #17a2b8; }
+.finalizar { background: #28a745; }
 
 /* BODY */
 .modal-body {
