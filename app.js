@@ -512,10 +512,7 @@ async function iniciarChamado() {
   try {
     if (!selectedTicket) return;
 
-    const idChamado = selectedTicket.id; // 🔥 salva antes
-    const unidade = selectedTicket.unidade;
-    const setor = selectedTicket.setor;
-
+    const idChamado = selectedTicket.id;
     const agora = new Date().toISOString();
 
     const { error } = await window.supabaseClient
@@ -540,7 +537,12 @@ async function iniciarChamado() {
       })
       .eq("id", idChamado);
 
-    
+    // ✅ AGORA ESTÁ CERTO
+    enviarPushOneSignal(
+      "▶️ Chamado iniciado",
+      `ID: ${idChamado}`
+    );
+
     fecharModal();
     await carregarDados();
 
@@ -550,10 +552,6 @@ async function iniciarChamado() {
     console.error(err);
     alert("Erro inesperado.");
   }
-  enviarPushOneSignal(
-  "▶️ Chamado iniciado",
-  `ID: ${idChamado}`
-);
 }
 
  // ✅ PAUSAR
