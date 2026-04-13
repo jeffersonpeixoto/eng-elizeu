@@ -214,7 +214,52 @@ async function restaurarChamado(id) {
   carregarLixeira();
   carregarDados();
 }
+function registerPWA() {
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", async () => {
+      try {
+        await navigator.serviceWorker.register("./service-worker.js");
+        console.log("Service Worker registrado");
+      } catch (error) {
+        console.error("Erro ao registrar Service Worker:", error);
+      }
+    });
+  }
 
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+
+    const installButton = document.getElementById("installButton");
+    if (installButton) {
+      installButton.classList.remove("hidden");
+    }
+  });
+
+  const installButton = document.getElementById("installButton");
+
+  // 🔥 PROTEÇÃO CONTRA NULL
+  if (installButton) {
+    installButton.addEventListener("click", async () => {
+      if (!deferredPrompt) {
+        alert("O navegador ainda não liberou a instalação.");
+        return;
+      }
+
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+
+      installButton.classList.add("hidden");
+    });
+  }
+
+  window.addEventListener("appinstalled", () => {
+    if (installButton) {
+      installButton.classList.add("hidden");
+    }
+  });
+}
 function exportarListaPDF(){const tickets=getFilteredTickets();if(!tickets.length){alert("Não há chamados para exportar.");return}const rows=tickets.map(ticket=>`<tr><td>${escapeHtml(ticket.id)}</td><td>${escapeHtml(ticket.nome||"")}</td><td>${escapeHtml(ticket.unidade||"")}</td><td>${escapeHtml(ticket.setor||"")}</td><td>${escapeHtml(ticket.setor_problema||"")}</td><td>${escapeHtml(ticket.tipo_manutencao||"")}</td><td>${escapeHtml(ticket.gravidade||"")}</td><td>${escapeHtml(ticket.status||"")}</td><td>${escapeHtml(formatDateTime(ticket.data_criacao))}</td><td>${escapeHtml(formatDateTime(ticket.data_inicio))}</td><td>${escapeHtml(formatDateTime(ticket.data_finalizacao))}</td></tr>`).join("");const popup=window.open("","_blank");if(!popup){alert("Libere pop-ups para exportar o PDF.");return}popup.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Lista de Chamados</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#0f172a}h1{margin:0 0 8px}p{color:#475569;margin:0 0 16px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #cbd5e1;padding:8px;text-align:left;vertical-align:top}th{background:#e2e8f0}@page{size:A4 landscape;margin:12mm}</style></head><body><h1>Lista de Chamados de Engenharia</h1><p>Exportado em ${new Date().toLocaleString("pt-BR")}</p><table><thead><tr><th>ID</th><th>Solicitante</th><th>Unidade</th><th>Setor</th><th>Problema</th><th>Manutenção</th><th>Prioridade</th><th>Status</th><th>Criação</th><th>Início</th><th>Finalização</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>window.print();</script></body></html>`);popup.document.close()}
 
 function bindFilters(){["busca","filtroStatus","filtroGravidade","filtroSetor"].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.addEventListener("input",()=>{renderTicketList();renderKanban()});el.addEventListener("change",()=>{renderTicketList();renderKanban()})})}
