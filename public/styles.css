@@ -1,18 +1,15 @@
 :root{
   --bg:#f5f5f7;
+  --glass:rgba(255,255,255,0.7);
   --surface:#ffffff;
-  --surface-soft:#f2f2f2;
 
   --text:#1d1d1f;
   --muted:#6e6e73;
 
   --primary:#0071e3;
-  --secondary:#f5f5f7;
 
-  --shadow:0 6px 20px rgba(0,0,0,.06);
-  --shadow-strong:0 10px 30px rgba(0,0,0,.08);
-
-  --radius:20px;
+  --shadow:0 8px 30px rgba(0,0,0,.08);
+  --radius:22px;
 }
 
 /* RESET */
@@ -35,25 +32,12 @@ html,body{
   min-height:100vh;
 }
 
-/* SIDEBAR */
+/* SIDEBAR (GLASS) */
 .sidebar{
-  background:#ffffff;
+  background:var(--glass);
+  backdrop-filter:blur(20px);
+  border-right:1px solid rgba(255,255,255,.4);
   padding:24px;
-  border-right:1px solid #e5e5e5;
-}
-
-.brand{
-  margin-bottom:30px;
-}
-
-.brand h1{
-  font-size:18px;
-  font-weight:600;
-}
-
-.brand span{
-  font-size:12px;
-  color:var(--muted);
 }
 
 /* NAV */
@@ -67,14 +51,14 @@ html,body{
   border:none;
   background:transparent;
   padding:12px;
-  border-radius:12px;
-  text-align:left;
-  font-weight:500;
+  border-radius:14px;
   cursor:pointer;
+  font-weight:500;
+  transition:.2s;
 }
 
 .nav-btn:hover{
-  background:#f2f2f2;
+  background:rgba(0,0,0,.05);
 }
 
 .nav-btn.active{
@@ -84,22 +68,25 @@ html,body{
 
 /* CONTENT */
 .content{
-  padding:24px;
+  padding:28px;
 }
 
 /* TOPBAR */
 .topbar{
-  display:flex;
-  justify-content:flex-end;
+  position:sticky;
+  top:0;
+  backdrop-filter:blur(12px);
+  background:rgba(255,255,255,.6);
+  padding:10px;
+  border-radius:14px;
   margin-bottom:20px;
 }
 
 /* BOTÕES */
 .btn{
   border:none;
-  border-radius:12px;
+  border-radius:14px;
   padding:10px 16px;
-  font-weight:500;
   cursor:pointer;
   transition:.2s;
 }
@@ -109,12 +96,8 @@ html,body{
   color:#fff;
 }
 
-.btn-primary:hover{
-  opacity:.9;
-}
-
 .btn-secondary{
-  background:#f2f2f2;
+  background:#e5e5ea;
 }
 
 .btn-danger{
@@ -122,9 +105,10 @@ html,body{
   color:#fff;
 }
 
-/* CARDS */
+/* CARDS (FLOATING APP STYLE) */
 .card{
-  background:var(--surface);
+  background:var(--glass);
+  backdrop-filter:blur(20px);
   border-radius:var(--radius);
   padding:18px;
   box-shadow:var(--shadow);
@@ -134,19 +118,14 @@ html,body{
 .metrics-grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:14px;
+  gap:16px;
 }
 
 .metric-card{
-  background:#fff;
-  padding:16px;
+  background:var(--glass);
+  backdrop-filter:blur(20px);
   border-radius:18px;
-  box-shadow:var(--shadow);
-}
-
-.metric-label{
-  font-size:13px;
-  color:var(--muted);
+  padding:16px;
 }
 
 .metric-value{
@@ -154,53 +133,31 @@ html,body{
   font-weight:600;
 }
 
-/* FORM */
-.form-grid{
+/* LISTA */
+.ticket-list{
   display:flex;
   flex-direction:column;
   gap:14px;
 }
 
-.field-group label{
-  font-size:13px;
-  color:var(--muted);
-}
-
-input,select,textarea{
-  border:1px solid #e5e5e5;
-  border-radius:14px;
-  padding:12px;
-  background:#fff;
-}
-
-input:focus,select:focus,textarea:focus{
-  border-color:var(--primary);
-  outline:none;
-}
-
-/* LISTA */
-.ticket-list{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
+/* CARD CHAMADO */
 .ticket-card{
-  background:#fff;
-  border-radius:18px;
+  background:var(--surface);
+  border-radius:20px;
   padding:16px;
   box-shadow:var(--shadow);
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+  transition:.25s;
 }
 
 .ticket-card:hover{
-  transform:translateY(-2px);
+  transform:translateY(-3px);
+}
+
+.ticket-card:active{
+  transform:scale(.97);
 }
 
 .ticket-card h4{
-  font-size:15px;
   font-weight:600;
 }
 
@@ -211,7 +168,7 @@ input:focus,select:focus,textarea:focus{
 
 /* BADGES */
 .badge{
-  padding:4px 8px;
+  padding:5px 10px;
   border-radius:999px;
   font-size:12px;
 }
@@ -228,47 +185,49 @@ input:focus,select:focus,textarea:focus{
   background:#d1fae5;
 }
 
-/* TOOLBAR */
-.toolbar{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:12px;
+/* FORM */
+input,select,textarea{
+  border-radius:14px;
+  border:1px solid #e5e5e5;
+  padding:12px;
+  background:#fff;
 }
 
-/* MODAL */
-dialog{
-  border:none;
-  border-radius:20px;
-  padding:20px;
-  background:#fff;
-  box-shadow:var(--shadow-strong);
+input:focus{
+  border-color:var(--primary);
 }
 
 /* FAB */
 .fab{
   position:fixed;
-  bottom:20px;
-  right:20px;
-  width:56px;
-  height:56px;
+  bottom:25px;
+  right:25px;
+  width:60px;
+  height:60px;
   border-radius:50%;
   background:var(--primary);
   color:#fff;
-  font-size:24px;
+  font-size:28px;
   border:none;
-  box-shadow:var(--shadow-strong);
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
 }
 
-/* ANIMAÇÃO */
-.ticket-card,
-.btn{
-  transition:all .2s ease;
+/* MODAL */
+dialog{
+  border:none;
+  border-radius:24px;
+  padding:20px;
+  box-shadow:0 20px 50px rgba(0,0,0,.2);
 }
 
-.ticket-card:active,
-.btn:active{
-  transform:scale(.97);
+/* ANIMAÇÃO SUAVE */
+.fade-in{
+  animation:fade .3s ease;
+}
+
+@keyframes fade{
+  from{opacity:0; transform:translateY(10px)}
+  to{opacity:1; transform:translateY(0)}
 }
 
 /* MOBILE */
@@ -284,8 +243,8 @@ dialog{
     width:100%;
     height:70px;
     display:flex;
-    align-items:center;
     justify-content:space-around;
+    align-items:center;
     z-index:1000;
   }
 
