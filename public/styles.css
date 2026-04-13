@@ -1,7 +1,84 @@
-.mobile-app{
-  width:320px;
-  height:640px;
-  margin:40px auto;
+.actions{
+  justify-content:space-around;
+  border-top:1px solid #e2e8f0;
+  padding-top:10px;
+}
+.card{
+  text-align:center;
+  padding:22px;
+  border-radius:20px;
+  color:#fff;
+  background:linear-gradient(180deg,#38bdf8,#2563eb);
+}
+
+.metric-card::after{
+  content:"";
+  display:block;
+  width:100%;
+  height:6px;
+  background:#e2e8f0;
+  border-radius:10px;
+  margin-top:8px;
+  position:relative;
+}
+
+.metric-card::before{
+  content:"";
+  position:absolute;
+  height:6px;
+  width:60%;
+  background:#22c55e;
+  border-radius:10px;
+  margin-top:52px;
+}
+.metric-label{
+  margin:0;
+}
+.metric-value{
+  font-size:18px;
+  width:45px;
+  height:45px;
+  background:#22c55e;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px;
+}
+.metric-card{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  padding:14px;
+  border-radius:16px;
+}
+.hero-actions{
+  display:none;
+}
+.hero{
+  display:block;
+  text-align:left;
+  padding:22px;
+  border-radius:20px;
+  color:#fff;
+  background:linear-gradient(180deg,#4ade80,#22c55e);
+}
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.topbar h2{
+  font-size:22px;
+}
+
+.topbar p{
+  font-size:14px;
+}
+.content{
+  width:340px;
+  height:680px;
   background:#fff;
   border-radius:30px;
   padding:20px;
@@ -10,96 +87,12 @@
   flex-direction:column;
   justify-content:space-between;
 }
-
-/* HEADER */
-.header{
+.sidebar{
+  display:none;
+}
+.app-shell{
+  min-height:100vh;
   display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.avatar{
-  width:40px;
-  height:40px;
-  background:#cbd5e1;
-  border-radius:50%;
-}
-
-/* TEXTOS */
-.title h2{
-  margin:20px 0 5px;
-}
-
-.title p{
-  color:#64748b;
-}
-
-/* BOTÕES GRANDES */
-.main-btn{
-  border-radius:20px;
-  padding:22px;
-  text-align:center;
-  font-weight:800;
-  color:#fff;
-  margin:20px 0;
-}
-
-.main-btn.green{
-  background:linear-gradient(180deg,#4ade80,#22c55e);
-}
-
-.main-btn.blue{
-  background:linear-gradient(180deg,#38bdf8,#2563eb);
-}
-
-/* LESSONS */
-.lessons{
-  display:flex;
-  flex-direction:column;
-  gap:15px;
-}
-
-.lesson{
-  display:flex;
-  gap:15px;
-  align-items:center;
-}
-
-.lesson-number{
-  width:50px;
-  height:50px;
-  background:#22c55e;
-  color:#fff;
-  display:flex;
-  align-items:center;
   justify-content:center;
-  border-radius:12px;
-  font-weight:bold;
-}
-
-.lesson-info span{
-  display:block;
-  width:120px;
-  height:6px;
-  background:#e2e8f0;
-  margin-top:5px;
-  border-radius:10px;
-  position:relative;
-}
-
-.lesson-info span::after{
-  content:"";
-  position:absolute;
-  width:60%;
-  height:100%;
-  background:#22c55e;
-  border-radius:10px;
-}
-
-/* FOOTER */
-.footer{
-  display:flex;
-  justify-content:space-around;
-  padding-top:15px;
-  border-top:1px solid #e2e8f0;
+  align-items:center;
 }
