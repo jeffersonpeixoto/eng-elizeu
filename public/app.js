@@ -510,7 +510,7 @@ function atualizarBotoes(status) {
     // nenhum botão aparece
   }
 }
-
+}
  
  // ✅ INICIAR
 async function iniciarChamado() {
