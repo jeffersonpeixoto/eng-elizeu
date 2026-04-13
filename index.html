@@ -203,17 +203,16 @@
 
 
 <!-- MODAL (fora da estrutura principal - mais organizado) -->
-<dialog id="detailModal" >
-  <div class="modal-header">
-    <div>
-      <h3>Detalhes do chamado</h3>
-      <p id="modalTicketId"></p>
-    </div>
-   <button class="btn-close" onclick="fecharModal()">×</button>
-  </div>
+<div id="detailModal">
+  <div class="modal-box">
 
-  <div class="modal-body">
-    <div id="detailGrid"></div>
+    <div class="modal-header">
+      <h3>Detalhes</h3>
+      <button onclick="fecharModal()">X</button>
+    </div>
+
+    <div class="modal-body">
+      <div id="detailGrid"></div>
 
     <div class="field-group">
       <label>Descrição</label>
@@ -221,20 +220,18 @@
     </div>
 
     <img id="modalFoto" class="hidden" />
+    </div>
+
+    <div class="modal-footer">
+      <button id="btnIniciar" class="iniciar">Iniciar</button>
+      <button id="btnPausar" class="pausar">Pausar</button>
+      <button id="btnRetomar" class="retomar">Retomar</button>
+      <button id="btnFinalizar" class="finalizar">Finalizar</button>
+    </div>
+
   </div>
-	<div class="modal-footer">
-  <button class="btn iniciar">Iniciar</button>
-  <button class="btn pausar">Pausar</button>
-  <button class="btn retomar">Retomar</button>
-  <button class="btn finalizar">Finalizar</button>
 </div>
-  <div class="modal-footer">
-    <button class="btn iniciar" onclick="iniciarChamado()">▶️ Iniciar</button>
-    <button class="btn pausar" onclick="pausarChamado()">⏸️ Pausar</button>
-    <button class="btn retomar" onclick="retomarChamado()">▶️ Retomar</button>
-    <button class="btn finalizar" onclick="finalizarChamado()">✅ Finalizar</button>
-  </div>
-</dialog>
+
 
 
 </body>
