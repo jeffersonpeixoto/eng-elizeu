@@ -134,7 +134,7 @@ function abrirDetalhes(id){
     modalFoto.classList.add("hidden");
   }
 
-  document.getElementById("detailModal").style.display = "flex";
+  document.getElementById("detailModal").style.display = "";
 
   // 🔥 IMPORTANTE (botões)
   atualizarBotoesStatus();
