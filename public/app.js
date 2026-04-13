@@ -80,8 +80,8 @@ function fecharModal(){
 }
 
 /* ================= BOTÕES ================= */
-function atualizarBotoesStatus(){
-  if(!selectedTicket) return;
+function atualizarBotoesStatus() {
+  if (!selectedTicket) return;
 
   const status = selectedTicket.status;
 
@@ -90,20 +90,22 @@ function atualizarBotoesStatus(){
   const btnRetomar = document.getElementById("btnRetomar");
   const btnFinalizar = document.getElementById("btnFinalizar");
 
-  [btnIniciar, btnPausar, btnRetomar, btnFinalizar].forEach(btn=>{
-    if(btn) btn.classList.add("hidden");
+  const botoes = [btnIniciar, btnPausar, btnRetomar, btnFinalizar];
+
+  botoes.forEach(btn => {
+    if (btn) btn.classList.add("hidden");
   });
 
-  if(status==="Aberto"){
+  if (status === "Aberto") {
     btnIniciar?.classList.remove("hidden");
   }
 
-  if(status==="Em andamento"){
+  if (status === "Em andamento") {
     btnPausar?.classList.remove("hidden");
     btnFinalizar?.classList.remove("hidden");
   }
 
-  if(status==="Pausado"){
+  if (status === "Pausado") {
     btnRetomar?.classList.remove("hidden");
     btnFinalizar?.classList.remove("hidden");
   }
