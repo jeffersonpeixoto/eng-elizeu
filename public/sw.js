@@ -1,20 +1,19 @@
 self.addEventListener("push", function (event) {
+  if (!event.data) return;
+
   const data = event.data.json();
 
-  self.registration.showNotification(data.title, {
-    body: data.message,
+  self.registration.showNotification(data.title || "Notificação", {
+    body: data.message || "Você tem uma nova mensagem",
     icon: "/logo.png",
     badge: "/logo.png"
   });
 });
 
-async function ativarPush() {
-  const permission = await Notification.requestPermission();
+self.addEventListener("notificationclick", function (event) {
+  event.notification.close();
 
-  if (permission !== "granted") {
-    alert("Permita notificações!");
-    return;
-  }
-
-  console.log("🔔 Push ativado");
-}
+  event.waitUntil(
+    clients.openWindow("/")
+  );
+});

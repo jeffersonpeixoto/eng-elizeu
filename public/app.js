@@ -48,12 +48,7 @@ async function salvarChamado(event){
       return;
     }
 
-    // 🔥 ENVIA WHATSAPP
-    enviarWhatsApp(
-      `🚨 NOVO CHAMADO\n\n📍 Loja: ${chamado.unidade}\n🏢 Setor: ${chamado.setor}\n⚠️ Problema: ${chamado.setor_problema}`
-    );
-
-    alert("Chamado salvo com sucesso!");
+      alert("Chamado salvo com sucesso!");
 
     resetarFormulario();
     await carregarDados();
@@ -136,7 +131,7 @@ function registerPWA(){if("serviceWorker"in navigator){window.addEventListener("
 
 document.addEventListener("DOMContentLoaded",()=>{if(!window.supabaseClient){alert("Supabase não foi inicializado. Verifique o arquivo supabase.js.");return}bindViewButtons();bindFilters();registerPWA();document.getElementById("ticketForm").addEventListener("submit",salvarChamado);switchView("dashboard");carregarDados(); setTimeout(() => {
   ativarNotificacoesSeguro();
-  escutarChamadosSeguro();
+  setTimeout(() => {  escutarChamadosSeguro();}, 2000);
   setTimeout(ativarPushOneSignal, 3000);
 }, 1500); } )
 // 🔥 EXPORTAR RELATÓRIO MENSAL (CORRIGIDO)
@@ -355,11 +350,7 @@ async function iniciarChamado() {
       })
       .eq("id", idChamado);
 
-    // 🔥 ENVIA WHATSAPP NO MOMENTO CERTO
-    enviarWhatsApp(
-      `▶️ CHAMADO INICIADO\n\n📄 ID: ${idChamado}\n📍 Loja: ${unidade}\n🏢 Setor: ${setor}`
-    );
-
+    
     fecharModal();
     await carregarDados();
 
@@ -422,10 +413,7 @@ async function pausarChamado() {
       .update({ status: "Pausado" })
       .eq("id", idChamado);
 
-    // 🔥 ENVIA WHATSAPP NO MOMENTO CERTO
-    enviarWhatsApp(
-      `⏸️ CHAMADO PAUSADO\n\n📄 ID: ${idChamado}\n📍 Loja: ${unidade}\n🏢 Setor: ${setor}`
-    );
+
 
     fecharModal();
     await carregarDados();
@@ -461,10 +449,6 @@ async function retomarChamado() {
     .update({ status: "Em andamento" })
     .eq("id", idChamado);
 
-  // 🔥 envia antes de limpar a tela
-  enviarWhatsApp(
-    `▶️ CHAMADO RETOMADO\n\n📄 ID: ${idChamado}\n📍 Loja: ${unidade}\n🏢 Setor: ${setor}`
-  );
 
   fecharModal();
   await carregarDados();
@@ -505,11 +489,6 @@ async function finalizarChamado() {
       data_finalizacao: new Date().toISOString()
     })
     .eq("id", idChamado);
-
-  // 🔥 ENVIA WHATSAPP ANTES DE LIMPAR TELA
-  enviarWhatsApp(
-    `✅ CHAMADO FINALIZADO\n\n📄 ID: ${idChamado}\n📍 Loja: ${unidade}\n🏢 Setor: ${setor}`
-  );
 
   fecharModal();
   await carregarDados();
@@ -571,10 +550,19 @@ function notificar(titulo, mensagem) {
 
 function escutarChamadosSeguro() {
   try {
-    if (!window.supabaseClient) return;
+    if (!window.supabaseClient) {
+      console.warn("Supabase ainda não carregou");
+      return;
+    }
 
-    window.supabaseClient
-      .channel("chamados")
+    const channel = window.supabaseClient.channel("chamados");
+
+    if (!channel) {
+      console.warn("Channel não criado");
+      return;
+    }
+
+    channel
       .on(
         "postgres_changes",
         {
@@ -597,8 +585,9 @@ function escutarChamadosSeguro() {
         }
       )
       .subscribe();
+
   } catch (e) {
-    console.warn("Realtime desativado:", e);
+    console.warn("Erro realtime:", e);
   }
 }
 
