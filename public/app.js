@@ -137,7 +137,7 @@ function registerPWA(){if("serviceWorker"in navigator){window.addEventListener("
 document.addEventListener("DOMContentLoaded",()=>{if(!window.supabaseClient){alert("Supabase não foi inicializado. Verifique o arquivo supabase.js.");return}bindViewButtons();bindFilters();registerPWA();document.getElementById("ticketForm").addEventListener("submit",salvarChamado);switchView("dashboard");carregarDados(); setTimeout(() => {
   ativarNotificacoesSeguro();
   escutarChamadosSeguro();
-}, 1500);} )
+}, 1500); setTimeout(ativarPushOneSignal, 3000);} )
 // 🔥 EXPORTAR RELATÓRIO MENSAL (CORRIGIDO)
 async function exportarRelatorioMensal() {
   try {
@@ -368,6 +368,10 @@ async function iniciarChamado() {
     console.error(err);
     alert("Erro inesperado.");
   }
+  enviarPushOneSignal(
+  "▶️ Chamado iniciado",
+  `ID: ${idChamado}`
+);
 }
 
  // ✅ PAUSAR
@@ -431,6 +435,10 @@ async function pausarChamado() {
     console.error("Erro real:", err);
     alert("Erro inesperado ao pausar.");
   }
+  enviarPushOneSignal(
+  "⏸️ Chamado pausado",
+  `ID: ${idChamado}`
+);
 }
  // ✅ RETOMAR
 async function retomarChamado() {
@@ -461,6 +469,10 @@ async function retomarChamado() {
   await carregarDados();
 
   alert("Chamado retomado!");
+  enviarPushOneSignal(
+  "▶️ Chamado retomado",
+  `ID: ${idChamado}`
+);
 }
  // ✅ FINALIZAR
 async function finalizarChamado() {
@@ -502,6 +514,10 @@ async function finalizarChamado() {
   await carregarDados();
 
   alert("Chamado finalizado!");
+  enviarPushOneSignal(
+  "✅ Chamado finalizado",
+  `ID: ${idChamado}`
+);
 }
  // ✅ CALCULAR TEMPO REAL
 async function calcularDuracaoReal(chamadoId) {
@@ -585,49 +601,38 @@ function escutarChamadosSeguro() {
   }
 }
 
-async function enviarWhatsApp(mensagem) {
-  const instanceId = "3F18330F3791724F480CBE4FDF68D33E"; // 🔥 SEU ID
-  const token = "4937D117D0073BED2DC18525"; // 🔥 SEU TOKEN
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js")
+    .then(() => console.log("Service Worker registrado"))
+    .catch(err => console.error("Erro SW:", err));
+}
 
-  const telefone = "5586998110012"; // 🔥 COLOQUE UM NÚMERO VÁLIDO (OUTRO CELULAR)
+async function ativarPush() {
+  const permission = await Notification.requestPermission();
 
-  try {
-    const response = await fetch(
-      `https://api.z-api.io/instances/${instanceId}/token/${token}/send-text`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          phone: telefone,
-          message: String(mensagem) // 🔥 garante que é string
-        })
-      }
-    );
-
-    // 🔥 pega resposta bruta (mais confiável)
-    const text = await response.text();
-
-    console.log("📡 STATUS HTTP:", response.status);
-    console.log("📨 RESPOSTA BRUTA:", text);
-
-    // 🔥 tenta converter pra JSON
-    let result;
-    try {
-      result = JSON.parse(text);
-    } catch {
-      console.warn("Resposta não é JSON");
-    }
-
-    if (response.status === 200) {
-      console.log("✅ WhatsApp enviado com sucesso!");
-    } else {
-      console.error("❌ Erro ao enviar COMPLETO:", JSON.stringify(result, null, 2));
-console.error("📨 TEXTO BRUTO:", text);
-    }
-
-  } catch (err) {
-    console.error("❌ Erro de conexão WhatsApp:", err);
+  if (permission !== "granted") {
+    alert("Permita notificações!");
+    return;
   }
+
+  console.log("🔔 Push ativado");
+}
+
+async function enviarPushOneSignal(titulo, mensagem) {
+  const appId = "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5";
+  const apiKey = "os_v2_app_tyxrxtimw5flhgtl527qf3dmwu7jxbjcci2e5onbz2yqwo2e3eqmep57e6eadskffbcjvrobsqdsdb6jjwv2hnmtncy7cyzb7inimza"; // 🔥 pega no painel OneSignal
+
+  await fetch("https://onesignal.com/api/v1/notifications", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Basic " + apiKey
+    },
+    body: JSON.stringify({
+      app_id: appId,
+      included_segments: ["All"],
+      headings: { en: titulo },
+      contents: { en: mensagem }
+    })
+  });
 }
