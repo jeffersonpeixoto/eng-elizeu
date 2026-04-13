@@ -270,21 +270,7 @@ chamadosMes.forEach(c => {
 
     custoPorSetor[c.setor] += custo;
   }
-  doc.addPage();
-
-doc.text("Resumo por Setor", 14, 20);
-
-const resumoSetor = Object.keys(chamadosPorSetor).map(setor => [
-  setor,
-  chamadosPorSetor[setor],
-  `R$ ${custoPorSetor[setor].toFixed(2)}`
-]);
-
-doc.autoTable({
-  startY: 25,
-  head: [["Setor", "Qtd Chamados", "Custo Total"]],
-  body: resumoSetor
-});
+  
 });
     if (!chamadosMes.length) {
       alert("Nenhum chamado concluído neste mês.");
@@ -379,8 +365,25 @@ doc.autoTable({
       head: [["Loja", "Qtd Chamados", "Custo"]],
       body: resumo
     });
+	
+	// 📊 ===== PÁGINA 3 - RESUMO POR SETOR =====
+doc.addPage();
 
-    // 📋 ===== PÁGINA 3 =====
+doc.text("Resumo por Setor", 14, 20);
+
+const resumoSetor = Object.keys(chamadosPorSetor).map(setor => [
+  setor,
+  chamadosPorSetor[setor],
+  `R$ ${custoPorSetor[setor].toFixed(2)}`
+]);
+
+doc.autoTable({
+  startY: 25,
+  head: [["Setor", "Qtd Chamados", "Custo Total"]],
+  body: resumoSetor
+});
+
+    // 📋 ===== PÁGINA 4 =====
     doc.addPage();
 
     doc.text("Detalhamento dos Chamados Concluídos", 14, 20);
