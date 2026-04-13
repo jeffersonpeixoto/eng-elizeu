@@ -137,6 +137,7 @@ function registerPWA(){if("serviceWorker"in navigator){window.addEventListener("
 document.addEventListener("DOMContentLoaded",()=>{if(!window.supabaseClient){alert("Supabase não foi inicializado. Verifique o arquivo supabase.js.");return}bindViewButtons();bindFilters();registerPWA();document.getElementById("ticketForm").addEventListener("submit",salvarChamado);switchView("dashboard");carregarDados(); setTimeout(() => {
   ativarNotificacoesSeguro();
   escutarChamadosSeguro();
+  setTimeout(ativarPushOneSignal, 3000);
 }, 1500); } )
 // 🔥 EXPORTAR RELATÓRIO MENSAL (CORRIGIDO)
 async function exportarRelatorioMensal() {
