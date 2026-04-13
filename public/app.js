@@ -285,7 +285,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 🔥 ORDEM CORRETA
   setTimeout(() => {
     ativarNotificacoesSeguro();
-    ativarPushOneSignal();
+    
   }, 1500);
 
   setTimeout(() => {
@@ -550,10 +550,7 @@ async function iniciarChamado() {
     console.error(err);
     alert("Erro inesperado.");
   }
-  enviarPushOneSignal(
-  "▶️ Chamado iniciado",
-  `ID: ${idChamado}`
-);
+
 }
 
  // ✅ PAUSAR
@@ -614,10 +611,7 @@ async function pausarChamado() {
     console.error("Erro real:", err);
     alert("Erro inesperado ao pausar.");
   }
-  enviarPushOneSignal(
-  "⏸️ Chamado pausado",
-  `ID: ${idChamado}`
-);
+
 }
  // ✅ RETOMAR
 async function retomarChamado() {
@@ -787,33 +781,8 @@ if ("serviceWorker" in navigator) {
     .catch(err => console.error("Erro SW:", err));
 }
 
-function ativarPushOneSignal() {
-  window.OneSignal = window.OneSignal || [];
 
-  OneSignal.push(function() {
-    OneSignal.showSlidedownPrompt();
-  });
-}
 
-async function enviarPushOneSignal(titulo, mensagem) {
-  try {
-    await fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5"
-      },
-      body: JSON.stringify({
-        app_id: "os_v2_app_tyxrxtimw5flhgtl527qf3dmwvzwl7xa3klebvm7vs7a6vvzzvhkj6656ebpqcw63pptn4jycoiam4pm4jlycd63jgym5kyzeeqngqy", 
-        included_segments: ["All"],
-        headings: { en: titulo },
-        contents: { en: mensagem }
-      })
-    });
-  } catch (err) {
-    console.error("Erro push:", err);
-  }
-}
 async function excluirChamado(id) {
   const confirmar = confirm("Deseja mover este chamado para a lixeira?");
 
