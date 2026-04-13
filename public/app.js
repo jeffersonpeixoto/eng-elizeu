@@ -18,17 +18,9 @@ function formatDateTime(v){
 
 /* ================= VIEW ================= */
 function switchView(view, el = null){
-  document.querySelectorAll(".view")
-    .forEach(v=>v.classList.add("hidden"));
+  document.querySelectorAll(".view").forEach(v=>v.classList.add("hidden"));
 
-  const target = document.getElementById(view+"View");
-
-  if (!target) {
-    console.warn("View não encontrada:", view);
-    return;
-  }
-
-  target.classList.remove("hidden");
+  document.getElementById(view+"View")?.classList.remove("hidden");
 
   document.querySelectorAll(".menu-btn")
     .forEach(btn=>btn.classList.remove("active"));
@@ -154,3 +146,7 @@ async function carregarDados(){
   }
 }
 
+/* ================= INIT ================= */
+document.addEventListener("DOMContentLoaded", async ()=>{
+  await carregarDados();
+});
