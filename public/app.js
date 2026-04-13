@@ -483,10 +483,10 @@ function atualizarBotoesStatus() {
 
   const status = selectedTicket.status;
 
-  const btnIniciar = document.getElementById("btnIniciar");
-  const btnPausar = document.getElementById("btnPausar");
-  const btnRetomar = document.getElementById("btnRetomar");
-  const btnFinalizar = document.getElementById("btnFinalizar");
+ const btnIniciar = document.getElementById("btnIniciar");if (btnIniciar) btnIniciar.style.display = "none";
+  const btnPausar = document.getElementById("btnPausar");if (btnPausar) btnIniciar.style.display = "none";
+  const btnRetomar = document.getElementById("btnRetomar");if (btnRetomar) btnIniciar.style.display = "none";
+  const btnFinalizar = document.getElementById("btnFinalizar");if (btnFinalizar) btnIniciar.style.display = "none";
 
   // Esconde todos
   btnIniciar.style.display = "none";
