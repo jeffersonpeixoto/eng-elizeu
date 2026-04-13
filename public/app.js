@@ -67,7 +67,15 @@ function getFilteredTickets(){const busca=document.getElementById("busca")?.valu
 
 function renderDashboard(){document.getElementById("metricTotal").textContent=ticketsCache.length;document.getElementById("metricAbertos").textContent=ticketsCache.filter(t=>t.status==="Aberto").length;document.getElementById("metricAndamento").textContent=ticketsCache.filter(t=>t.status==="Em andamento" || t.status === "Pausado").length;document.getElementById("metricConcluidos").textContent=ticketsCache.filter(t=>t.status==="Concluído").length;document.getElementById("metricCriticos").textContent=ticketsCache.filter(t=>t.gravidade==="Crítica").length}
 
-function renderTicketList(){const list=document.getElementById("ticketList");const filtered=getFilteredTickets();if(!filtered.length){list.innerHTML='<div class="empty-state">Nenhum chamado encontrado com os filtros atuais.</div>';return}list.innerHTML=filtered.map(ticket=>`<article class="ticket-card"><div><h4>${escapeHtml(ticket.unidade)} • ${escapeHtml(ticket.setor)}</h4><div class="ticket-meta"><span class="badge badge-soft">${escapeHtml(ticket.id)}</span><span class="badge badge-soft">${escapeHtml(ticket.nome||"Sem nome")}</span><span class="badge badge-soft">${escapeHtml(ticket.tipo_manutencao||"—")}</span><span class="badge ${statusClass(ticket.status)}">${escapeHtml(ticket.status||"Aberto")}</span><span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span></div><p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p></div><div class="ticket-aside"><div class="date-chip"><strong>Criação:</strong><br>${formatDateTime(ticket.data_criacao)}</div><div class="date-chip"><strong>Início:</strong><br>${formatDateTime(ticket.data_inicio)}</div><div class="date-chip"><strong>Finalização:</strong><br>${formatDateTime(ticket.data_finalizacao)}</div>${ticket.foto_url?`<img class="thumb" src="${escapeHtml(ticket.foto_url)}" alt="Foto do chamado">`:""}<button class="btn btn-secondary" onclick="abrirDetalhes('${escapeHtml(ticket.id)}')">Detalhes</button></div></article>`).join("")}
+function renderTicketList(){const list=document.getElementById("ticketList");const filtered=getFilteredTickets();if(!filtered.length){list.innerHTML='<div class="empty-state">Nenhum chamado encontrado com os filtros atuais.</div>';return}list.innerHTML=filtered.map(ticket=>`<article class="ticket-card"><div><h4>${escapeHtml(ticket.unidade)} • ${escapeHtml(ticket.setor)}</h4><div class="ticket-meta"><span class="badge badge-soft">${escapeHtml(ticket.id)}</span><span class="badge badge-soft">${escapeHtml(ticket.nome||"Sem nome")}</span><span class="badge badge-soft">${escapeHtml(ticket.tipo_manutencao||"—")}</span><span class="badge ${statusClass(ticket.status)}">${escapeHtml(ticket.status||"Aberto")}</span><span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span></div><p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p></div><div class="ticket-aside"><div class="date-chip"><strong>Criação:</strong><br>${formatDateTime(ticket.data_criacao)}</div><div class="date-chip"><strong>Início:</strong><br>${formatDateTime(ticket.data_inicio)}</div><div class="date-chip"><strong>Finalização:</strong><br>${formatDateTime(ticket.data_finalizacao)}</div>${ticket.foto_url?`<img class="thumb" src="${escapeHtml(ticket.foto_url)}" alt="Foto do chamado">`:""}<button class="btn btn-secondary" onclick="abrirDetalhes('${ticket.id}')">
+  Detalhes
+</button>
+
+${ticket.status === "Concluído" ? `
+  <button class="btn btn-danger" onclick="excluirChamado('${ticket.id}')">
+    🗑️ Lixeira
+  </button>
+` : ""}</div></article>`).join("")}
 
 function renderKanban(){const aberto=ticketsCache.filter(t=>t.status==="Aberto");const andamento=ticketsCache.filter(t=>t.status==="Em andamento");const concluido=ticketsCache.filter(t=>t.status==="Concluído");document.getElementById("kanbanCountAberto").textContent=aberto.length;document.getElementById("kanbanCountAndamento").textContent=andamento.length;document.getElementById("kanbanCountConcluido").textContent=concluido.length;renderKanbanColumn("kanbanAberto",aberto);renderKanbanColumn("kanbanAndamento",andamento);renderKanbanColumn("kanbanConcluido",concluido)}
 function renderKanbanColumn(id,items){const target=document.getElementById(id);if(!items.length){target.innerHTML='<div class="empty-state">Sem chamados nesta coluna.</div>';return}target.innerHTML=items.map(ticket=>`<article class="kanban-card" onclick="abrirDetalhes('${escapeHtml(ticket.id)}')"><strong>${escapeHtml(ticket.unidade)}</strong><div class="ticket-meta"><span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span></div><div>${escapeHtml(ticket.setor_problema||"—")}</div><small>${escapeHtml(ticket.setor||"—")} • ${escapeHtml(ticket.tipo_manutencao||"—")}</small></article>`).join("")}
@@ -704,5 +712,30 @@ async function enviarPushOneSignal(titulo, mensagem) {
     });
   } catch (err) {
     console.error("Erro push:", err);
+  }
+}
+async function excluirChamado(id) {
+  const confirmar = confirm("Deseja mover este chamado para a lixeira?");
+
+  if (!confirmar) return;
+
+  try {
+    const { error } = await window.supabaseClient
+      .from("chamados")
+      .update({ excluido: true }) // 🔥 NÃO DELETA
+      .eq("id", id);
+
+    if (error) {
+      alert("Erro: " + error.message);
+      return;
+    }
+
+    alert("Chamado movido para lixeira!");
+
+    await carregarDados();
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro inesperado.");
   }
 }
