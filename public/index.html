@@ -209,7 +209,7 @@
       <h3>Detalhes do chamado</h3>
       <p id="modalTicketId"></p>
     </div>
-    <button onclick="fecharModal()">Fechar</button>
+   <button class="btn-close" onclick="fecharModal()">×</button>
   </div>
 
   <div class="modal-body">
@@ -222,12 +222,12 @@
 
     <img id="modalFoto" class="hidden" />
   </div>
-
+	
   <div class="modal-footer">
-    <button onclick="iniciarChamado()">▶️ Iniciar</button>
-    <button onclick="pausarChamado()">⏸️ Pausar</button>
-    <button onclick="retomarChamado()">▶️ Retomar</button>
-    <button onclick="finalizarChamado()">✅ Finalizar</button>
+    <button class="btn iniciar" onclick="iniciarChamado()">▶️ Iniciar</button>
+    <button class="btn pausar" onclick="pausarChamado()">⏸️ Pausar</button>
+    <button class="btn retomar" onclick="retomarChamado()">▶️ Retomar</button>
+    <button class="btn finalizar" onclick="finalizarChamado()">✅ Finalizar</button>
   </div>
 </dialog>
 
