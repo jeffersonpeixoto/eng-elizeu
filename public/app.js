@@ -270,13 +270,7 @@ chamadosMes.forEach(c => {
 
     custoPorSetor[c.setor] += custo;
   }
-  
-});
-    if (!chamadosMes.length) {
-      alert("Nenhum chamado concluído neste mês.");
-      return;
-    }
-doc.addPage();
+  doc.addPage();
 
 doc.text("Resumo por Setor", 14, 20);
 
@@ -291,6 +285,12 @@ doc.autoTable({
   head: [["Setor", "Qtd Chamados", "Custo Total"]],
   body: resumoSetor
 });
+});
+    if (!chamadosMes.length) {
+      alert("Nenhum chamado concluído neste mês.");
+      return;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("landscape");
 
