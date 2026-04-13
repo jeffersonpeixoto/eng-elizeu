@@ -18,18 +18,26 @@ function formatDateTime(v){
 
 /* ================= VIEW ================= */
 function switchView(view, el = null){
-  document.querySelectorAll(".view").forEach(v=>v.classList.add("hidden"));
+  document.querySelectorAll(".view")
+    .forEach(v=>v.classList.add("hidden"));
 
-  document.getElementById(view+"View")?.classList.remove("hidden");
+  const target = document.getElementById(view+"View");
+
+  if (!target) {
+    console.warn("View não encontrada:", view);
+    return;
+  }
+
+  target.classList.remove("hidden");
 
   document.querySelectorAll(".menu-btn")
     .forEach(btn=>btn.classList.remove("active"));
 
   if(el) el.classList.add("active");
 
-  if(view==="dashboard") renderDashboard();
-  if(view==="lista") renderTicketList();
-  if(view==="kanban") renderKanban();
+  if(view==="dashboard" && typeof renderDashboard==="function") renderDashboard();
+  if(view==="lista" && typeof renderTicketList==="function") renderTicketList();
+  if(view==="kanban" && typeof renderKanban==="function") renderKanban();
 }
 
 /* ================= DASHBOARD ================= */
