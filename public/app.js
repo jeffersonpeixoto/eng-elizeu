@@ -607,7 +607,7 @@ function ativarPushOneSignal() {
 
 async function enviarPushOneSignal(titulo, mensagem) {
   const appId = "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5";
-  const apiKey = "os_v2_app_tyxrxtimw5flhgtl527qf3dmwu7jxbjcci2e5onbz2yqwo2e3eqmep57e6eadskffbcjvrobsqdsdb6jjwv2hnmtncy7cyzb7inimza"; // 🔥 pega no painel OneSignal
+  const apiKey = "os_v2_app_tyxrxtimw5flhgtl527qf3dmwvzwl7xa3klebvm7vs7a6vvzzvhkj6656ebpqcw63pptn4jycoiam4pm4jlycd63jgym5kyzeeqngqy"; // 🔥 pega no painel OneSignal
 
   await fetch("https://onesignal.com/api/v1/notifications", {
     method: "POST",
