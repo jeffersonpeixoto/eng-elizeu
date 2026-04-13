@@ -587,12 +587,12 @@ function escutarChamadosSeguro() {
 
 async function enviarWhatsApp(mensagem) {
   const instanceId = "3F18330F3791724F480CBE4FDF68D33E";
-  const token = "308D7A30CAC0A476D8E0C5E0";
+  const token = "4937D117D0073BED2DC18525";
 
   const telefone = "5586998525536"; // 🔥 coloque OUTRO número real
 
   try {
-    const response = await fetch(`https://api.z-api.io/instances/3F18330F3791724F480CBE4FDF68D33E/token/308D7A30CAC0A476D8E0C5E0/send-text`, {
+    const response = await fetch(`https://api.z-api.io/instances/3F18330F3791724F480CBE4FDF68D33E/token/4937D117D0073BED2DC18525/send-text`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
