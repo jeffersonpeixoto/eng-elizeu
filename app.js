@@ -482,31 +482,33 @@ doc.autoTable({
 function atualizarBotoesStatus() {
   if (!selectedTicket) return;
 
-  const status = selectedTicket.status;
+  const status = selectedTicket.status?.toLowerCase();
 
- const btnIniciar = document.getElementById("btnIniciar");if (btnIniciar) btnIniciar.style.display = "none";
-  const btnPausar = document.getElementById("btnPausar");if (btnPausar) btnIniciar.style.display = "none";
-  const btnRetomar = document.getElementById("btnRetomar");if (btnRetomar) btnIniciar.style.display = "none";
-  const btnFinalizar = document.getElementById("btnFinalizar");if (btnFinalizar) btnIniciar.style.display = "none";
+  const btnIniciar = document.getElementById("btnIniciar");
+  const btnPausar = document.getElementById("btnPausar");
+  const btnRetomar = document.getElementById("btnRetomar");
+  const btnFinalizar = document.getElementById("btnFinalizar");
 
+  const botoes = [btnIniciar, btnPausar, btnRetomar, btnFinalizar];
 
-  if (status === "Aberto") {
-    btnIniciar.style.display = "inline-block";
+  // 🔥 esconder todos
+  botoes.forEach(btn => btn && (btn.style.display = "none"));
+
+  // 🔥 regras
+  if (status === "aberto") {
+    btnIniciar && (btnIniciar.style.display = "flex");
   }
 
-  if (status === "Em andamento") {
-    btnPausar.style.display = "inline-block";
-    btnFinalizar.style.display = "inline-block";
+  if (status === "em andamento") {
+    btnPausar && (btnPausar.style.display = "flex");
+    btnFinalizar && (btnFinalizar.style.display = "flex");
   }
 
-  if (status === "Pausado") {
-    btnRetomar.style.display = "inline-block";
-    btnFinalizar.style.display = "inline-block";
+  if (status === "pausado") {
+    btnRetomar && (btnRetomar.style.display = "flex");
   }
 
-  if (status === "Concluído") {
-    // nenhum botão aparece
-  }
+  // concluído = nenhum botão (já escondidos)
 }
  // ✅ INICIAR
 async function iniciarChamado() {
