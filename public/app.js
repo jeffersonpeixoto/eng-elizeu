@@ -488,25 +488,30 @@ function atualizarBotoesStatus() {
   const btnRetomar = document.getElementById("btnRetomar");if (btnRetomar) btnIniciar.style.display = "none";
   const btnFinalizar = document.getElementById("btnFinalizar");if (btnFinalizar) btnIniciar.style.display = "none";
 
+function atualizarBotoes(status) {
+  const botoes = [btnIniciar, btnPausar, btnRetomar, btnFinalizar];
+  
+  botoes.forEach(btn => btn.classList.add("hidden"));
 
   if (status === "Aberto") {
-    btnIniciar.style.display = "inline-block";
+    btnIniciar.classList.remove("hidden");
   }
 
   if (status === "Em andamento") {
-    btnPausar.style.display = "inline-block";
-    btnFinalizar.style.display = "inline-block";
+    btnPausar.classList.remove("hidden");
+    btnFinalizar.classList.remove("hidden");
   }
 
   if (status === "Pausado") {
-    btnRetomar.style.display = "inline-block";
-    btnFinalizar.style.display = "inline-block";
+    btnRetomar.classList.remove("hidden");
+    btnFinalizar.classList.remove("hidden");
   }
-
-  if (status === "Concluído") {
+   if (status === "Concluído") {
     // nenhum botão aparece
   }
 }
+
+ 
  // ✅ INICIAR
 async function iniciarChamado() {
   try {
