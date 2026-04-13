@@ -33,6 +33,11 @@ body {
   border-radius: 12px;
   margin-bottom: 15px;
   border-left: 6px solid var(--vermelho);
+      justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: #fff;
 }
 
 .header h1 {
