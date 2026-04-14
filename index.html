@@ -155,7 +155,7 @@
               <h3>Lista de chamados</h3>
               <p class="muted">Acompanhe chamados, filtros, exportação em PDF e detalhes.</p>
             </div>
-            <div style="display:flex; gap:10px;">
+            <div style="display:none; gap:10px;">
   <button class="btn btn-secondary" onclick="exportarListaPDF()">Exportar lista de chamados em PDF</button>
   <button class="btn btn-primary" onclick="exportarRelatorioMensal()">Exportar relatório mensal</button>
 </div>
@@ -245,13 +245,13 @@
     </div>
 
     <div class="modal-footer">
-  <button id="btnIniciar" style="display:none" class="iniciar" onclick="iniciarChamado()">Iniciar</button>
+  <button id="btnIniciar" style="display:none !important" class="iniciar" onclick="iniciarChamado()">Iniciar</button>
 
-  <button id="btnPausar" style="display:none" class="pausar" onclick="pausarChamado()">Pausar</button>
+  <button id="btnPausar" style="display: none !important;" class="pausar" onclick="pausarChamado()">Pausar</button>
 
-  <button id="btnRetomar" style="display:none" class="retomar" onclick="retomarChamado()">Retomar</button>
+  <button id="btnRetomar" style="display: none !important;" class="retomar" onclick="retomarChamado()">Retomar</button>
 
-  <button id="btnFinalizar" style="display:none" class="finalizar" onclick="finalizarChamado()">Finalizar</button>
+  <button id="btnFinalizar" style="display: none !important;" class="finalizar" onclick="finalizarChamado()">Finalizar</button>
 </div>
 
   </div>
