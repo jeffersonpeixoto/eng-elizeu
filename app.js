@@ -309,38 +309,19 @@ async function exportarRelatorioMensal() {
     const mes = hoje.getMonth();
     const ano = hoje.getFullYear();
 
-    // ✅ FILTRO: mês atual + apenas CONCLUÍDOS
- const chamadosMes = data.filter(c => {
-  if (!c.data_criacao) return false;
+    const chamadosMes = data.filter(c => {
+      if (!c.data_criacao) return false;
 
-  const d = new Date(c.data_criacao);
+      const d = new Date(c.data_criacao);
 
-  return (
-    d.getMonth() === mes &&
-    d.getFullYear() === ano &&
-    c.status === "Concluído" &&
-    c.excluido !== true // 🔥 AQUI RESOLVE
-  );
-});
-const chamadosPorSetor = {};
-const custoPorSetor = {};
+      return (
+        d.getMonth() === mes &&
+        d.getFullYear() === ano &&
+        c.status === "Concluído" &&
+        c.excluido !== true
+      );
+    });
 
-chamadosMes.forEach(c => {
-  if (!chamadosPorSetor[c.setor]) {
-    chamadosPorSetor[c.setor] = 0;
-    custoPorSetor[c.setor] = 0;
-  }
-
-  chamadosPorSetor[c.setor]++;
-
-  if (c.data_inicio && c.data_finalizacao) {
-    const duracao = (new Date(c.data_finalizacao) - new Date(c.data_inicio)) / (1000 * 60 * 60);
-    const custo = duracao * 81;
-
-    custoPorSetor[c.setor] += custo;
-  }
-  
-});
     if (!chamadosMes.length) {
       alert("Nenhum chamado concluído neste mês.");
       return;
@@ -349,35 +330,66 @@ chamadosMes.forEach(c => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("landscape");
 
-    // 🔧 CONFIG
     const CUSTO_HORA = 81;
 
     let custoTotal = 0;
     const custoPorLoja = {};
     const chamadosPorLoja = {};
+    const chamadosPorSetor = {};
+    const custoPorSetor = {};
 
-    // 🔥 PROCESSAMENTO
-    const linhas = chamadosMes.map(c => {
+    const linhas = [];
+
+    for (const c of chamadosMes) {
+
+      // 🔥 BUSCAR TEMPOS ORDENADOS
+      const { data: tempos } = await window.supabaseClient
+        .from("chamado_tempo")
+        .select("*")
+        .eq("chamado_id", c.id)
+        .order("inicio", { ascending: true });
+
       let duracao = 0;
-      let custo = 0;
+      let pausa = 0;
 
-      if (c.data_inicio && c.data_finalizacao) {
-        const inicio = new Date(c.data_inicio);
-        const fim = new Date(c.data_finalizacao);
+      if (tempos && tempos.length > 0) {
+        for (let i = 0; i < tempos.length; i++) {
+          const atual = tempos[i];
 
-        duracao = (fim - inicio) / (1000 * 60 * 60);
-        custo = duracao * CUSTO_HORA;
+          // ⏱️ TEMPO TRABALHADO
+          if (atual.inicio && atual.fim) {
+            duracao += (new Date(atual.fim) - new Date(atual.inicio)) / (1000 * 60 * 60);
+          }
 
-        custoTotal += custo;
-
-        if (!custoPorLoja[c.unidade]) custoPorLoja[c.unidade] = 0;
-        custoPorLoja[c.unidade] += custo;
+          // ⏸️ TEMPO DE PAUSA
+          const proximo = tempos[i + 1];
+          if (atual.fim && proximo && proximo.inicio) {
+            pausa += (new Date(proximo.inicio) - new Date(atual.fim)) / (1000 * 60 * 60);
+          }
+        }
       }
+
+      const custo = duracao * CUSTO_HORA;
+      custoTotal += custo;
+
+      // 📊 AGRUPAMENTO LOJA
+      if (!custoPorLoja[c.unidade]) custoPorLoja[c.unidade] = 0;
+      custoPorLoja[c.unidade] += custo;
 
       if (!chamadosPorLoja[c.unidade]) chamadosPorLoja[c.unidade] = 0;
       chamadosPorLoja[c.unidade]++;
 
-      return [
+      // 📊 AGRUPAMENTO SETOR
+      if (!chamadosPorSetor[c.setor]) {
+        chamadosPorSetor[c.setor] = 0;
+        custoPorSetor[c.setor] = 0;
+      }
+
+      chamadosPorSetor[c.setor]++;
+      custoPorSetor[c.setor] += custo;
+
+      // 📋 LINHAS DO PDF
+      linhas.push([
         c.id,
         c.nome,
         c.unidade,
@@ -390,24 +402,23 @@ chamadosMes.forEach(c => {
         formatDateTime(c.data_inicio),
         formatDateTime(c.data_finalizacao),
         duracao ? formatarHoras(duracao) : "",
+        pausa ? formatarHoras(pausa) : "",
         "Equipe",
         `R$ ${CUSTO_HORA}`,
         custo ? `R$ ${custo.toFixed(2)}` : "",
         c.descricao || ""
-      ];
-    });
+      ]);
+    }
 
-    // 🧾 ===== PÁGINA 1 - RESUMO =====
+    // 🧾 PÁGINA 1
     doc.setFontSize(18);
     doc.text("RELATÓRIO MENSAL - CHAMADOS CONCLUÍDOS", 14, 20);
 
     doc.setFontSize(12);
     doc.text(`Mês: ${mes + 1}/${ano}`, 14, 30);
-
     doc.text(`Total concluídos: ${chamadosMes.length}`, 14, 40);
     doc.text(`CUSTO TOTAL: R$ ${custoTotal.toFixed(2)}`, 14, 50);
 
-    // 🏆 Ranking por custo
     const ranking = Object.entries(custoPorLoja)
       .sort((a, b) => b[1] - a[1])
       .map(([loja, valor]) => [loja, `R$ ${valor.toFixed(2)}`]);
@@ -418,7 +429,7 @@ chamadosMes.forEach(c => {
       body: ranking
     });
 
-    // 📊 ===== PÁGINA 2 =====
+    // 📊 PÁGINA 2
     doc.addPage();
 
     const resumo = Object.keys(chamadosPorLoja).map(loja => [
@@ -434,25 +445,25 @@ chamadosMes.forEach(c => {
       head: [["Loja", "Qtd Chamados", "Custo"]],
       body: resumo
     });
-	
-	// 📊 ===== PÁGINA 3 - RESUMO POR SETOR =====
-doc.addPage();
 
-doc.text("Resumo por Setor", 14, 20);
+    // 📊 PÁGINA 3
+    doc.addPage();
 
-const resumoSetor = Object.keys(chamadosPorSetor).map(setor => [
-  setor,
-  chamadosPorSetor[setor],
-  `R$ ${custoPorSetor[setor].toFixed(2)}`
-]);
+    doc.text("Resumo por Setor", 14, 20);
 
-doc.autoTable({
-  startY: 25,
-  head: [["Setor", "Qtd Chamados", "Custo Total"]],
-  body: resumoSetor
-});
+    const resumoSetor = Object.keys(chamadosPorSetor).map(setor => [
+      setor,
+      chamadosPorSetor[setor],
+      `R$ ${custoPorSetor[setor].toFixed(2)}`
+    ]);
 
-    // 📋 ===== PÁGINA 4 =====
+    doc.autoTable({
+      startY: 25,
+      head: [["Setor", "Qtd Chamados", "Custo Total"]],
+      body: resumoSetor
+    });
+
+    // 📋 PÁGINA 4
     doc.addPage();
 
     doc.text("Detalhamento dos Chamados Concluídos", 14, 20);
@@ -462,16 +473,15 @@ doc.autoTable({
       head: [[
         "ID","Solicitante","Unidade","Setor","Problema","Tipo",
         "Gravidade","Status","Criação","Início","Final",
-        "Duração (h)","Equipe","Custo Hora","Custo","Descrição"
+        "Duração (h)","Pausa (h)","Equipe","Custo Hora","Custo","Descrição"
       ]],
       body: linhas,
       styles: { fontSize: 6 },
       columnStyles: {
-        15: { cellWidth: 50 }
+        16: { cellWidth: 50 }
       }
     });
 
-    // 📥 DOWNLOAD
     doc.save(`Relatorio_Concluidos_${mes + 1}_${ano}.pdf`);
 
   } catch (err) {
