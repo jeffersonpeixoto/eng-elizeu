@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="description" content="Sistema de chamados de engenharia com PWA, PDF, quadro operacional e detalhes." />
+  <title>Chamados de Engenharia • Completo</title>
+  <link rel="manifest" href="manifest.json" />
+<link rel="stylesheet" href="styles.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="app2.js?v=2"></script>
+<link rel="icon" type="image/png" href="favicon.png">
+<script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+<script>
+  window.OneSignal = window.OneSignal || [];
+  OneSignal.push(function() {
+    OneSignal.init({
+      appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
+      notifyButton: {
+        enable: true
+      }
+    });
+
+    // 🔥 MOSTRA O PEDIDO DE PERMISSÃO DEPOIS DE INICIAR
+    OneSignal.showSlidedownPrompt();
+  });
+</script>
+</head>
+
+<body>
+
+<div class="app-shell">
+
+  <div class="header">
+  <img src="icon-512.png" style="width:8vh;">
+    <h1 style="position:relative; width:50%;  ">Chamados de Engenharia</h1>
+	 <div class="topbar-actions" style="position:absolute; right:15px; top:15%;">
+          <button id="installButton" class="btn btn-secondary hidden" type="button">Instalar aplicativo</button>
+          
+        </div>
+  </div>
+
+  <div class="menu-grid">
+    <button class="menu-btn active" onclick="switchView('dashboard', this)">Dashboard</button>
+    <button class="menu-btn" onclick="switchView('novo', this)">Novo Chamado</button>
+    <button class="menu-btn" onclick="switchView('lista', this)">Lista de Chamados</button>
+    <button class="menu-btn" onclick="switchView('kanban', this)">Quadro Operacional</button>
+  </div>
+
+  <div class="dynamic-area">
+
+    <!-- DASHBOARD -->
+    <div id="dashboardView" class="view">
+      <div class="metrics-grid">
+        <div class="metric-card">Total <div id="metricTotal" class="metric-value" id="metricTotal">0</div></div>
+        <div class="metric-card">Abertos <div id="metricAbertos" class="metric-value" id="metricAbertos">0</div></div>
+        <div class="metric-card">Andamento <div id="metricAndamento" class="metric-value" id="metricAndamento">0</div></div>
+        <div class="metric-card">Concluídos <div id="metricConcluidos" class="metric-value" id="metricConcluidos">0</div></div>
+		<div class="metric-card">Críticos <div id="metricCriticos" class="metric-value">0</div>
+</div>
+      </div>
+    </div>
+
+    <!-- NOVO -->
+    <div id="novoView" class="view hidden">
+   
+      <div class="card form-card">
+          <div class="section-header">
+            <div>
+              <span class="eyebrow">Cadastro</span>
+              <h3>Novo chamado</h3>
+              <p class="muted">Cadastre a ocorrência com unidade padronizada, setor, prioridade e foto.</p>
+            </div>
+          </div>
+
+          <form id="ticketForm" class="form-grid">
+            <div class="grid-2">
+              <div class="field-group">
+                <label for="nome">Nome do solicitante</label>
+                <input id="nome" required placeholder="Ex.: João Silva" />
+              </div>
+              <div class="field-group">
+                <label for="unidade">Identificação da unidade</label>
+                <select id="unidade" required>
+                  <option value="">Selecione</option>
+                  <option>LOJA 9</option><option>LOJA 10</option><option>LOJA 11</option><option>LOJA 12</option>
+                  <option>LOJA 13</option><option>LOJA 16</option><option>LOJA 17</option><option>LOJA 18</option>
+                  <option>CD SECOS</option><option>CD FRIOS</option><option>CENTRO ADM</option><option>IND.PANIFICAÇÃO</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field-group">
+                <label for="setor">Setor</label>
+                <select id="setor" required>
+                  <option value="">Selecione</option>
+                  <option>Predial</option><option>Elétrica</option><option>Metalúrgica</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="gravidade">Gravidade</label>
+                <select id="gravidade" required>
+                  <option value="">Selecione</option>
+                  <option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field-group">
+                <label for="setorProblema">Setor do problema</label>
+                <input id="setorProblema" required placeholder="Ex.: Banheiro, Quadro de energia, Soldagem" />
+              </div>
+              <div class="field-group">
+                <label for="tipoManutencao">Tipo de manutenção</label>
+                <select id="tipoManutencao" required>
+                  <option value="">Selecione</option>
+                  <option>Corretiva</option><option>Preventiva</option><option>Emergencial</option><option>Inspeção</option><option>Instalação</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="descricao">Descrição detalhada</label>
+              <textarea id="descricao" required placeholder="Descreva o problema, impacto, risco e observações relevantes."></textarea>
+            </div>
+
+            <div class="field-group">
+              <label for="foto">Foto</label>
+              <input id="foto" type="file" accept="image/*" capture="environment" />
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn btn-primary">Salvar chamado</button>
+              <button type="button" class="btn btn-secondary" onclick="resetarFormulario(); switchView('dashboard')">Cancelar</button>
+            </div>
+          </form>
+        </div>
+    </div>
+
+    <!-- LISTA -->
+    <div id="listaView" class="view hidden">
+     
+      
+	      <div class="card">
+          <div class="section-header">
+            <div>
+              <span class="eyebrow">Operação</span>
+              <h3>Lista de chamados</h3>
+              <p class="muted">Acompanhe chamados, filtros, exportação em PDF e detalhes.</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+  <button class="btn btn-secondary" onclick="exportarListaPDF()">Exportar lista de chamados em PDF</button>
+  <button class="btn btn-primary" onclick="exportarRelatorioMensal()">Exportar relatório mensal</button>
+</div>
+          </div>
+
+          <div class="toolbar toolbar-4">
+            <input id="busca" placeholder="Buscar por nome, unidade, setor, problema ou ID" />
+            <select id="filtroStatus">
+  <option value="">Todos os status</option>
+  <option>Aberto</option>
+  <option>Em andamento</option>
+  <option>Pausado</option> <!-- 🔥 ADICIONE -->
+  <option>Concluído</option>
+</select>
+            <select id="filtroGravidade"><option value="">Todas as prioridades</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Crítica</option></select>
+            <select id="filtroSetor"><option value="">Todos os setores</option><option>Predial</option><option>Elétrica</option><option>Metalúrgica</option></select>
+          </div>
+
+          <div id="ticketList" class="ticket-list"></div>
+        </div>
+		<div id="ticketList"></div>
+    </div>
+
+    <!-- KANBAN -->
+    <div id="kanbanView" class="view hidden">
+     <div class="card">
+          <div class="section-header">
+            <div>
+              <span class="eyebrow">Quadro operacional</span>
+              <h3>Status por coluna</h3>
+              <p class="muted">Visualização rápida da operação para acompanhamento diário.</p>
+            </div>
+          </div>
+
+          <div class="kanban-grid">
+            <div class="kanban-column">
+              <div class="kanban-header"><span>Aberto</span><strong id="kanbanCountAberto">0</strong></div>
+              <div id="kanbanAberto" class="kanban-list"></div>
+            </div>
+            <div class="kanban-column">
+              <div class="kanban-header"><span>Em andamento</span><strong id="kanbanCountAndamento">0</strong></div>
+              <div id="kanbanAndamento" class="kanban-list"></div>
+            </div>
+			<div class="kanban-column">
+				<div class="kanban-header">	<span>Pausado</span><strong id="kanbanCountPausado">0</strong>
+				<div id="kanbanAndamento" class="kanban-list"></div>
+			</div>
+  <div id="kanbanPausado" class="kanban-list"></div>
+</div>
+            <div class="kanban-column">
+              <div class="kanban-header"><span>Concluído</span><strong id="kanbanCountConcluido">0</strong></div>
+              <div id="kanbanConcluido" class="kanban-list"></div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+  </div> <!-- FECHA dynamic-area -->
+  <div class="header">
+    <h6>Desenvolvido por Jefferson Peixoto</h6>
+	
+  </div>
+</div> <!-- FECHA app-shell -->
+
+
+<!-- MODAL (fora da estrutura principal - mais organizado) -->
+<div id="detailModal">
+  <div class="modal-box">
+
+    <div class="modal-header">
+       <div>
+    <h3 >Detalhes</h3>
+    <p id="modalTicketId"></p> <!-- 🔥 AQUI -->
+  </div>
+      <button onclick="fecharModal()" class="btn-close">X</button>
+    </div>
+
+    <div class="modal-body">
+      <div id="detailGrid"></div>
+
+    <div class="field-group">
+      <label>Descrição</label>
+      <div id="modalDescricao"></div>
+    </div>
+
+    <img id="modalFoto" class="hidden" />
+    </div>
+
+    <div class="modal-footer">
+  <button id="btnIniciar" class="iniciar" onclick="iniciarChamado()">Iniciar</button>
+
+  <button id="btnPausar" class="pausar" onclick="pausarChamado()">Pausar</button>
+
+  <button id="btnRetomar" class="retomar" onclick="retomarChamado()">Retomar</button>
+
+  <button id="btnFinalizar" class="finalizar" onclick="finalizarChamado()">Finalizar</button>
+</div>
+
+  </div>
+</div>
+
+<div style="position: relative;
+    width: auto;
+    margin: 0 auto;
+    text-align: center;"><img src="logo.png" style="width:30vh;"></div>
+
+</body>
+</html>
