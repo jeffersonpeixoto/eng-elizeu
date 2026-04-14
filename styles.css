@@ -38,6 +38,7 @@ body {
     padding: 20px 24px;
     background: linear-gradient(135deg, #ef4444, #b91c1c);
     color: #fff;
+	position:relative;
 }
 
 .header h1 {
