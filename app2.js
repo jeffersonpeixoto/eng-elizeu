@@ -568,6 +568,7 @@ async function iniciarChamado() {
 enviarPushOneSignal(
   "▶️ Chamado iniciado",
   `${selectedTicket.unidade} - ${selectedTicket.setor}`
+  selectedTicket.id
 );
 	
 
@@ -667,6 +668,7 @@ alert("⏸️ Chamado pausado com sucesso!");
 enviarPushOneSignal(
   "⏸️ Chamado pausado",
   `${selectedTicket.unidade} - ${selectedTicket.setor}`
+  selectedTicket.id
 );
 }
  // ✅ FINALIZAR
@@ -709,6 +711,7 @@ alert("✅ Chamado finalizado!");
 enviarPushOneSignal(
   "✅ Chamado finalizado",
   `${selectedTicket.unidade} - ${selectedTicket.setor}`
+  selectedTicket.id
 );
 }
  // ✅ CALCULAR TEMPO REAL
