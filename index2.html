@@ -22,15 +22,28 @@
   OneSignal.push(function() {
     OneSignal.init({
       appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
+
       notifyButton: {
         enable: true
+      },
+
+      // 🔥 DESATIVA AUTO PROMPT
+      autoPrompt: false,
+
+      promptOptions: {
+        slidedown: {
+          enabled: true,
+          autoPrompt: false,
+          text: {
+            actionMessage: "Receba atualizações dos chamados em tempo real 🚀",
+            acceptButton: "Permitir",
+            cancelButton: "Agora não"
+          }
+        }
       }
     });
 
-    // 🔔 PEDE PERMISSÃO
-    OneSignal.showSlidedownPrompt();
-
-    // 🧠 CRIA ID ÚNICO DO USUÁRIO (SEM LOGIN)
+    // 🧠 ID DO USUÁRIO
     let userId = localStorage.getItem("user_id");
 
     if (!userId) {
@@ -38,53 +51,17 @@
       localStorage.setItem("user_id", userId);
     }
 
-    // 🔗 VINCULA COM ONESIGNAL
+    // 🔗 LOGIN NO ONESIGNAL
     OneSignal.login(userId);
 
-    // (opcional) debug no console
     console.log("User ID:", userId);
+
+    // ⏱️ MOSTRA DEPOIS (EVITA DUPLICIDADE)
+    setTimeout(() => {
+      OneSignal.showSlidedownPrompt();
+    }, 5000);
+
   });
-</script>
-<script>
-	function notificarUsuario(userId, mensagem) {
-  fetch("https://onesignal.com/api/v1/notifications", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Basic w5vjxn2zfumtuo7p63e7jotiu"
-    },
-    body: JSON.stringify({
-      app_id: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
-      include_external_user_ids: [userId],
-      headings: { en: "Atualização de chamado" },
-      contents: { en: mensagem }
-    })
-  });
-}
-const chamado = {
-  id: Date.now(),
-  titulo: "exemplo",
-  status: "aberto",
-  userId: localStorage.getItem("user_id"), // 👈 ESSENCIAL
-  data: new Date()
-};
-function atualizarStatus(chamadoId, novoStatus) {
-  let chamados = JSON.parse(localStorage.getItem("chamados")) || [];
-
-  let chamado = chamados.find(c => c.id === chamadoId);
-
-  if (chamado) {
-    chamado.status = novoStatus;
-
-    localStorage.setItem("chamados", JSON.stringify(chamados));
-
-    // 🔔 DISPARA NOTIFICAÇÃO
-    notificarUsuario(
-      chamado.userId,
-      `Chamado #${chamado.id} agora está: ${novoStatus}`
-    );
-  }
-}
 </script>
 </head>
 
