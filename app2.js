@@ -67,7 +67,8 @@ async function salvarChamado(event){
 // 🔔 ENVIA PUSH
 enviarPushOneSignal(
   "🚨 Novo chamado aberto",
-  `${chamado.unidade} - ${chamado.setor}`
+  `${chamado.unidade} - ${chamado.setor}`,
+  chamado.id
 );
 	  
 
@@ -807,7 +808,7 @@ function escutarChamadosSeguro() {
 }
 
 
-async function enviarPushOneSignal(titulo, mensagem) {
+async function enviarPushOneSignal(titulo, mensagem, id) {
   try {
     const res = await fetch("https://bubcilkbujuycpvysico.supabase.co/functions/v1/enviar-push", {
       method: "POST",
@@ -817,7 +818,8 @@ async function enviarPushOneSignal(titulo, mensagem) {
       },
       body: JSON.stringify({
         titulo,
-        mensagem
+        mensagem,
+        id // 🔥 ESSENCIAL
       })
     });
 
