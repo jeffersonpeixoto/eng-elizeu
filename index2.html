@@ -20,28 +20,31 @@
   window.OneSignal = window.OneSignal || [];
 
   OneSignal.push(function() {
-    OneSignal.init({
-      appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
+   OneSignal.init({
+  appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
 
-      notifyButton: {
-        enable: true
-      },
+  // 🔥 ADICIONA AQUI
+  serviceWorkerPath: "/eng-elizeu/OneSignalSDKWorker.js",
+  serviceWorkerUpdaterPath: "/eng-elizeu/OneSignalSDKUpdaterWorker.js",
 
-      // 🔥 DESATIVA AUTO PROMPT
+  notifyButton: {
+    enable: true
+  },
+
+  autoPrompt: false,
+
+  promptOptions: {
+    slidedown: {
+      enabled: true,
       autoPrompt: false,
-
-      promptOptions: {
-        slidedown: {
-          enabled: true,
-          autoPrompt: false,
-          text: {
-            actionMessage: "Receba atualizações dos chamados em tempo real 🚀",
-            acceptButton: "Permitir",
-            cancelButton: "Agora não"
-          }
-        }
+      text: {
+        actionMessage: "Receba atualizações dos chamados em tempo real 🚀",
+        acceptButton: "Permitir",
+        cancelButton: "Agora não"
       }
-    });
+    }
+  }
+});
 
     // 🧠 ID DO USUÁRIO
     let userId = localStorage.getItem("user_id");
