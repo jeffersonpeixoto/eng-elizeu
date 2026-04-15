@@ -18,6 +18,7 @@
 <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
 <script>
   window.OneSignal = window.OneSignal || [];
+
   OneSignal.push(function() {
     OneSignal.init({
       appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
@@ -26,9 +27,64 @@
       }
     });
 
-    // 🔥 MOSTRA O PEDIDO DE PERMISSÃO DEPOIS DE INICIAR
+    // 🔔 PEDE PERMISSÃO
     OneSignal.showSlidedownPrompt();
+
+    // 🧠 CRIA ID ÚNICO DO USUÁRIO (SEM LOGIN)
+    let userId = localStorage.getItem("user_id");
+
+    if (!userId) {
+      userId = "user_" + Math.random().toString(36).substring(2);
+      localStorage.setItem("user_id", userId);
+    }
+
+    // 🔗 VINCULA COM ONESIGNAL
+    OneSignal.login(userId);
+
+    // (opcional) debug no console
+    console.log("User ID:", userId);
   });
+</script>
+<script>
+	function notificarUsuario(userId, mensagem) {
+  fetch("https://onesignal.com/api/v1/notifications", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Basic w5vjxn2zfumtuo7p63e7jotiu"
+    },
+    body: JSON.stringify({
+      app_id: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
+      include_external_user_ids: [userId],
+      headings: { en: "Atualização de chamado" },
+      contents: { en: mensagem }
+    })
+  });
+}
+const chamado = {
+  id: Date.now(),
+  titulo: "exemplo",
+  status: "aberto",
+  userId: localStorage.getItem("user_id"), // 👈 ESSENCIAL
+  data: new Date()
+};
+function atualizarStatus(chamadoId, novoStatus) {
+  let chamados = JSON.parse(localStorage.getItem("chamados")) || [];
+
+  let chamado = chamados.find(c => c.id === chamadoId);
+
+  if (chamado) {
+    chamado.status = novoStatus;
+
+    localStorage.setItem("chamados", JSON.stringify(chamados));
+
+    // 🔔 DISPARA NOTIFICAÇÃO
+    notificarUsuario(
+      chamado.userId,
+      `Chamado #${chamado.id} agora está: ${novoStatus}`
+    );
+  }
+}
 </script>
 </head>
 
