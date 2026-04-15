@@ -62,7 +62,14 @@ async function salvarChamado(event){
       return;
     }
 
-      alert("Chamado salvo com sucesso!");
+     alert("Chamado salvo com sucesso!");
+
+// 🔔 ENVIA PUSH
+enviarPushOneSignal(
+  "🚨 Novo chamado aberto",
+  `${chamado.unidade} - ${chamado.setor}`
+);
+	  
 
     resetarFormulario();
    await carregarDados();
@@ -550,16 +557,18 @@ async function iniciarChamado() {
       })
       .eq("id", idChamado);
 
-    // ✅ AGORA ESTÁ CERTO
-    enviarPushOneSignal(
-      "▶️ Chamado iniciado",
-      `ID: ${idChamado}`
-    );
 
     fecharModal();
     await carregarDados();
 
     alert("▶️ Chamado iniciado!");
+
+// 🔔 PUSH
+enviarPushOneSignal(
+  "▶️ Chamado iniciado",
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`
+);
+	
 
   } catch (err) {
     console.error(err);
@@ -625,10 +634,7 @@ async function pausarChamado() {
     console.error("Erro real:", err);
     alert("Erro inesperado ao pausar.");
   }
-  enviarPushOneSignal(
-  "⏸️ Chamado pausado",
-  `ID: ${idChamado}`
-);
+
 }
  // ✅ RETOMAR
 async function retomarChamado() {
@@ -654,10 +660,12 @@ async function retomarChamado() {
   fecharModal();
   await carregarDados();
 
-  alert("Chamado retomado!");
-  enviarPushOneSignal(
-  "▶️ Chamado retomado",
-  `ID: ${idChamado}`
+alert("⏸️ Chamado pausado com sucesso!");
+
+// 🔔 PUSH
+enviarPushOneSignal(
+  "⏸️ Chamado pausado",
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`
 );
 }
  // ✅ FINALIZAR
@@ -694,10 +702,12 @@ async function finalizarChamado() {
   fecharModal();
   await carregarDados();
 
-  alert("Chamado finalizado!");
-  enviarPushOneSignal(
+alert("✅ Chamado finalizado!");
+
+// 🔔 PUSH
+enviarPushOneSignal(
   "✅ Chamado finalizado",
-  `ID: ${idChamado}`
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`
 );
 }
  // ✅ CALCULAR TEMPO REAL
@@ -803,23 +813,17 @@ async function enviarPushOneSignal(titulo, mensagem) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-
-        // 🔥 COLOCA ASSIM (com Basic + espaço)
         "Authorization": "Basic w5vjxn2zfumtuo7p63e7jotiu"
       },
       body: JSON.stringify({
-        // 🔥 SEU APP ID CORRETO
         app_id: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
-
-        // 🔥 ENVIA PRA TODOS INSCRITOS
         included_segments: ["All"],
-
-        headings: { en: titulo },
-        contents: { en: mensagem }
+        headings: { pt: titulo },
+        contents: { pt: mensagem }
       })
     });
 
-    console.log("✅ Push enviado!");
+    console.log("✅ Push enviado:", titulo);
 
   } catch (err) {
     console.error("Erro push:", err);
