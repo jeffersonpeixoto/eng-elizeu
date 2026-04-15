@@ -652,6 +652,12 @@ async function pausarChamado() {
     await carregarDados();
 
     alert("⏸️ Chamado pausado com sucesso!");
+	// 🔔 PUSH
+enviarPushOneSignal(
+  "⏸️ Chamado pausado",
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
+  selectedTicket.id
+);
 
   } catch (err) {
     console.error("Erro real:", err);
@@ -683,7 +689,7 @@ async function retomarChamado() {
   fecharModal();
   await carregarDados();
 
-alert("⏸️ Chamado pausado com sucesso!");
+alert("⏸️ Chamado Retomado com sucesso!");
 
 // 🔔 PUSH
 enviarPushOneSignal(
