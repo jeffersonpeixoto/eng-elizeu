@@ -567,7 +567,7 @@ async function iniciarChamado() {
 // 🔔 PUSH
 enviarPushOneSignal(
   "▶️ Chamado iniciado",
-  `${selectedTicket.unidade} - ${selectedTicket.setor}`
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
   selectedTicket.id
 );
 	
@@ -667,7 +667,7 @@ alert("⏸️ Chamado pausado com sucesso!");
 // 🔔 PUSH
 enviarPushOneSignal(
   "⏸️ Chamado pausado",
-  `${selectedTicket.unidade} - ${selectedTicket.setor}`
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
   selectedTicket.id
 );
 }
@@ -710,7 +710,7 @@ alert("✅ Chamado finalizado!");
 // 🔔 PUSH
 enviarPushOneSignal(
   "✅ Chamado finalizado",
-  `${selectedTicket.unidade} - ${selectedTicket.setor}`
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
   selectedTicket.id
 );
 }
