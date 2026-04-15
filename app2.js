@@ -809,24 +809,22 @@ function escutarChamadosSeguro() {
 
 async function enviarPushOneSignal(titulo, mensagem) {
   try {
-    await fetch("https://onesignal.com/api/v1/notifications", {
+    const res = await fetch("https://bubcilkbujuycpvysico.supabase.co/functions/v1/enviar-push", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Basic w5vjxn2zfumtuo7p63e7jotiu"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        app_id: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
-        included_segments: ["All"],
-        headings: { pt: titulo },
-        contents: { pt: mensagem }
+        titulo,
+        mensagem
       })
     });
 
-    console.log("✅ Push enviado:", titulo);
+    const data = await res.json();
+    console.log("✅ RESPOSTA PUSH:", data);
 
   } catch (err) {
-    console.error("Erro push:", err);
+    console.error("❌ ERRO PUSH:", err);
   }
 }
 async function excluirChamado(id) {
