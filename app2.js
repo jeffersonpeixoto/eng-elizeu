@@ -286,7 +286,7 @@ switchView("dashboard");
   // 🔥 ORDEM CORRETA
   setTimeout(() => {
     ativarNotificacoesSeguro();
-    ativarPushOneSignal();
+    
   }, 1500);
 
   setTimeout(() => {
