@@ -157,7 +157,7 @@ async function carregarDados() {
     const { data, error } = await window.supabaseClient
       .from("chamados")
       .select("*")
-      .or("excluido.is.null,excluido.eq.false") // 🔥 CORREÇÃO AQUI
+      .or("excluido.is.null,excluido.eq.false")
       .order("data_criacao", { ascending: false });
 
     if (error) {
@@ -173,26 +173,27 @@ async function carregarDados() {
     renderDashboard();
     renderTicketList();
     renderKanban();
-	  // 🔥 ABRIR CHAMADO VIA URL
-  const chamadoId = getChamadoDaURL();
 
-  if (chamadoId) {
-    const chamado = ticketsCache.find(c => c.id == chamadoId);
+    // 🔥 AQUI COMEÇA A PARTE NOVA
+    const chamadoId = getChamadoDaURL();
 
-    if (chamado) {
-      abrirDetalhesChamado(chamado);
+    if (chamadoId) {
+      const chamado = ticketsCache.find(c => c.id == chamadoId);
 
-      // 🔥 DESTACA E ROLA
-      setTimeout(() => {
-        const el = document.querySelector(`[data-id="${chamado.id}"]`);
-        if (el) {
-          el.style.border = "3px solid red";
-          el.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 500);
+      if (chamado) {
+        abrirDetalhesChamado(chamado);
+
+        // 🔥 DESTACA E ROLA
+        setTimeout(() => {
+          const el = document.querySelector(`[data-id="${chamado.id}"]`);
+          if (el) {
+            el.style.border = "3px solid red";
+            el.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 500);
+      }
     }
-  }
-}
+    // 🔥 AQUI TERMINA
 
   } catch (err) {
     console.error("Erro geral:", err);
