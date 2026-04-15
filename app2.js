@@ -812,7 +812,8 @@ async function enviarPushOneSignal(titulo, mensagem) {
     const res = await fetch("https://bubcilkbujuycpvysico.supabase.co/functions/v1/enviar-push", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": "Bearer sb_publishable_9ScFMiMlii1eQo-BxvbOZg_LRXvTloH"
       },
       body: JSON.stringify({
         titulo,
