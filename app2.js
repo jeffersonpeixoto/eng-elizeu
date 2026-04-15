@@ -803,15 +803,24 @@ async function enviarPushOneSignal(titulo, mensagem) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5"
+
+        // 🔥 COLOCA ASSIM (com Basic + espaço)
+        "Authorization": "Basic w5vjxn2zfumtuo7p63e7jotiu"
       },
       body: JSON.stringify({
-        app_id: "os_v2_app_tyxrxtimw5flhgtl527qf3dmwvzwl7xa3klebvm7vs7a6vvzzvhkj6656ebpqcw63pptn4jycoiam4pm4jlycd63jgym5kyzeeqngqy", 
+        // 🔥 SEU APP ID CORRETO
+        app_id: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
+
+        // 🔥 ENVIA PRA TODOS INSCRITOS
         included_segments: ["All"],
+
         headings: { en: titulo },
         contents: { en: mensagem }
       })
     });
+
+    console.log("✅ Push enviado!");
+
   } catch (err) {
     console.error("Erro push:", err);
   }
