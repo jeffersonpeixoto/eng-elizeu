@@ -813,7 +813,7 @@ async function enviarPushOneSignal(titulo, mensagem) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer sb_publishable_9ScFMiMlii1eQo-BxvbOZg_LRXvTloH"
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1YmNpbGtidWp1eWNwdnlzaWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzQyMDQsImV4cCI6MjA5MDcxMDIwNH0.0wFvOdVl47GkOl6aKARSvajqnFMaL3U1_Vp_iAMzw3w"
       },
       body: JSON.stringify({
         titulo,
