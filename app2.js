@@ -693,7 +693,7 @@ alert("⏸️ Chamado Retomado com sucesso!");
 
 // 🔔 PUSH
 enviarPushOneSignal(
-  "⏸️ Chamado pausado",
+  "⏸️ Chamado Retomado",
   `${selectedTicket.unidade} - ${selectedTicket.setor}`,
   selectedTicket.id
 );
