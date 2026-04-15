@@ -66,6 +66,16 @@
 
   });
 </script>
+<script>
+function getChamadoDaURL() {
+  const params = new URLSearchParams(window.location.search);
+  let id = params.get("chamado");
+
+  if (!id) return null;
+
+  return id.replace("CH-", "");
+}
+</script>
 </head>
 
 <body>

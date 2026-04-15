@@ -173,6 +173,26 @@ async function carregarDados() {
     renderDashboard();
     renderTicketList();
     renderKanban();
+	  // 🔥 ABRIR CHAMADO VIA URL
+  const chamadoId = getChamadoDaURL();
+
+  if (chamadoId) {
+    const chamado = ticketsCache.find(c => c.id == chamadoId);
+
+    if (chamado) {
+      abrirDetalhesChamado(chamado);
+
+      // 🔥 DESTACA E ROLA
+      setTimeout(() => {
+        const el = document.querySelector(`[data-id="${chamado.id}"]`);
+        if (el) {
+          el.style.border = "3px solid red";
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 500);
+    }
+  }
+}
 
   } catch (err) {
     console.error("Erro geral:", err);
