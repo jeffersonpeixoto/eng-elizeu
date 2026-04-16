@@ -935,3 +935,18 @@ function switchView(view, el = null) {
   if (view === "lista") renderTicketList();
   if (view === "kanban") renderKanban();
 }
+function toggleColuna(event, id) {
+  const header = event.currentTarget;
+  const lista = document.getElementById(id);
+  const seta = header.querySelector(".seta");
+
+  if (!lista) return;
+
+  if (lista.classList.contains("hidden")) {
+    lista.classList.remove("hidden");
+    if (seta) seta.textContent = "⬆️";
+  } else {
+    lista.classList.add("hidden");
+    if (seta) seta.textContent = "⬇️";
+  }
+}
