@@ -98,7 +98,22 @@ ${ticket.status === "Concluído" ? `
   </button>
 ` : ""}</div></article>`).join("")}
 
-function renderKanban(){const aberto=ticketsCache.filter(t=>t.status==="Aberto");const andamento=ticketsCache.filter(t=>t.status==="Em andamento");const concluido=ticketsCache.filter(t=>t.status==="Concluído");document.getElementById("kanbanCountAberto").textContent=aberto.length;document.getElementById("kanbanCountAndamento").textContent=andamento.length;document.getElementById("kanbanCountConcluido").textContent=concluido.length;renderKanbanColumn("kanbanAberto",aberto);renderKanbanColumn("kanbanAndamento",andamento);renderKanbanColumn("kanbanConcluido",concluido)}
+function renderKanban(){
+  const aberto = ticketsCache.filter(t => t.status === "Aberto");
+  const andamento = ticketsCache.filter(t => t.status === "Em andamento");
+  const pausado = ticketsCache.filter(t => t.status === "Pausado"); // 🔥 FALTAVA ISSO
+  const concluido = ticketsCache.filter(t => t.status === "Concluído");
+
+  document.getElementById("kanbanCountAberto").textContent = aberto.length;
+  document.getElementById("kanbanCountAndamento").textContent = andamento.length;
+  document.getElementById("kanbanCountPausado").textContent = pausado.length; // 🔥 NOVO
+  document.getElementById("kanbanCountConcluido").textContent = concluido.length;
+
+  renderKanbanColumn("kanbanAberto", aberto);
+  renderKanbanColumn("kanbanAndamento", andamento);
+  renderKanbanColumn("kanbanPausado", pausado); // 🔥 NOVO
+  renderKanbanColumn("kanbanConcluido", concluido);
+}
 function renderKanbanColumn(id,items){const target=document.getElementById(id);if(!items.length){target.innerHTML='<div class="empty-state">Sem chamados nesta coluna.</div>';return}target.innerHTML=items.map(ticket=>`<article class="kanban-card" onclick="abrirDetalhes('${escapeHtml(ticket.id)}')"><strong>${escapeHtml(ticket.unidade)}</strong><div class="ticket-meta"><span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span></div><div>${escapeHtml(ticket.setor_problema||"—")}</div><small>${escapeHtml(ticket.setor||"—")} • ${escapeHtml(ticket.tipo_manutencao||"—")}</small></article>`).join("")}
 
 function abrirDetalhes(id){
