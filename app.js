@@ -62,7 +62,15 @@ async function salvarChamado(event){
       return;
     }
 
-      alert("Chamado salvo com sucesso!");
+     alert("Chamado salvo com sucesso!");
+
+// 🔔 ENVIA PUSH
+enviarPushOneSignal(
+  "🚨 Novo chamado aberto",
+  `${chamado.unidade} - ${chamado.setor}`,
+  chamado.id
+);
+	  
 
     resetarFormulario();
    await carregarDados();
@@ -80,7 +88,7 @@ function getFilteredTickets(){const busca=document.getElementById("busca")?.valu
 
 function renderDashboard(){document.getElementById("metricTotal").textContent=ticketsCache.length;document.getElementById("metricAbertos").textContent=ticketsCache.filter(t=>t.status==="Aberto").length;document.getElementById("metricAndamento").textContent=ticketsCache.filter(t=>t.status==="Em andamento" || t.status === "Pausado").length;document.getElementById("metricConcluidos").textContent=ticketsCache.filter(t=>t.status==="Concluído").length;document.getElementById("metricCriticos").textContent=ticketsCache.filter(t=>t.gravidade==="Crítica").length}
 
-function renderTicketList(){const list=document.getElementById("ticketList");const filtered=getFilteredTickets();if(!filtered.length){list.innerHTML='<div class="empty-state">Nenhum chamado encontrado com os filtros atuais.</div>';return}list.innerHTML=filtered.map(ticket=>`<article class="ticket-card"><div><h4>${escapeHtml(ticket.unidade)} • ${escapeHtml(ticket.setor)}</h4><div class="ticket-meta"><span class="badge badge-soft">${escapeHtml(ticket.id)}</span><span class="badge badge-soft">${escapeHtml(ticket.nome||"Sem nome")}</span><span class="badge badge-soft">${escapeHtml(ticket.tipo_manutencao||"—")}</span><span class="badge ${statusClass(ticket.status)}">${escapeHtml(ticket.status||"Aberto")}</span><span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span></div><p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p></div><div class="ticket-aside"><div class="date-chip"><strong>Criação:</strong><br>${formatDateTime(ticket.data_criacao)}</div><div class="date-chip"><strong>Início:</strong><br>${formatDateTime(ticket.data_inicio)}</div><div class="date-chip"><strong>Finalização:</strong><br>${formatDateTime(ticket.data_finalizacao)}</div>${ticket.foto_url?`<img class="thumb" src="${escapeHtml(ticket.foto_url)}" alt="Foto do chamado">`:""}<button class="btn btn-secondary" style="display:none;" onclick="abrirDetalhes('${ticket.id}')">
+function renderTicketList(){const list=document.getElementById("ticketList");const filtered=getFilteredTickets();if(!filtered.length){list.innerHTML='<div class="empty-state">Nenhum chamado encontrado com os filtros atuais.</div>';return}list.innerHTML=filtered.map(ticket=>`<article class="ticket-card"><div><h4>${escapeHtml(ticket.unidade)} • ${escapeHtml(ticket.setor)}</h4><div class="ticket-meta"><span class="badge badge-soft">${escapeHtml(ticket.id)}</span><span class="badge badge-soft">${escapeHtml(ticket.nome||"Sem nome")}</span><span class="badge badge-soft">${escapeHtml(ticket.tipo_manutencao||"—")}</span><span class="badge ${statusClass(ticket.status)}">${escapeHtml(ticket.status||"Aberto")}</span><span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span></div><p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p></div><div class="ticket-aside"><div class="date-chip"><strong>Criação:</strong><br>${formatDateTime(ticket.data_criacao)}</div><div class="date-chip"><strong>Início:</strong><br>${formatDateTime(ticket.data_inicio)}</div><div class="date-chip"><strong>Finalização:</strong><br>${formatDateTime(ticket.data_finalizacao)}</div>${ticket.foto_url?`<img class="thumb" src="${escapeHtml(ticket.foto_url)}" alt="Foto do chamado">`:""}<button class="btn btn-secondary" onclick="abrirDetalhes('${ticket.id}')">
   Detalhes
 </button>
 
@@ -90,7 +98,22 @@ ${ticket.status === "Concluído" ? `
   </button>
 ` : ""}</div></article>`).join("")}
 
-function renderKanban(){const aberto=ticketsCache.filter(t=>t.status==="Aberto");const andamento=ticketsCache.filter(t=>t.status==="Em andamento");const concluido=ticketsCache.filter(t=>t.status==="Concluído");document.getElementById("kanbanCountAberto").textContent=aberto.length;document.getElementById("kanbanCountAndamento").textContent=andamento.length;document.getElementById("kanbanCountConcluido").textContent=concluido.length;renderKanbanColumn("kanbanAberto",aberto);renderKanbanColumn("kanbanAndamento",andamento);renderKanbanColumn("kanbanConcluido",concluido)}
+function renderKanban(){
+  const aberto = ticketsCache.filter(t => t.status === "Aberto");
+  const andamento = ticketsCache.filter(t => t.status === "Em andamento");
+  const pausado = ticketsCache.filter(t => t.status === "Pausado"); // 🔥 FALTAVA ISSO
+  const concluido = ticketsCache.filter(t => t.status === "Concluído");
+
+  document.getElementById("kanbanCountAberto").textContent = aberto.length;
+  document.getElementById("kanbanCountAndamento").textContent = andamento.length;
+  document.getElementById("kanbanCountPausado").textContent = pausado.length; // 🔥 NOVO
+  document.getElementById("kanbanCountConcluido").textContent = concluido.length;
+
+  renderKanbanColumn("kanbanAberto", aberto);
+  renderKanbanColumn("kanbanAndamento", andamento);
+  renderKanbanColumn("kanbanPausado", pausado); // 🔥 NOVO
+  renderKanbanColumn("kanbanConcluido", concluido);
+}
 function renderKanbanColumn(id,items){const target=document.getElementById(id);if(!items.length){target.innerHTML='<div class="empty-state">Sem chamados nesta coluna.</div>';return}target.innerHTML=items.map(ticket=>`<article class="kanban-card" onclick="abrirDetalhes('${escapeHtml(ticket.id)}')"><strong>${escapeHtml(ticket.unidade)}</strong><div class="ticket-meta"><span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span></div><div>${escapeHtml(ticket.setor_problema||"—")}</div><small>${escapeHtml(ticket.setor||"—")} • ${escapeHtml(ticket.tipo_manutencao||"—")}</small></article>`).join("")}
 
 function abrirDetalhes(id){
@@ -149,7 +172,7 @@ async function carregarDados() {
     const { data, error } = await window.supabaseClient
       .from("chamados")
       .select("*")
-      .or("excluido.is.null,excluido.eq.false") // 🔥 CORREÇÃO AQUI
+      .or("excluido.is.null,excluido.eq.false")
       .order("data_criacao", { ascending: false });
 
     if (error) {
@@ -165,6 +188,27 @@ async function carregarDados() {
     renderDashboard();
     renderTicketList();
     renderKanban();
+
+    // 🔥 AQUI COMEÇA A PARTE NOVA
+    const chamadoId = getChamadoDaURL();
+
+    if (chamadoId) {
+      const chamado = ticketsCache.find(c => c.id == chamadoId);
+
+      if (chamado) {
+        abrirDetalhesChamado(chamado);
+
+        // 🔥 DESTACA E ROLA
+        setTimeout(() => {
+          const el = document.querySelector(`[data-id="${chamado.id}"]`);
+          if (el) {
+            el.style.border = "3px solid red";
+            el.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 500);
+      }
+    }
+    // 🔥 AQUI TERMINA
 
   } catch (err) {
     console.error("Erro geral:", err);
@@ -286,7 +330,7 @@ switchView("dashboard");
   // 🔥 ORDEM CORRETA
   setTimeout(() => {
     ativarNotificacoesSeguro();
-    ativarPushOneSignal();
+    
   }, 1500);
 
   setTimeout(() => {
@@ -550,16 +594,19 @@ async function iniciarChamado() {
       })
       .eq("id", idChamado);
 
-    // ✅ AGORA ESTÁ CERTO
-    enviarPushOneSignal(
-      "▶️ Chamado iniciado",
-      `ID: ${idChamado}`
-    );
 
     fecharModal();
     await carregarDados();
 
     alert("▶️ Chamado iniciado!");
+
+// 🔔 PUSH
+enviarPushOneSignal(
+  "▶️ Chamado iniciado",
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
+  selectedTicket.id
+);
+	
 
   } catch (err) {
     console.error(err);
@@ -620,15 +667,18 @@ async function pausarChamado() {
     await carregarDados();
 
     alert("⏸️ Chamado pausado com sucesso!");
+	// 🔔 PUSH
+enviarPushOneSignal(
+  "⏸️ Chamado pausado",
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
+  selectedTicket.id
+);
 
   } catch (err) {
     console.error("Erro real:", err);
     alert("Erro inesperado ao pausar.");
   }
-  enviarPushOneSignal(
-  "⏸️ Chamado pausado",
-  `ID: ${idChamado}`
-);
+
 }
  // ✅ RETOMAR
 async function retomarChamado() {
@@ -654,10 +704,13 @@ async function retomarChamado() {
   fecharModal();
   await carregarDados();
 
-  alert("Chamado retomado!");
-  enviarPushOneSignal(
-  "▶️ Chamado retomado",
-  `ID: ${idChamado}`
+alert("⏸️ Chamado Retomado com sucesso!");
+
+// 🔔 PUSH
+enviarPushOneSignal(
+  "⏸️ Chamado Retomado",
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
+  selectedTicket.id
 );
 }
  // ✅ FINALIZAR
@@ -694,10 +747,13 @@ async function finalizarChamado() {
   fecharModal();
   await carregarDados();
 
-  alert("Chamado finalizado!");
-  enviarPushOneSignal(
+alert("✅ Chamado finalizado!");
+
+// 🔔 PUSH
+enviarPushOneSignal(
   "✅ Chamado finalizado",
-  `ID: ${idChamado}`
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
+  selectedTicket.id
 );
 }
  // ✅ CALCULAR TEMPO REAL
@@ -797,23 +853,26 @@ function escutarChamadosSeguro() {
 }
 
 
-async function enviarPushOneSignal(titulo, mensagem) {
+async function enviarPushOneSignal(titulo, mensagem, id) {
   try {
-    await fetch("https://onesignal.com/api/v1/notifications", {
+    const res = await fetch("https://bubcilkbujuycpvysico.supabase.co/functions/v1/enviar-push", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5"
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1YmNpbGtidWp1eWNwdnlzaWNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzQyMDQsImV4cCI6MjA5MDcxMDIwNH0.0wFvOdVl47GkOl6aKARSvajqnFMaL3U1_Vp_iAMzw3w"
       },
       body: JSON.stringify({
-        app_id: "os_v2_app_tyxrxtimw5flhgtl527qf3dmwvzwl7xa3klebvm7vs7a6vvzzvhkj6656ebpqcw63pptn4jycoiam4pm4jlycd63jgym5kyzeeqngqy", 
-        included_segments: ["All"],
-        headings: { en: titulo },
-        contents: { en: mensagem }
+        titulo,
+        mensagem,
+        id // 🔥 ESSENCIAL
       })
     });
+
+    const data = await res.json();
+    console.log("✅ RESPOSTA PUSH:", data);
+
   } catch (err) {
-    console.error("Erro push:", err);
+    console.error("❌ ERRO PUSH:", err);
   }
 }
 async function excluirChamado(id) {

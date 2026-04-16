@@ -13,22 +13,69 @@
   <script defer src="supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script src="app.js?v=2"></script>
+<script src="app2.js?v=2"></script>
 <link rel="icon" type="image/png" href="favicon.png">
 <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
 <script>
   window.OneSignal = window.OneSignal || [];
-  OneSignal.push(function() {
-    OneSignal.init({
-      appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
-      notifyButton: {
-        enable: true
-      }
-    });
 
-    // 🔥 MOSTRA O PEDIDO DE PERMISSÃO DEPOIS DE INICIAR
-    OneSignal.showSlidedownPrompt();
+  OneSignal.push(function() {
+   OneSignal.init({
+  appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
+
+  // 🔥 ADICIONA AQUI
+  serviceWorkerPath: "https://jeffersonpeixoto.github.io/eng-elizeu/OneSignalSDKWorker.js",
+  serviceWorkerUpdaterPath: "https://jeffersonpeixoto.github.io/eng-elizeu/OneSignalSDKUpdaterWorker.js",
+
+  notifyButton: {
+    enable: true
+  },
+
+  autoPrompt: false,
+
+  promptOptions: {
+    slidedown: {
+      enabled: true,
+      autoPrompt: false,
+      text: {
+         actionMessage: "Deseja receber alertas de chamados em tempo real?",
+          acceptButton: "Ativar",
+          cancelButton: "Depois"
+      }
+    }
+  }
+});
+
+
+    // 🧠 ID DO USUÁRIO
+    let userId = localStorage.getItem("user_id");
+
+    if (!userId) {
+      userId = "user_" + Math.random().toString(36).substring(2);
+      localStorage.setItem("user_id", userId);
+    }
+
+    // 🔗 LOGIN NO ONESIGNAL
+    OneSignal.setExternalUserId(userId);
+
+    console.log("User ID:", userId);
+
+    // ⏱️ MOSTRA DEPOIS (EVITA DUPLICIDADE)
+    setTimeout(() => {
+      OneSignal.showSlidedownPrompt();
+    }, 5000);
+
   });
+</script>
+<script>
+function getChamadoDaURL() {
+  const params = new URLSearchParams(window.location.search);
+  let id = params.get("chamado");
+
+  if (!id) return null;
+
+  return id.replace("CH-", "");
+}
 </script>
 </head>
 
@@ -155,7 +202,7 @@
               <h3>Lista de chamados</h3>
               <p class="muted">Acompanhe chamados, filtros, exportação em PDF e detalhes.</p>
             </div>
-            <div style="display:none; gap:10px;">
+            <div style="display:flex; gap:10px;">
   <button class="btn btn-secondary" onclick="exportarListaPDF()">Exportar lista de chamados em PDF</button>
   <button class="btn btn-primary" onclick="exportarRelatorioMensal()">Exportar relatório mensal</button>
 </div>
@@ -200,17 +247,15 @@
               <div id="kanbanAndamento" class="kanban-list"></div>
             </div>
 			<div class="kanban-column">
-				<div class="kanban-header">	<span>Pausado</span><strong id="kanbanCountPausado">0</strong>
-				<div id="kanbanAndamento" class="kanban-list"></div>
+				<div class="kanban-header">	<span>Pausado</span><strong id="kanbanCountPausado">0</strong></div>
+				<div id="kanbanPausado" class="kanban-list"></div>
 			</div>
-  <div id="kanbanPausado" class="kanban-list"></div>
-</div>
             <div class="kanban-column">
               <div class="kanban-header"><span>Concluído</span><strong id="kanbanCountConcluido">0</strong></div>
               <div id="kanbanConcluido" class="kanban-list"></div>
             </div>
           </div>
-        </div>
+     </div>
     </div>
 
   </div> <!-- FECHA dynamic-area -->
@@ -227,7 +272,7 @@
 
     <div class="modal-header">
        <div>
-    <h3>Detalhes</h3>
+    <h3 >Detalhes</h3>
     <p id="modalTicketId"></p> <!-- 🔥 AQUI -->
   </div>
       <button onclick="fecharModal()" class="btn-close">X</button>
@@ -245,13 +290,13 @@
     </div>
 
     <div class="modal-footer">
-  <button id="btnIniciar" style="display:none !important" class="iniciar" onclick="iniciarChamado()">Iniciar</button>
+  <button id="btnIniciar" class="iniciar" onclick="iniciarChamado()">Iniciar</button>
 
-  <button id="btnPausar" style="display: none !important;" class="pausar" onclick="pausarChamado()">Pausar</button>
+  <button id="btnPausar" class="pausar" onclick="pausarChamado()">Pausar</button>
 
-  <button id="btnRetomar" style="display: none !important;" class="retomar" onclick="retomarChamado()">Retomar</button>
+  <button id="btnRetomar" class="retomar" onclick="retomarChamado()">Retomar</button>
 
-  <button id="btnFinalizar" style="display: none !important;" class="finalizar" onclick="finalizarChamado()">Finalizar</button>
+  <button id="btnFinalizar" class="finalizar" onclick="finalizarChamado()">Finalizar</button>
 </div>
 
   </div>
