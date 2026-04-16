@@ -231,7 +231,13 @@ input[type="file"] {
 .btn-secondary {
   background: #e5e7eb;
 }
-
+#detal{
+	background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #FFFFFF;
+    MARGIN-TOP: 20px;
+    width: 30vh;
+    font-size: 15px;
+}
 .btn-secondary:hover {
   background: #d1d5db;
 }
@@ -375,7 +381,13 @@ input[type="file"] {
   gap: 16px;
   margin-top: 20px;
 }
+.pausa {
+  border-left: 3px solid #f39c12;
+}
 
+.retomada {
+  border-left: 3px solid #27ae60;
+}
 /* CARD DO CHAMADO */
 .ticket-card {
   display: flex;

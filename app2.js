@@ -88,9 +88,28 @@ function getFilteredTickets(){const busca=document.getElementById("busca")?.valu
 
 function renderDashboard(){document.getElementById("metricTotal").textContent=ticketsCache.length;document.getElementById("metricAbertos").textContent=ticketsCache.filter(t=>t.status==="Aberto").length;document.getElementById("metricAndamento").textContent=ticketsCache.filter(t=>t.status==="Em andamento" || t.status === "Pausado").length;document.getElementById("metricConcluidos").textContent=ticketsCache.filter(t=>t.status==="Concluído").length;document.getElementById("metricCriticos").textContent=ticketsCache.filter(t=>t.gravidade==="Crítica").length}
 
-function renderTicketList(){const list=document.getElementById("ticketList");const filtered=getFilteredTickets();if(!filtered.length){list.innerHTML='<div class="empty-state">Nenhum chamado encontrado com os filtros atuais.</div>';return}list.innerHTML=filtered.map(ticket=>`<article class="ticket-card"><div><h4>${escapeHtml(ticket.unidade)} • ${escapeHtml(ticket.setor)}</h4><div class="ticket-meta"><span class="badge badge-soft">${escapeHtml(ticket.id)}</span><span class="badge badge-soft">${escapeHtml(ticket.nome||"Sem nome")}</span><span class="badge badge-soft">${escapeHtml(ticket.tipo_manutencao||"—")}</span><span class="badge ${statusClass(ticket.status)}">${escapeHtml(ticket.status||"Aberto")}</span><span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span></div><p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p></div><div class="ticket-aside"><div class="date-chip"><strong>Criação:</strong><br>${formatDateTime(ticket.data_criacao)}</div><div class="date-chip"><strong>Início:</strong><br>${formatDateTime(ticket.data_inicio)}</div><div class="date-chip"><strong>Finalização:</strong><br>${formatDateTime(ticket.data_finalizacao)}</div>${ticket.foto_url?`<img class="thumb" src="${escapeHtml(ticket.foto_url)}" alt="Foto do chamado">`:""}<button class="btn btn-secondary" onclick="abrirDetalhes('${ticket.id}')">
-  Detalhes
-</button>
+function renderTicketList(){
+	const list=document.getElementById("ticketList");
+	const filtered=getFilteredTickets();
+	if(!filtered.length){list.innerHTML='<div class="empty-state">Nenhum chamado encontrado com os filtros atuais.</div>';return}
+	list.innerHTML=filtered.map(ticket=>`<article class="ticket-card"><div><h4>${escapeHtml(ticket.unidade)} • ${escapeHtml(ticket.setor)}</h4>
+	<div class="ticket-meta">
+	<span class="badge badge-soft">${escapeHtml(ticket.id)}</span>
+	<span class="badge badge-soft">${escapeHtml(ticket.nome||"Sem nome")}</span>
+	<span class="badge badge-soft">${escapeHtml(ticket.tipo_manutencao||"—")}</span>
+	<span class="badge ${statusClass(ticket.status)}">${escapeHtml(ticket.status||"Aberto")}</span>
+	<span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span>
+	</div>
+	<p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p>
+	<button class="btn btn-secondary" id="detal" onclick="abrirDetalhes('${ticket.id}')">  Detalhes </button>
+	</div>
+	<div class="ticket-aside">
+	<div class="date-chip">
+	<strong>Criação:</strong><br>${formatDateTime(ticket.data_criacao)}
+	</div>
+	<div class="date-chip"><strong>Início:</strong><br>${formatDateTime(ticket.data_inicio)}</div>
+	<div class="date-chip"><strong>Finalização:</strong><br>${formatDateTime(ticket.data_finalizacao)}</div>
+	
 
 ${ticket.status === "Concluído" ? `
   <button class="btn btn-danger" onclick="excluirChamado('${ticket.id}')">
@@ -934,4 +953,19 @@ function switchView(view, el = null) {
   if (view === "dashboard") renderDashboard();
   if (view === "lista") renderTicketList();
   if (view === "kanban") renderKanban();
+}
+function toggleColuna(event, id) {
+  const header = event.currentTarget;
+  const lista = document.getElementById(id);
+  const seta = header.querySelector(".seta");
+
+  if (!lista) return;
+
+  if (lista.classList.contains("hidden")) {
+    lista.classList.remove("hidden");
+    if (seta) seta.textContent = "⬆️";
+  } else {
+    lista.classList.add("hidden");
+    if (seta) seta.textContent = "⬇️";
+  }
 }
