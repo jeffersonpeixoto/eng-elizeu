@@ -38,13 +38,14 @@
       enabled: true,
       autoPrompt: false,
       text: {
-        actionMessage: "Receba atualizações dos chamados em tempo real 🚀",
-        acceptButton: "Permitir",
-        cancelButton: "Agora não"
+         actionMessage: "Deseja receber alertas de chamados em tempo real?",
+          acceptButton: "Ativar",
+          cancelButton: "Depois"
       }
     }
   }
 });
+OneSignal.setLanguage("pt");
 
     // 🧠 ID DO USUÁRIO
     let userId = localStorage.getItem("user_id");
