@@ -13,7 +13,7 @@
   <script defer src="supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script src="app2.js?v=2"></script>
+<script src="app.js?v=2"></script>
 <link rel="icon" type="image/png" href="favicon.png">
 <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
 <script>
@@ -237,24 +237,45 @@ function getChamadoDaURL() {
             </div>
           </div>
 
-          <div class="kanban-grid">
-            <div class="kanban-column">
-              <div class="kanban-header"><span>Aberto</span><strong id="kanbanCountAberto">0</strong></div>
-              <div id="kanbanAberto" class="kanban-list"></div>
-            </div>
-            <div class="kanban-column">
-              <div class="kanban-header"><span>Em andamento</span><strong id="kanbanCountAndamento">0</strong></div>
-              <div id="kanbanAndamento" class="kanban-list"></div>
-            </div>
-			<div class="kanban-column">
-				<div class="kanban-header">	<span>Pausado</span><strong id="kanbanCountPausado">0</strong></div>
-				<div id="kanbanPausado" class="kanban-list"></div>
-			</div>
-            <div class="kanban-column">
-              <div class="kanban-header"><span>Concluído</span><strong id="kanbanCountConcluido">0</strong></div>
-              <div id="kanbanConcluido" class="kanban-list"></div>
-            </div>
-          </div>
+         <div class="kanban-grid">
+
+  <div class="kanban-column">
+   <div class="kanban-header" onclick="toggleColuna(event, 'kanbanAberto')">
+  <span>Aberto</span>
+  <strong id="kanbanCountAberto">0</strong>
+  <span class="seta">⬇️</span>
+</div>
+<div id="kanbanAberto" class="kanban-list hidden"></div>
+  </div>
+
+  <div class="kanban-column">
+    <div class="kanban-header" onclick="toggleColuna(event, 'kanbanAndamento')">
+      <span>Em andamento</span>
+      <strong id="kanbanCountAndamento">0</strong>
+      <span class="seta">⬇️</span>
+    </div>
+    <div id="kanbanAndamento" class="kanban-list hidden"></div>
+  </div>
+
+  <div class="kanban-column">
+    <div class="kanban-header" onclick="toggleColuna( event,'kanbanPausado')">
+      <span>Pausado</span>
+      <strong id="kanbanCountPausado">0</strong>
+      <span class="seta">⬇️</span>
+    </div>
+    <div id="kanbanPausado" class="kanban-list hidden"></div>
+  </div>
+
+  <div class="kanban-column">
+    <div class="kanban-header" onclick="toggleColuna(event, 'kanbanConcluido')">
+      <span>Concluído</span>
+      <strong id="kanbanCountConcluido">0</strong>
+      <span class="seta">⬇️</span>
+    </div>
+    <div id="kanbanConcluido" class="kanban-list hidden"></div>
+  </div>
+
+</div>
      </div>
     </div>
 
