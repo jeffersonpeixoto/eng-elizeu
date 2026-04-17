@@ -10,20 +10,22 @@ function resetarFormulario(){document.getElementById("ticketForm").reset()}
 
 async function uploadFoto(file){if(!file)return null;const ext=(file.name.split(".").pop()||"jpg").toLowerCase();const fileName="foto_"+Date.now()+"."+ext;const {error}=await window.supabaseClient.storage.from("chamados-fotos").upload(fileName,file,{cacheControl:"3600",upsert:false,contentType:file.type||"image/jpeg"});if(error)throw error;const {data}=window.supabaseClient.storage.from("chamados-fotos").getPublicUrl(fileName);return data.publicUrl}
 function renderDashboard(){
-  document.getElementById("metricTotal").textContent = ticketsCache.length;
+  document.getElementById("metricTotal").textContent =
+    ticketsCache.filter(t => !t.excluido).length;
 
   document.getElementById("metricAbertos").textContent =
-    ticketsCache.filter(t => t.status === "Aberto").length;
+    ticketsCache.filter(t => t.status === "Aberto" && !t.excluido).length;
 
   document.getElementById("metricAndamento").textContent =
-    ticketsCache.filter(t => t.status === "Em andamento").length;
+    ticketsCache.filter(t => t.status === "Em andamento" && !t.excluido).length;
 
   document.getElementById("metricConcluidos").textContent =
-    ticketsCache.filter(t => t.status === "Concluído").length;
+    ticketsCache.filter(t => t.status === "Concluído" && !t.excluido).length;
 
   document.getElementById("metricCriticos").textContent =
-    ticketsCache.filter(t => t.gravidade === "Crítica").length;
+    ticketsCache.filter(t => t.gravidade === "Crítica" && !t.excluido).length;
 }
+
 async function salvarChamado(event){
   event.preventDefault();
 
@@ -84,9 +86,36 @@ switchView("dashboard");
   }
 }
 
-function getFilteredTickets(){const busca=document.getElementById("busca")?.value.toLowerCase().trim()||"";const filtroStatus=document.getElementById("filtroStatus")?.value||"";const filtroGravidade=document.getElementById("filtroGravidade")?.value||"";const filtroSetor=document.getElementById("filtroSetor")?.value||"";return ticketsCache.filter(ticket=>{const target=[ticket.id,ticket.nome,ticket.unidade,ticket.setor,ticket.setor_problema,ticket.tipo_manutencao,ticket.descricao].join(" ").toLowerCase();return (!busca||target.includes(busca))&&(!filtroStatus||ticket.status===filtroStatus)&&(!filtroGravidade||ticket.gravidade===filtroGravidade)&&(!filtroSetor||ticket.setor===filtroSetor)})}
+function getFilteredTickets(){
+	const busca=document.getElementById("busca")?.value.toLowerCase().trim()||"";
+	const filtroStatus=document.getElementById("filtroStatus")?.value||"";
+	const filtroGravidade=document.getElementById("filtroGravidade")?.value||"";
+	const filtroSetor=document.getElementById("filtroSetor")?.value||"";
 
-function renderDashboard(){document.getElementById("metricTotal").textContent=ticketsCache.length;document.getElementById("metricAbertos").textContent=ticketsCache.filter(t=>t.status==="Aberto").length;document.getElementById("metricAndamento").textContent=ticketsCache.filter(t=>t.status==="Em andamento" || t.status === "Pausado").length;document.getElementById("metricConcluidos").textContent=ticketsCache.filter(t=>t.status==="Concluído").length;document.getElementById("metricCriticos").textContent=ticketsCache.filter(t=>t.gravidade==="Crítica").length}
+	return ticketsCache.filter(ticket=>{
+
+		if (ticket.excluido) return false; // 🔥 ESSENCIAL
+
+		const target=[
+			ticket.id,
+			ticket.nome,
+			ticket.unidade,
+			ticket.setor,
+			ticket.setor_problema,
+			ticket.tipo_manutencao,
+			ticket.descricao
+		].join(" ").toLowerCase();
+
+		return (
+			(!busca || target.includes(busca)) &&
+			(!filtroStatus || ticket.status === filtroStatus) &&
+			(!filtroGravidade || ticket.gravidade === filtroGravidade) &&
+			(!filtroSetor || ticket.setor === filtroSetor)
+		);
+	});
+}
+
+
 
 function renderTicketList(){
 	const list=document.getElementById("ticketList");
@@ -112,16 +141,21 @@ function renderTicketList(){
 	
 
 ${ticket.status === "Concluído" ? `
-  <button class="btn btn-danger" onclick="excluirChamado('${ticket.id}')">
+  <button class="btn btn-danger" style="display:none;" onclick="excluirChamado('${ticket.id}')">
     🗑️ Lixeira
   </button>
-` : ""}</div></article>`).join("")}
+` : ""}
+</div></article>`).join("")
+}
 
 function renderKanban(){
-  const aberto = ticketsCache.filter(t => t.status === "Aberto");
-  const andamento = ticketsCache.filter(t => t.status === "Em andamento");
-  const pausado = ticketsCache.filter(t => t.status === "Pausado"); // 🔥 FALTAVA ISSO
-  const concluido = ticketsCache.filter(t => t.status === "Concluído");
+const aberto = ticketsCache.filter(t => t.status === "Aberto" && !t.excluido);
+
+const andamento = ticketsCache.filter(t => t.status === "Em andamento" && !t.excluido);
+
+const pausado = ticketsCache.filter(t => t.status === "Pausado" && !t.excluido);
+
+const concluido = ticketsCache.filter(t => t.status === "Concluído" && !t.excluido);
 
   document.getElementById("kanbanCountAberto").textContent = aberto.length;
   document.getElementById("kanbanCountAndamento").textContent = andamento.length;
@@ -188,11 +222,10 @@ async function atualizarChamadoModal(){if(!selectedTicket)return;const novoStatu
 
 async function carregarDados() {
   try {
-    const { data, error } = await window.supabaseClient
-      .from("chamados")
-      .select("*")
-      .or("excluido.is.null,excluido.eq.false")
-      .order("data_criacao", { ascending: false });
+   const { data, error } = await window.supabaseClient
+  .from("chamados")
+  .select("*")
+  .order("data_criacao", { ascending: false });
 
     if (error) {
       console.error("Erro Supabase:", error);
@@ -895,29 +928,34 @@ async function enviarPushOneSignal(titulo, mensagem, id) {
   }
 }
 async function excluirChamado(id) {
-  const confirmar = confirm("Deseja mover este chamado para a lixeira?");
+  if (!id) {
+    alert("ID inválido");
+    return;
+  }
 
+  const confirmar = confirm("Deseja mover este chamado para a lixeira?");
   if (!confirmar) return;
 
-  try {
-    const { error } = await window.supabaseClient
-      .from("chamados")
-      .update({ excluido: true }) // 🔥 NÃO DELETA
-      .eq("id", id);
+  const agora = new Date().toISOString();
 
-    if (error) {
-      alert("Erro: " + error.message);
-      return;
-    }
+  const { error } = await window.supabaseClient
+    .from("chamados")
+    .update({ 
+      excluido: true,
+      status: "Concluído", // 🔥 FORÇA STATUS
+      data_finalizacao: agora
+    })
+    .eq("id", id);
 
-    alert("Chamado movido para lixeira!");
-
-    await carregarDados();
-
-  } catch (err) {
-    console.error(err);
-    alert("Erro inesperado.");
+  if (error) {
+    console.error(error);
+    alert("Erro: " + error.message);
+    return;
   }
+
+  console.log("✔ Atualizado:", id);
+
+  await carregarDados();
 }
 function formatarHoras(horasDecimal) {
   if (!horasDecimal) return "—";
@@ -968,4 +1006,29 @@ function toggleColuna(event, id) {
     lista.classList.add("hidden");
     if (seta) seta.textContent = "⬇️";
   }
+}
+
+async function restaurarParaConcluidos() {
+  const confirmar = confirm("Restaurar todos os chamados da lixeira como CONCLUÍDOS?");
+
+  if (!confirmar) return;
+
+  const { error } = await window.supabaseClient
+    .from("chamados")
+    .update({
+      excluido: false,
+      status: "Concluído",
+      data_finalizacao: new Date().toISOString()
+    })
+    .eq("excluido", true);
+
+  if (error) {
+    alert("Erro: " + error.message);
+    return;
+  }
+
+  alert("Chamados restaurados como concluídos!");
+
+  carregarLixeira();
+  carregarDados();
 }
