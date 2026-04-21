@@ -7,8 +7,76 @@ function priorityClass(p){return {"Baixa":"priority-baixa","Média":"priority-me
 function switchView(view){document.querySelectorAll(".view").forEach(el=>el.classList.add("hidden"));document.getElementById(view+"View").classList.remove("hidden");document.querySelectorAll("[data-view-btn]").forEach(btn=>btn.classList.toggle("active",btn.dataset.viewBtn===view));if(view==="dashboard")renderDashboard();if(view==="lista")renderTicketList();if(view==="kanban")renderKanban()}
 function bindViewButtons(){document.querySelectorAll("[data-view-btn]").forEach(btn=>btn.addEventListener("click",()=>switchView(btn.dataset.viewBtn)))}
 function resetarFormulario(){document.getElementById("ticketForm").reset()}
+function compressImageSafe(file) {
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      const reader = new FileReader();
 
-async function uploadFoto(file){if(!file)return null;const ext=(file.name.split(".").pop()||"jpg").toLowerCase();const fileName="foto_"+Date.now()+"."+ext;const {error}=await window.supabaseClient.storage.from("chamados-fotos").upload(fileName,file,{cacheControl:"3600",upsert:false,contentType:file.type||"image/jpeg"});if(error)throw error;const {data}=window.supabaseClient.storage.from("chamados-fotos").getPublicUrl(fileName);return data.publicUrl}
+      reader.onload = (e) => {
+        img.src = e.target.result;
+      };
+
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+
+          const maxWidth = 800;
+          const scale = Math.min(1, maxWidth / img.width);
+
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob); // ✅ comprimido
+              } else {
+                resolve(file); // ⚠️ fallback
+              }
+            },
+            "image/webp",
+            0.7
+          );
+        } catch {
+          resolve(file);
+        }
+      };
+
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+
+    } catch {
+      resolve(file);
+    }
+  });
+}
+async function uploadFoto(file) {
+  if (!file) return null;
+
+  // 🔥 tenta comprimir, mas não quebra se falhar
+  const finalFile = await compressImageSafe(file);
+
+  const formData = new FormData();
+  formData.append("file", finalFile);
+  formData.append("upload_preset", "uploads_public");
+
+  const res = await fetch("https://api.cloudinary.com/v1_1/dprkzdmqt/image/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    throw new Error(data.error.message);
+  }
+
+  return data.secure_url;
+}
 function renderDashboard(){
   document.getElementById("metricTotal").textContent =
     ticketsCache.filter(t => !t.excluido).length;
@@ -34,8 +102,15 @@ async function salvarChamado(event){
   btn.textContent = "Salvando...";
 
   try {
+
+    // 👇 AQUI É O LUGAR CERTO
     const file = document.getElementById("foto").files[0];
-    const fotoUrl = await uploadFoto(file);
+
+    let fotoUrl = null;
+
+    if (file) {
+      fotoUrl = await uploadFoto(file);
+    }
 
     const chamado = {
       id: "CH-" + Date.now(),
@@ -46,40 +121,24 @@ async function salvarChamado(event){
       tipo_manutencao: document.getElementById("tipoManutencao").value,
       gravidade: document.getElementById("gravidade").value,
       descricao: document.getElementById("descricao").value.trim(),
-      foto_url: fotoUrl,
+      foto_url: fotoUrl, // 👈 já tratado
       status: "Aberto",
       data_criacao: new Date().toISOString(),
       data_inicio: null,
       data_finalizacao: null
     };
 
-    // 🔥 SALVA NO SUPABASE (FALTAVA ISSO)
     const { error } = await window.supabaseClient
       .from("chamados")
       .insert([chamado]);
 
-    if (error) {
-      console.error(error);
-      alert("Erro ao salvar chamado: " + error.message);
-      return;
-    }
+    if (error) throw error;
 
-     alert("Chamado salvo com sucesso!");
+    alert("Chamado salvo com sucesso!");
 
-// 🔔 ENVIA PUSH
-enviarPushOneSignal(
-  "🚨 Novo chamado aberto",
-  `${chamado.unidade} - ${chamado.setor}`,
-  chamado.id
-);
-	  
-
-    resetarFormulario();
-   await carregarDados();
-switchView("dashboard");
   } catch (error) {
     console.error(error);
-    alert("Erro ao salvar chamado.");
+    alert("Erro: " + error.message);
   } finally {
     btn.disabled = false;
     btn.textContent = "Salvar chamado";
@@ -141,7 +200,7 @@ function renderTicketList(){
 	
 
 ${ticket.status === "Concluído" ? `
-  <button class="btn btn-danger" style="display:none;" onclick="excluirChamado('${ticket.id}')">
+  <button class="btn btn-danger"  onclick="excluirChamado('${ticket.id}')">
     🗑️ Lixeira
   </button>
 ` : ""}
@@ -200,14 +259,34 @@ function abrirDetalhes(id){
   // descrição
   document.getElementById("modalDescricao").textContent = ticket.descricao || "";
 
-  // foto
-  const modalFoto = document.getElementById("modalFoto");
-  if(ticket.foto_url){
-    modalFoto.src = ticket.foto_url;
+// foto + comparador
+const antes = ticket.foto_url;
+const depois = ticket.foto_final_url;
+
+const modalFoto = document.getElementById("modalFoto");
+const wrapper = document.getElementById("compareWrapper");
+
+if (antes && depois) {
+  // 🔥 mostra slider
+  wrapper.style.display = "block";
+  modalFoto.classList.add("hidden");
+
+  document.getElementById("imgAntes").src = antes;
+  document.getElementById("imgDepois").src = depois;
+
+  setTimeout(iniciarSlider, 100);
+
+} else {
+  // 👉 fallback (só uma imagem)
+  wrapper.style.display = "none";
+
+  if (antes) {
+    modalFoto.src = antes;
     modalFoto.classList.remove("hidden");
   } else {
     modalFoto.classList.add("hidden");
   }
+}
 
   document.getElementById("detailModal").style.display = "flex";
 
@@ -1031,4 +1110,90 @@ async function restaurarParaConcluidos() {
 
   carregarLixeira();
   carregarDados();
+}
+
+function iniciarSlider() {
+  const container = document.querySelector(".compare-container");
+  const overlay = document.getElementById("overlay");
+  const slider = document.getElementById("slider");
+
+  if (!container || !overlay || !slider) return;
+
+  let isDragging = false;
+
+  function mover(x) {
+    const rect = container.getBoundingClientRect();
+
+    let pos = x - rect.left;
+
+    // trava dentro da área
+    pos = Math.max(0, Math.min(pos, rect.width));
+
+    const percent = (pos / rect.width) * 100;
+
+    overlay.style.width = percent + "%";
+    slider.style.left = percent + "%";
+  }
+
+  // 🖱️ mouse
+  slider.addEventListener("mousedown", () => isDragging = true);
+  window.addEventListener("mouseup", () => isDragging = false);
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    mover(e.clientX);
+  });
+
+  // 📱 touch (celular)
+  slider.addEventListener("touchstart", () => isDragging = true);
+  window.addEventListener("touchend", () => isDragging = false);
+
+  window.addEventListener("touchmove", (e) => {
+    if (!isDragging) return;
+    mover(e.touches[0].clientX);
+  });
+}
+
+function abrirModalFinalizar() {
+  document.getElementById("modalFinalizar").classList.remove("hidden");
+}
+
+function fecharModalFinalizar() {
+  document.getElementById("modalFinalizar").classList.add("hidden");
+}
+
+async function confirmarFinalizacao() {
+  try {
+    const file = document.getElementById("fotoFinal").files[0];
+
+    let fotoFinalUrl = null;
+
+    if (file) {
+      fotoFinalUrl = await uploadFoto(file);
+    }
+
+    await window.supabaseClient
+      .from("chamados")
+      .update({
+        status: "Concluído",
+        data_finalizacao: new Date().toISOString(),
+        foto_final_url: fotoFinalUrl
+      })
+      .eq("id", selectedTicket.id);
+
+    alert("Chamado finalizado!");
+
+    // fecha tudo
+    fecharModalFinalizar();
+    fecharModal();
+
+    // limpa input
+    document.getElementById("fotoFinal").value = "";
+
+    await carregarDados();
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao finalizar chamado");
+  }
 }

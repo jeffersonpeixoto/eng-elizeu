@@ -18,6 +18,66 @@ body {
   padding: 20px;
 }
 
+.compare-container {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: 10px auto;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+/* imagens base */
+.compare-container img {
+  width: 100%;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* imagem de fundo (DEPOIS) */
+.img-base {
+  position: relative;
+  z-index: 1;
+}
+
+/* camada do ANTES */
+.img-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%; /* começa no meio */
+  height: 100%;
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* barra de arraste */
+.slider {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 3px;
+  height: 100%;
+  background: white;
+  z-index: 3;
+  cursor: ew-resize;
+}
+
+/* bolinha do slider */
+.slider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -7px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
 /* CONTAINER PRINCIPAL */
 .app-shell {
   max-width: 1000px;

@@ -7,13 +7,13 @@
   <meta name="description" content="Sistema de chamados de engenharia com PWA, PDF, quadro operacional e detalhes." />
   <title>Chamados de Engenharia • Completo</title>
   <link rel="manifest" href="manifest.json" />
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script src="app2.js?v=19"></script>
+<script src="app2.js?v=24"></script>
 <link rel="icon" type="image/png" href="favicon.png">
 <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
 <script>
@@ -308,6 +308,23 @@ function getChamadoDaURL() {
     </div>
 
     <img id="modalFoto" class="hidden" />
+
+<!-- 🔥 COMPARADOR ANTES/DEPOIS -->
+<div id="compareWrapper" style="display:none; margin-top:10px;">
+
+  <div class="compare-container">
+    
+    <img id="imgDepois" class="img-base">
+
+    <div class="img-overlay" id="overlay">
+      <img id="imgAntes">
+    </div>
+
+    <div class="slider" id="slider"></div>
+
+  </div>
+
+</div>
     </div>
 
     <div class="modal-footer">
@@ -317,12 +334,35 @@ function getChamadoDaURL() {
 
   <button id="btnRetomar" class="retomar" onclick="retomarChamado()">Retomar</button>
 
-  <button id="btnFinalizar" class="finalizar" onclick="finalizarChamado()">Finalizar</button>
+  <button id="btnFinalizar" class="finalizar" onclick="abrirModalFinalizar()">Finalizar</button>
 </div>
 
   </div>
 </div>
+<div id="modalFinalizar" class="modal hidden">
+  <div class="modal-box">
 
+    <div class="modal-header">
+      <h3>Finalizar chamado</h3>
+      <button onclick="fecharModalFinalizar()" class="btn-close">X</button>
+    </div>
+
+    <div class="modal-body">
+      <p style="font-size:13px; opacity:.7;">
+        📸 Foto do serviço concluído (opcional)
+      </p>
+
+      <input type="file" id="fotoFinal" accept="image/*">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="confirmarFinalizacao()">
+        Confirmar finalização
+      </button>
+    </div>
+
+  </div>
+</div>
 <div style="position: relative;
     width: auto;
     margin: 0 auto;
