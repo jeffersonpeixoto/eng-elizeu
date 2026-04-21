@@ -13,7 +13,7 @@
   <script defer src="supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script src="app2.js?v=26"></script>
+<script src="app2.js?v=28"></script>
 <link rel="icon" type="image/png" href="favicon.png">
 <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
 <script>
@@ -24,8 +24,8 @@ OneSignal.push(async function() {
   await OneSignal.init({
     appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
 
-    serviceWorkerPath: "https://jeffersonpeixoto.github.io/eng-elizeu/OneSignalSDKWorker.js",
-    serviceWorkerUpdaterPath: "https://jeffersonpeixoto.github.io/eng-elizeu/OneSignalSDKUpdaterWorker.js",
+    serviceWorkerPath: "OneSignalSDKWorker.js",
+    serviceWorkerUpdaterPath: "OneSignalSDKUpdaterWorker.js",
 
     notifyButton: { enable: false },
     autoPrompt: false
@@ -38,7 +38,7 @@ OneSignal.push(async function() {
     localStorage.setItem("user_id", userId);
   }
 
-  await OneSignal.setExternalUserId(userId);
+ await OneSignal.login(userId);
 
   console.log("User ID:", userId);
 
@@ -252,7 +252,7 @@ function ativarNotificacoesManual() {
               <h3>Lista de chamados</h3>
               <p class="muted">Acompanhe chamados, filtros, exportação em PDF e detalhes.</p>
             </div>
-            <div style="display:flex; gap:10px;">
+            <div style="display:none; gap:10px;">
   <button class="btn btn-secondary" onclick="exportarListaPDF()">Exportar lista de chamados em PDF</button>
   <button class="btn btn-primary" onclick="exportarRelatorioMensal()">Exportar relatório mensal</button>
 </div>
@@ -435,6 +435,12 @@ function toggleColuna(event, id) {
   }
 }
 </script>
-
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(reg => reg.unregister());
+  });
+}
+</script>
 </body>
 </html>

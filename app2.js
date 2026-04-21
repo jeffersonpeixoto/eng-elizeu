@@ -135,6 +135,10 @@ async function salvarChamado(event){
     if (error) throw error;
 
     alert("Chamado salvo com sucesso!");
+	// 🔥 AQUI É O SEGREDO
+resetarFormulario();
+await carregarDados();
+switchView("lista");
 
   } catch (error) {
     console.error(error);
@@ -200,7 +204,7 @@ function renderTicketList(){
 	
 
 ${ticket.status === "Concluído" ? `
-  <button class="btn btn-danger" style="display:none;"  onclick="excluirChamado('${ticket.id}')">
+  <button class="btn btn-danger"  onclick="excluirChamado('${ticket.id}')">
     🗑️ Lixeira
   </button>
 ` : ""}
@@ -440,7 +444,6 @@ function exportarListaPDF(){const tickets=getFilteredTickets();if(!tickets.lengt
 
 function bindFilters(){["busca","filtroStatus","filtroGravidade","filtroSetor"].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.addEventListener("input",()=>{renderTicketList();renderKanban()});el.addEventListener("change",()=>{renderTicketList();renderKanban()})})}
 
-function registerPWA(){if("serviceWorker"in navigator){window.addEventListener("load",async()=>{try{await navigator.serviceWorker.register("./service-worker.js");console.log("Service Worker registrado")}catch(error){console.error("Erro ao registrar Service Worker:",error)}})}window.addEventListener("beforeinstallprompt",(event)=>{event.preventDefault();deferredPrompt=event;document.getElementById("installButton").classList.remove("hidden")});const installButton=document.getElementById("installButton");installButton.addEventListener("click",async()=>{if(!deferredPrompt){alert("O navegador ainda não liberou a instalação. Abra via HTTPS ou localhost e use o app por alguns instantes.");return}deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installButton.classList.add("hidden")});window.addEventListener("appinstalled",()=>{installButton.classList.add("hidden")})}
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!window.supabaseClient) {
@@ -905,36 +908,8 @@ async function calcularDuracaoReal(chamadoId) {
   return (total / (1000 * 60 * 60)).toFixed(2);
 }
 // notificações
-async function ativarNotificacoes() {
-  const perm = await Notification.requestPermission();
 
-  if (perm === "granted") {
-    console.log("🔔 Notificações ativadas");
-  } else {
-    alert("Ative as notificações para receber alertas.");
-  }
-}
-function ativarNotificacoesSeguro() {
-  if (!("Notification" in window)) return;
 
-  Notification.requestPermission().then(permission => {
-    console.log("Permissão:", permission);
-  });
-}
-function notificar(titulo, mensagem) {
-  try {
-    if (!("Notification" in window)) return;
-
-    if (Notification.permission === "granted") {
-      new Notification(titulo, {
-        body: mensagem,
-        icon: "/logo.png"
-      });
-    }
-  } catch (e) {
-    console.warn("Erro notificação:", e);
-  }
-}
 let canalChamados = null;
 function escutarChamadosSeguro() {
   try {
@@ -943,10 +918,14 @@ function escutarChamadosSeguro() {
       return;
     }
 
-    // 🔥 NÃO CRIAR MAIS DE UM
+    // 🔥 trava global anti-duplicação
+    if (window.__realtimeAtivo) return;
+    window.__realtimeAtivo = true;
+
+    // 🔥 mata canal antigo se existir
     if (canalChamados) {
-      console.log("Realtime já ativo");
-      return;
+      window.supabaseClient.removeChannel(canalChamados);
+      canalChamados = null;
     }
 
     canalChamados = window.supabaseClient.channel("chamados");
@@ -960,19 +939,25 @@ function escutarChamadosSeguro() {
           table: "chamados",
         },
         async (payload) => {
-          console.log("Realtime:", payload);
 
           const c = payload.new;
 
           if (payload.eventType === "INSERT") {
-            notificar("🚨 Novo chamado", `${c.unidade} - ${c.setor}`);
+          enviarPushOneSignal(
+  "🚨 Novo chamado",
+  `${c.unidade} - ${c.setor}`,
+  c.id
+);
           }
 
           if (payload.eventType === "UPDATE") {
-            notificar("🔄 Status atualizado", `${c.unidade} - ${c.status}`);
+            enviarPushOneSignal(
+  "🔄 Status atualizado",
+  `${c.unidade} - ${c.status}`,
+  c.id
+);
           }
 
-          // 🔥 SINCRONIZA SEM DUPLICAR
           await carregarDados();
         }
       )
