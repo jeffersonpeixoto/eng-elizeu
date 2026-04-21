@@ -18,24 +18,18 @@
 
 <link rel="icon" type="image/png" href="favicon.png">
 
-<script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
-
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-
-OneSignalDeferred.push(async function (OneSignal) {
-
-  await OneSignal.init({
-    appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
-    autoPrompt: true
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
+      safari_web_id: "web.onesignal.auto.4b99c5db-a7c9-461a-8333-facb0838095d",
+      notifyButton: {
+        enable: true,
+      },
+    });
   });
-
-  console.log("OneSignal iniciado com sucesso");
-
-  const permission = await OneSignal.Notifications.permission;
-  console.log("Permissão:", permission);
-
-});
 </script>
 
 </head>
