@@ -480,15 +480,13 @@ async function exportarRelatorioMensal() {
     const custoPorSetor = {};
 
     const linhas = [];
-
+	const { data: temposTodos } = await window.supabaseClient
+    .from("chamado_tempo")
+    .select("*");
     for (const c of chamadosMes) {
 
       // 🔥 BUSCAR TEMPOS ORDENADOS
-      const { data: tempos } = await window.supabaseClient
-        .from("chamado_tempo")
-        .select("*")
-        .eq("chamado_id", c.id)
-        .order("inicio", { ascending: true });
+      const tempos = temposTodos.filter(t => t.chamado_id === c.id);
 
       let duracao = 0;
       let pausa = 0;
@@ -903,7 +901,7 @@ function escutarChamadosSeguro() {
           schema: "public",
           table: "chamados",
         },
-        async (payload) => {
+         (payload) => {
 
           const c = payload.new;
 
