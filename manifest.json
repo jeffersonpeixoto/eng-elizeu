@@ -1,6 +1,6 @@
 {
   "name": "Chamados de Engenharia Completo",
-  "short_name": "Chamados",
+  "short_name": "Chamadoss",
   "start_url": "./index2.html?source=pwa",
   "scope": "./",
   "display": "browser",
