@@ -398,7 +398,7 @@ function registerPWA() {
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-       await navigator.serviceWorker.register("service-worker.js");
+       await navigator.serviceWorker.register("./service-worker.js");
         console.log("Service Worker registrado");
       } catch (error) {
         console.error("Erro ao registrar Service Worker:", error);
@@ -940,12 +940,15 @@ function escutarChamadosSeguro() {
 
           const c = payload.new;
 
-          if (payload.eventType === "INSERT") {
- enviarPushOneSignal(
-  "▶️ Chamado Aberto",
-  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
-  selectedTicket.id
-);
+    if (payload.eventType === "INSERT") {
+  const c = payload.new;
+
+  enviarPushOneSignal(
+    "▶️ Chamado Aberto",
+    `${c.unidade} - ${c.setor}`,
+    c.id
+  );
+}
           }
 
           if (payload.eventType === "UPDATE") {
