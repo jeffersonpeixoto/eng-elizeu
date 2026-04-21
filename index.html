@@ -7,76 +7,37 @@
   <meta name="description" content="Sistema de chamados de engenharia com PWA, PDF, quadro operacional e detalhes." />
   <title>Chamados de Engenharia • Completo</title>
   <link rel="manifest" href="manifest.json" />
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=6">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script defer src="supabase.js"></script>
+<script defer src="app2.js?v=39"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script src="app2.js?v=19"></script>
+
 <link rel="icon" type="image/png" href="favicon.png">
+
 <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+
 <script>
-  window.OneSignal = window.OneSignal || [];
+window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-  OneSignal.push(function() {
-   OneSignal.init({
-  appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
+OneSignalDeferred.push(async function (OneSignal) {
 
-  // 🔥 ADICIONA AQUI
-  serviceWorkerPath: "https://jeffersonpeixoto.github.io/eng-elizeu/OneSignalSDKWorker.js",
-  serviceWorkerUpdaterPath: "https://jeffersonpeixoto.github.io/eng-elizeu/OneSignalSDKUpdaterWorker.js",
-
-  notifyButton: {
-    enable: true
-  },
-
-  autoPrompt: false,
-
-  promptOptions: {
-    slidedown: {
-      enabled: true,
-      autoPrompt: false,
-      text: {
-         actionMessage: "Deseja receber alertas de chamados em tempo real?",
-          acceptButton: "Ativar",
-          cancelButton: "Depois"
-      }
-    }
-  }
-});
-
-
-    // 🧠 ID DO USUÁRIO
-    let userId = localStorage.getItem("user_id");
-
-    if (!userId) {
-      userId = "user_" + Math.random().toString(36).substring(2);
-      localStorage.setItem("user_id", userId);
-    }
-
-    // 🔗 LOGIN NO ONESIGNAL
-    OneSignal.setExternalUserId(userId);
-
-    console.log("User ID:", userId);
-
-    // ⏱️ MOSTRA DEPOIS (EVITA DUPLICIDADE)
-    setTimeout(() => {
-      OneSignal.showSlidedownPrompt();
-    }, 5000);
-
+  await OneSignal.init({
+    appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
+    autoPrompt: true
   });
-</script>
-<script>
-function getChamadoDaURL() {
-  const params = new URLSearchParams(window.location.search);
-  let id = params.get("chamado");
 
-  if (!id) return null;
+  console.log("OneSignal iniciado com sucesso");
 
-  return id.replace("CH-", "");
-}
+  const permission = await OneSignal.Notifications.permission;
+  console.log("Permissão:", permission);
+
+});
 </script>
+
 </head>
 
 <body>
@@ -88,7 +49,11 @@ function getChamadoDaURL() {
     <h1 style="position:relative; width:50%;  ">Chamados de Engenharia</h1>
 	 <div class="topbar-actions" style="position:absolute; right:15px; top:15%;">
           <button id="installButton" class="btn btn-secondary hidden" type="button">Instalar aplicativo</button>
-          
+          <div id="boxNotificacao" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+  
+  
+
+</div>
         </div>
   </div>
 
@@ -202,7 +167,7 @@ function getChamadoDaURL() {
               <h3>Lista de chamados</h3>
               <p class="muted">Acompanhe chamados, filtros, exportação em PDF e detalhes.</p>
             </div>
-            <div style="display:flex; gap:10px;">
+            <div style="display:none; gap:10px;">
   <button class="btn btn-secondary" onclick="exportarListaPDF()">Exportar lista de chamados em PDF</button>
   <button class="btn btn-primary" onclick="exportarRelatorioMensal()">Exportar relatório mensal</button>
 </div>
@@ -308,6 +273,23 @@ function getChamadoDaURL() {
     </div>
 
     <img id="modalFoto" class="hidden" />
+
+<!-- 🔥 COMPARADOR ANTES/DEPOIS -->
+<div id="compareWrapper" style="display:none; margin-top:10px;">
+
+  <div class="compare-container">
+    
+    <img id="imgDepois" class="img-base">
+
+    <div class="img-overlay" id="overlay">
+      <img id="imgAntes">
+    </div>
+
+    <div class="slider" id="slider"></div>
+
+  </div>
+
+</div>
     </div>
 
     <div class="modal-footer">
@@ -317,12 +299,35 @@ function getChamadoDaURL() {
 
   <button id="btnRetomar" class="retomar" onclick="retomarChamado()">Retomar</button>
 
-  <button id="btnFinalizar" class="finalizar" onclick="finalizarChamado()">Finalizar</button>
+  <button id="btnFinalizar" class="finalizar" onclick="abrirModalFinalizar()">Finalizar</button>
 </div>
 
   </div>
 </div>
+<div id="modalFinalizar" class="modal">
+  <div class="modal-box">
 
+    <div class="modal-header">
+      <h3>Finalizar chamado</h3>
+      <button onclick="fecharModalFinalizar()" class="btn-close">X</button>
+    </div>
+
+    <div class="modal-body">
+      <p style="font-size:13px; opacity:.7;">
+        📸 Foto do serviço concluído (opcional)
+      </p>
+
+      <input type="file" id="fotoFinal" accept="image/*">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="confirmarFinalizacao()">
+        Confirmar finalização
+      </button>
+    </div>
+
+  </div>
+</div>
 <div style="position: relative;
     width: auto;
     margin: 0 auto;
@@ -345,6 +350,12 @@ function toggleColuna(event, id) {
   }
 }
 </script>
-
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(reg => reg.unregister());
+  });
+}
+</script>
 </body>
 </html>
