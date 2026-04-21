@@ -203,7 +203,7 @@ function renderTicketList(){
 	
 
 ${ticket.status === "Concluído" ? `
-  <button class="btn btn-danger"  onclick="excluirChamado('${ticket.id}')">
+  <button class="btn btn-danger" style="display:none;"  onclick="excluirChamado('${ticket.id}')">
     🗑️ Lixeira
   </button>
 ` : ""}
