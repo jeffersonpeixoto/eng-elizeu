@@ -949,7 +949,7 @@ function escutarChamadosSeguro() {
     c.id
   );
 }
-          }
+         
 
           if (payload.eventType === "UPDATE") {
             enviarPushOneSignal(
