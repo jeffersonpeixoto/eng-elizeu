@@ -306,7 +306,8 @@ async function carregarDados() {
   try {
     const { data, error } = await window.supabaseClient
       .from("chamados")
-      .select("*")
+      .select("id, status, data_criacao, setor, unidade")
+	  .limit(50)
       .order("data_criacao", { ascending: false });
 
     if (error) {
@@ -886,7 +887,7 @@ function escutarChamadosSeguro() {
     if (window.__realtimeAtivo) return;
     window.__realtimeAtivo = true;
 
-    // 🔥 mata canal antigo se existir
+    // 🔥 remove canal antigo
     if (canalChamados) {
       window.supabaseClient.removeChannel(canalChamados);
       canalChamados = null;
@@ -906,26 +907,39 @@ function escutarChamadosSeguro() {
 
           const c = payload.new;
 
-    if (payload.eventType === "INSERT") {
-  const c = payload.new;
-
-  enviarPushOneSignal(
-    "▶️ Chamado Aberto",
-    `${c.unidade} - ${c.setor}`,
-    c.id
-  );
-}
-         
+          // 🔔 PUSH NOTIFICATION
+          if (payload.eventType === "INSERT") {
+            enviarPushOneSignal(
+              "▶️ Chamado Aberto",
+              `${c.unidade} - ${c.setor}`,
+              c.id
+            );
+          }
 
           if (payload.eventType === "UPDATE") {
             enviarPushOneSignal(
-  "🔄 Status atualizado",
-  `${c.unidade} - ${c.status}`,
-  c.id
-);
+              "🔄 Status atualizado",
+              `${c.unidade} - ${c.status}`,
+              c.id
+            );
           }
 
-          await carregarDados();
+          // 🚀 ATUALIZA LOCAL (SEM IR NO BANCO)
+          const index = ticketsCache.findIndex(t => t.id === c.id);
+
+          if (index !== -1) {
+            ticketsCache[index] = {
+              ...ticketsCache[index],
+              ...c
+            };
+          } else {
+            ticketsCache.unshift(c);
+          }
+
+          // 🔄 RE-RENDERIZA
+          renderDashboard();
+          renderTicketList();
+          renderKanban();
         }
       )
       .subscribe();
