@@ -13,69 +13,101 @@
   <script defer src="supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-<script src="app2.js?v=27"></script>
+<script src="app2.js?v=26"></script>
 <link rel="icon" type="image/png" href="favicon.png">
 <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
 <script>
-  window.OneSignal = window.OneSignal || [];
+window.OneSignal = window.OneSignal || [];
 
-  OneSignal.push(function() {
-   OneSignal.init({
-  appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
+OneSignal.push(async function() {
 
-  // 🔥 ADICIONA AQUI
-  serviceWorkerPath: "https://jeffersonpeixoto.github.io/eng-elizeu/OneSignalSDKWorker.js",
-  serviceWorkerUpdaterPath: "https://jeffersonpeixoto.github.io/eng-elizeu/OneSignalSDKUpdaterWorker.js",
+  await OneSignal.init({
+    appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
 
-  notifyButton: {
-    enable: true
-  },
+    serviceWorkerPath: "https://jeffersonpeixoto.github.io/eng-elizeu/OneSignalSDKWorker.js",
+    serviceWorkerUpdaterPath: "https://jeffersonpeixoto.github.io/eng-elizeu/OneSignalSDKUpdaterWorker.js",
 
-  autoPrompt: false,
+    notifyButton: { enable: false },
+    autoPrompt: false
+  });
 
-  promptOptions: {
-    slidedown: {
-      enabled: true,
-      autoPrompt: false,
-      text: {
-         actionMessage: "Deseja receber alertas de chamados em tempo real?",
-          acceptButton: "Ativar",
-          cancelButton: "Depois"
-      }
-    }
+  let userId = localStorage.getItem("user_id");
+
+  if (!userId) {
+    userId = "user_" + Math.random().toString(36).substring(2);
+    localStorage.setItem("user_id", userId);
   }
+
+  await OneSignal.setExternalUserId(userId);
+
+  console.log("User ID:", userId);
+
+  // 🔥 atualização segura
+  if (typeof atualizarStatusNotificacao === "function") {
+    atualizarStatusNotificacao();
+  }
+
+  // 🔥 reage a mudança
+  OneSignal.on('subscriptionChange', function () {
+    if (typeof atualizarStatusNotificacao === "function") {
+      atualizarStatusNotificacao();
+    }
+  });
+
 });
 
-
-    // 🧠 ID DO USUÁRIO
-    let userId = localStorage.getItem("user_id");
-
-    if (!userId) {
-      userId = "user_" + Math.random().toString(36).substring(2);
-      localStorage.setItem("user_id", userId);
-    }
-
-    // 🔗 LOGIN NO ONESIGNAL
-    OneSignal.setExternalUserId(userId);
-
-    console.log("User ID:", userId);
-
-    // ⏱️ MOSTRA DEPOIS (EVITA DUPLICIDADE)
-    setTimeout(() => {
-      OneSignal.showSlidedownPrompt();
-    }, 5000);
-
-  });
 </script>
 <script>
 function getChamadoDaURL() {
   const params = new URLSearchParams(window.location.search);
-  let id = params.get("chamado");
+  const id = params.get("chamado");
 
-  if (!id) return null;
+  if (!id || !id.startsWith("CH-")) return null;
 
-  return id.replace("CH-", "");
+  return id.trim();
 }
+</script>
+<script>
+<script>
+async function atualizarStatusNotificacao() {
+  try {
+    const statusEl = document.getElementById("statusNotificacao");
+    const btn = document.getElementById("btnNotificacao");
+
+    if (!window.OneSignal) return;
+
+    const isEnabled = await OneSignal.isPushNotificationsEnabled();
+    const permission = await OneSignal.getNotificationPermission();
+
+    if (isEnabled) {
+      statusEl.textContent = "🟢 Ativo";
+      btn.textContent = "Notificações ativas";
+      btn.disabled = true;
+    } 
+    else if (permission === "denied") {
+      statusEl.textContent = "🔴 Bloqueado no navegador";
+      btn.textContent = "Como ativar";
+      btn.disabled = false;
+    } 
+    else {
+      statusEl.textContent = "⚪ Não ativado";
+      btn.textContent = "🔔 Ativar notificações";
+      btn.disabled = false;
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function ativarNotificacoesManual() {
+  OneSignal.showSlidedownPrompt();
+
+  setTimeout(() => {
+    atualizarStatusNotificacao();
+  }, 3000);
+}
+</script>
 </script>
 </head>
 
@@ -88,7 +120,15 @@ function getChamadoDaURL() {
     <h1 style="position:relative; width:50%;  ">Chamados de Engenharia</h1>
 	 <div class="topbar-actions" style="position:absolute; right:15px; top:15%;">
           <button id="installButton" class="btn btn-secondary hidden" type="button">Instalar aplicativo</button>
-          
+          <div id="boxNotificacao" style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+  
+  <button id="btnNotificacao" class="btn btn-primary" onclick="ativarNotificacoesManual()">
+    🔔 Ativar notificações
+  </button>
+
+  <span id="statusNotificacao" style="font-size:13px; opacity:.7;"></span>
+
+</div>
         </div>
   </div>
 
@@ -202,7 +242,7 @@ function getChamadoDaURL() {
               <h3>Lista de chamados</h3>
               <p class="muted">Acompanhe chamados, filtros, exportação em PDF e detalhes.</p>
             </div>
-            <div style="display:none; gap:10px;">
+            <div style="display:flex; gap:10px;">
   <button class="btn btn-secondary" onclick="exportarListaPDF()">Exportar lista de chamados em PDF</button>
   <button class="btn btn-primary" onclick="exportarRelatorioMensal()">Exportar relatório mensal</button>
 </div>
