@@ -461,11 +461,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  await carregarDados();
 switchView("dashboard");
 
-  // 🔥 ORDEM CORRETA
-  setTimeout(() => {
-    ativarNotificacoesSeguro();
-    
-  }, 1500);
+  
 
   setTimeout(() => {
     escutarChamadosSeguro();
