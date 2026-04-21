@@ -304,10 +304,10 @@ async function atualizarChamadoModal(){if(!selectedTicket)return;const novoStatu
 
 async function carregarDados() {
   try {
-   const { data, error } = await window.supabaseClient
-  .from("chamados")
-  .select("*")
-  .order("data_criacao", { ascending: false });
+    const { data, error } = await window.supabaseClient
+      .from("chamados")
+      .select("*")
+      .order("data_criacao", { ascending: false });
 
     if (error) {
       console.error("Erro Supabase:", error);
@@ -323,25 +323,20 @@ async function carregarDados() {
     renderTicketList();
     renderKanban();
 
-    
+    // 🔥 deep link
+    const chamadoId = getChamadoDaURL();
 
     if (chamadoId) {
       const chamado = ticketsCache.find(c => c.id == chamadoId);
 
       if (chamado) {
-        abrirDetalhesChamado(chamado);
+        abrirDetalhes(chamado.id);
 
-        // 🔥 DESTACA E ROLA
         setTimeout(() => {
-          const el = document.querySelector(`[data-id="${chamado.id}"]`);
-          if (el) {
-            el.style.border = "3px solid red";
-            el.scrollIntoView({ behavior: "smooth" });
-          }
+          window.scrollTo({ top: 0, behavior: "smooth" });
         }, 500);
       }
     }
-    // 🔥 AQUI TERMINA
 
   } catch (err) {
     console.error("Erro geral:", err);
