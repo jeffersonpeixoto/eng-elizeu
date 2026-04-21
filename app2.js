@@ -1155,45 +1155,73 @@ function iniciarSlider() {
 }
 
 function abrirModalFinalizar() {
-  document.getElementById("modalFinalizar").classList.remove("hidden");
+  document.getElementById("modalFinalizar").classList.add("show");
 }
 
 function fecharModalFinalizar() {
-  document.getElementById("modalFinalizar").classList.add("hidden");
+  document.getElementById("modalFinalizar").classList.remove("show");
 }
 
 async function confirmarFinalizacao() {
   try {
+    if (!selectedTicket || !selectedTicket.id) {
+      alert("Chamado inválido.");
+      return;
+    }
+
     const file = document.getElementById("fotoFinal").files[0];
 
     let fotoFinalUrl = null;
 
+    // 🔥 upload opcional
     if (file) {
+      console.log("📤 Enviando foto...");
       fotoFinalUrl = await uploadFoto(file);
+      console.log("✅ URL:", fotoFinalUrl);
     }
 
-    await window.supabaseClient
+    // 🔥 monta update inteligente
+    const updateData = {
+      status: "Concluído",
+      data_finalizacao: new Date().toISOString()
+    };
+
+    // só adiciona se existir
+    if (fotoFinalUrl) {
+      updateData.foto_final_url = fotoFinalUrl;
+    }
+
+    const { data, error } = await window.supabaseClient
       .from("chamados")
-      .update({
-        status: "Concluído",
-        data_finalizacao: new Date().toISOString(),
-        foto_final_url: fotoFinalUrl
-      })
-      .eq("id", selectedTicket.id);
+      .update(updateData)
+      .eq("id", selectedTicket.id)
+      .select();
 
-    alert("Chamado finalizado!");
+    if (error) {
+      console.error("Erro Supabase:", error);
+      alert("Erro ao finalizar: " + error.message);
+      return;
+    }
 
-    // fecha tudo
+    // 🔥 valida se realmente atualizou
+    if (!data || data.length === 0) {
+      alert("Nada foi atualizado. Verifique o ID.");
+      return;
+    }
+
+    console.log("✔ Atualizado no banco:", data);
+
+    alert("✅ Chamado finalizado!");
+
     fecharModalFinalizar();
     fecharModal();
 
-    // limpa input
     document.getElementById("fotoFinal").value = "";
 
     await carregarDados();
 
   } catch (err) {
-    console.error(err);
+    console.error("Erro geral:", err);
     alert("Erro ao finalizar chamado");
   }
 }
