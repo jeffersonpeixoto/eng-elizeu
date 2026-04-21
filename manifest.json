@@ -1,9 +1,9 @@
 {
   "name": "Chamados de Engenharia Completo",
   "short_name": "Chamados",
-  "start_url": "./index2.html",
+  "start_url": "./index2.html?source=pwa",
   "scope": "./",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
