@@ -22,11 +22,15 @@
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 
 OneSignalDeferred.push(async function (OneSignal) {
-
   await OneSignal.init({
     appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
-    autoPrompt: false
+    autoPrompt: true
   });
+
+  const permission = await OneSignal.Notifications.permissionNative;
+
+  console.log("Permissão push:", permission);
+});
 
   // ID simples e persistente
   let userId = localStorage.getItem("user_id");
@@ -36,7 +40,6 @@ OneSignalDeferred.push(async function (OneSignal) {
     localStorage.setItem("user_id", userId);
   }
 
-  await OneSignal.setExternalUserId(userId);
 
   console.log("Push OK - user:", userId);
 
