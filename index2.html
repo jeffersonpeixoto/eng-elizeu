@@ -101,11 +101,21 @@ async function atualizarStatusNotificacao() {
 }
 
 function ativarNotificacoesManual() {
-  OneSignal.showSlidedownPrompt();
+  OneSignal.push(async function () {
+    try {
+      const permission = await OneSignal.getNotificationPermission();
 
-  setTimeout(() => {
-    atualizarStatusNotificacao();
-  }, 3000);
+      if (permission === "denied") {
+        alert("Notificações bloqueadas. Clique no cadeado do navegador e permita manualmente.");
+        return;
+      }
+
+      await OneSignal.showSlidedownPrompt();
+
+    } catch (err) {
+      console.error("Erro ao ativar notificações:", err);
+    }
+  });
 }
 </script>
 </script>
