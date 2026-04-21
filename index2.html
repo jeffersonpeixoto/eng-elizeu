@@ -17,46 +17,30 @@
 <link rel="icon" type="image/png" href="favicon.png">
 
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-window.OneSignal = window.OneSignal || [];
 
-OneSignal.push(async function() {
+<script>
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+OneSignalDeferred.push(async function (OneSignal) {
 
   await OneSignal.init({
     appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
-
-    serviceWorkerPath: "OneSignalSDKWorker.js",
-    serviceWorkerUpdaterPath: "OneSignalSDKUpdaterWorker.js",
-
-    notifyButton: { enable: false },
     autoPrompt: false
   });
 
+  // ID simples e persistente
   let userId = localStorage.getItem("user_id");
 
   if (!userId) {
-    userId = "user_" + Math.random().toString(36).substring(2);
+    userId = "user_" + crypto.randomUUID();
     localStorage.setItem("user_id", userId);
   }
 
- await OneSignal.setExternalUserId(userId);
+  await OneSignal.setExternalUserId(userId);
 
-  console.log("User ID:", userId);
-
-  // 🔥 atualização segura
-  if (typeof atualizarStatusNotificacao === "function") {
-    atualizarStatusNotificacao();
-  }
-
-  // 🔥 reage a mudança
-  OneSignal.on('subscriptionChange', function () {
-    if (typeof atualizarStatusNotificacao === "function") {
-      atualizarStatusNotificacao();
-    }
-  });
+  console.log("Push OK - user:", userId);
 
 });
-
 </script>
 <script>
 function getChamadoDaURL() {
@@ -68,57 +52,7 @@ function getChamadoDaURL() {
   return id.trim();
 }
 </script>
-<script>
 
-async function atualizarStatusNotificacao() {
-  try {
-    const statusEl = document.getElementById("statusNotificacao");
-    const btn = document.getElementById("btnNotificacao");
-
-    if (!window.OneSignal) return;
-
-    const isEnabled = await OneSignal.isPushNotificationsEnabled();
-    const permission = await OneSignal.getNotificationPermission();
-
-    if (isEnabled) {
-      statusEl.textContent = "🟢 Ativo";
-      btn.textContent = "Notificações ativas";
-      btn.disabled = true;
-    } 
-    else if (permission === "denied") {
-      statusEl.textContent = "🔴 Bloqueado no navegador";
-      btn.textContent = "Como ativar";
-      btn.disabled = false;
-    } 
-    else {
-      statusEl.textContent = "⚪ Não ativado";
-      btn.textContent = "🔔 Ativar notificações";
-      btn.disabled = false;
-    }
-
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-function ativarNotificacoesManual() {
-  OneSignal.push(async function () {
-    try {
-      const permission = await OneSignal.getNotificationPermission();
-
-      if (permission === "denied") {
-        alert("Notificações bloqueadas. Clique no cadeado do navegador e permita manualmente.");
-        return;
-      }
-
-      await OneSignal.showSlidedownPrompt();
-
-    } catch (err) {
-      console.error("Erro ao ativar notificações:", err);
-    }
-  });
-}
-</script>
 
 </head>
 
