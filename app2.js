@@ -343,6 +343,10 @@ async function carregarDados() {
     alert("Erro inesperado ao carregar dados.");
   }
 }
+window.getChamadoDaURL = function () {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("id");
+};
 async function deletarPermanente(id) {
   const confirmar = confirm("Excluir definitivamente?");
 
