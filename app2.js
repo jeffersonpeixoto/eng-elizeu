@@ -938,24 +938,27 @@ function escutarChamadosSeguro() {
 
 async function enviarPushOneSignal(titulo, mensagem, id) {
   try {
-    const res = await fetch("https://bubcilkbujuycpvysico.supabase.co/functions/v1/enviar-push", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer os_v2_app_tyxrxtimw5flhgtl527qf3dmwvjoicrvc5surentyx7zitn3fsivhrizzvd7ly76awkoqgrgdsvm2d43hpeulwypn4bxdopkzqr5vty"
-      },
-      body: JSON.stringify({
-        titulo,
-        mensagem,
-        id // 🔥 ESSENCIAL
-      })
-    });
+    const res = await fetch(
+      "https://bubcilkbujuycpvysico.supabase.co/functions/v1/enviar-push",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${window.supabaseClient.auth?.getSession?.()?.access_token || ""}`
+        },
+        body: JSON.stringify({
+          titulo,
+          mensagem,
+          id
+        })
+      }
+    );
 
     const data = await res.json();
-    console.log("✅ RESPOSTA PUSH:", data);
+    console.log("Push enviado:", data);
 
   } catch (err) {
-    console.error("❌ ERRO PUSH:", err);
+    console.error("Erro push:", err);
   }
 }
 async function excluirChamado(id) {
