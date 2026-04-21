@@ -35,17 +35,6 @@ OneSignalDeferred.push(async function (OneSignal) {
 
 });
 </script>
-<script>
-function getChamadoDaURL() {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get("chamado");
-
-  if (!id || !id.startsWith("CH-")) return null;
-
-  return id.trim();
-}
-</script>
-
 
 </head>
 
