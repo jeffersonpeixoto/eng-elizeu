@@ -4,8 +4,7 @@ function formatDateTime(v){if(!v)return "—";const d=new Date(v);if(Number.isNa
 function statusClass(s){if(s==="Em andamento")return "status-andamento";if(s==="Concluído")return "status-concluido";return "status-aberto"}
 function priorityClass(p){return {"Baixa":"priority-baixa","Média":"priority-media","Alta":"priority-alta","Crítica":"priority-critica"}[p]||"priority-baixa"}
 
-function switchView(view){document.querySelectorAll(".view").forEach(el=>el.classList.add("hidden"));document.getElementById(view+"View").classList.remove("hidden");document.querySelectorAll("[data-view-btn]").forEach(btn=>btn.classList.toggle("active",btn.dataset.viewBtn===view));if(view==="dashboard")renderDashboard();if(view==="lista")renderTicketList();if(view==="kanban")renderKanban()}
-function bindViewButtons(){document.querySelectorAll("[data-view-btn]").forEach(btn=>btn.addEventListener("click",()=>switchView(btn.dataset.viewBtn)))}
+ function bindViewButtons(){document.querySelectorAll("[data-view-btn]").forEach(btn=>btn.addEventListener("click",()=>switchView(btn.dataset.viewBtn)))}
 function resetarFormulario(){document.getElementById("ticketForm").reset()}
 function compressImageSafe(file) {
   return new Promise((resolve) => {
@@ -324,8 +323,7 @@ async function carregarDados() {
     renderTicketList();
     renderKanban();
 
-    // 🔥 AQUI COMEÇA A PARTE NOVA
-    const chamadoId = getChamadoDaURL();
+    
 
     if (chamadoId) {
       const chamado = ticketsCache.find(c => c.id == chamadoId);
