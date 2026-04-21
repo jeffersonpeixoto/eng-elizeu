@@ -879,11 +879,13 @@ async function finalizarChamado() {
 
 alert("✅ Chamado finalizado!");
 
-// 🔔 PUSH
+const userId = localStorage.getItem("user_id");
+
 enviarPushOneSignal(
-  "⏸️ Chamado Finalizado",
+  "✅ Chamado finalizado",
   `${selectedTicket.unidade} - ${selectedTicket.setor}`,
-  selectedTicket.id
+  selectedTicket.id,
+  userId
 );
 }
  // ✅ CALCULAR TEMPO REAL
@@ -1193,6 +1195,14 @@ async function confirmarFinalizacao() {
     console.log("✔ Atualizado no banco:", data);
 
     alert("✅ Chamado finalizado!");
+	const userId = localStorage.getItem("user_id");
+
+enviarPushOneSignal(
+  "✅ Chamado finalizado",
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
+  selectedTicket.id,
+  userId
+);
 
     fecharModalFinalizar();
     fecharModal();
