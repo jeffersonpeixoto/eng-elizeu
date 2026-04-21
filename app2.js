@@ -395,48 +395,17 @@ async function restaurarChamado(id) {
   carregarDados();
 }
 function registerPWA() {
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", async () => {
-      try {
-       await navigator.serviceWorker.register("./service-worker.js");
-        console.log("Service Worker registrado");
-      } catch (error) {
-        console.error("Erro ao registrar Service Worker:", error);
-      }
-    });
-  }
+  if (!("serviceWorker" in navigator)) return;
 
-  window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();
-    deferredPrompt = event;
+  window.addEventListener("load", async () => {
+    try {
+      const reg = await navigator.serviceWorker.register("./service-worker.js", {
+        scope: "./"
+      });
 
-    const installButton = document.getElementById("installButton");
-    if (installButton) {
-      installButton.classList.remove("hidden");
-    }
-  });
-
-  const installButton = document.getElementById("installButton");
-
-  // 🔥 PROTEÇÃO CONTRA NULL
-  if (installButton) {
-    installButton.addEventListener("click", async () => {
-      if (!deferredPrompt) {
-        alert("O navegador ainda não liberou a instalação.");
-        return;
-      }
-
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-
-      installButton.classList.add("hidden");
-    });
-  }
-
-  window.addEventListener("appinstalled", () => {
-    if (installButton) {
-      installButton.classList.add("hidden");
+      console.log("SW registrado:", reg.scope);
+    } catch (err) {
+      console.error("Erro ao registrar Service Worker:", err);
     }
   });
 }
