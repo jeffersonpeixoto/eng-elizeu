@@ -881,7 +881,7 @@ alert("✅ Chamado finalizado!");
 
 // 🔔 PUSH
 enviarPushOneSignal(
-  "✅ Chamado finalizado",
+  "⏸️ Chamado Finalizado",
   `${selectedTicket.unidade} - ${selectedTicket.setor}`,
   selectedTicket.id
 );
@@ -939,10 +939,10 @@ function escutarChamadosSeguro() {
           const c = payload.new;
 
           if (payload.eventType === "INSERT") {
-          enviarPushOneSignal(
-  "🚨 Novo chamado",
-  `${c.unidade} - ${c.setor}`,
-  c.id
+ enviarPushOneSignal(
+  "▶️ Chamado Aberto",
+  `${selectedTicket.unidade} - ${selectedTicket.setor}`,
+  selectedTicket.id
 );
           }
 
