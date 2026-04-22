@@ -436,8 +436,7 @@ function renderKanbanColumn(id, items) {
 function abrirDetalhes(id) {
   const ticket = ticketsCache.find(t => t.id === id);
   if (!ticket) return;
-  appState.selectedTicket = ticket; // ✔ AQUI
-
+  
   console.log("Selecionado:", appState.selectedTicket);
 
   selectedTicket = ticket;
@@ -594,10 +593,14 @@ async function carregarDados() {
       .limit(50)
       .get();
 
-    ticketsCache = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+   ticketsCache.length = 0;
+
+snapshot.docs.forEach(doc => {
+  ticketsCache.push({
+    id: doc.id,
+    ...doc.data()
+  });
+});
 
     renderDashboard();
     renderTicketList();
@@ -1518,7 +1521,9 @@ function escutarChamadosSeguro() {
               ...c
             };
           } else {
-            ticketsCache.unshift(c);
+            if (!ticketsCache.find(t => t.id === c.id)) {
+  ticketsCache.unshift(c);
+}
           }
 
         });
