@@ -1917,16 +1917,6 @@ async function confirmarFinalizacao() {
 
 // ... todas suas funções acima ...
 
-async function iniciarChamado() { ... }
-async function pausarChamado() { ... }
-async function retomarChamado() { ... }
-async function abrirModalFinalizar() { ... }
-async function fecharModalFinalizar() { ... }
-async function confirmarFinalizacao() { ... }
-async function resetarFormulario(){...}
-async function exportarListaPDF(){...}
-async function exportarRelatorioMensal (){...}
-
 
 // 🔥 FINAL DO ARQUIVO
 Object.assign(window, {
