@@ -99,19 +99,31 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 🔥 assets (cache-first + update em background)
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      const fetchPromise = fetch(req)
-        .then((networkRes) => {
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(req, networkRes.clone());
-          });
-          return networkRes;
-        })
-        .catch(() => cached);
+event.respondWith(
+  caches.match(req).then((cached) => {
 
-      return cached || fetchPromise;
-    })
-  );
+    const fetchPromise = fetch(req)
+      .then((networkRes) => {
+
+        // 🔒 só cacheia resposta válida
+        if (
+          networkRes &&
+          networkRes.status === 200 &&
+          (networkRes.type === "basic" || networkRes.type === "cors")
+        ) {
+          const responseClone = networkRes.clone();
+
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(req, responseClone);
+          });
+        }
+
+        return networkRes;
+      })
+      .catch(() => cached);
+
+    // ⚡ cache-first (rápido)
+    return cached || fetchPromise;
+  })
+);
 });
