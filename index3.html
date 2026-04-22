@@ -9,12 +9,30 @@
   <link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="styles.css?v=6">
 
-<script defer src="app3.js?v=10"></script>
+<script type="module" src="app3.js?v=10"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <link rel="icon" type="image/png" href="favicon.png">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
+const firebaseConfig = { 
+	apiKey: "AIzaSyCyhg8K7l48_k8sNTGuVxNf37sDf865T1A",
+    authDomain: "eng-bd-elizeu.firebaseapp.com",
+    projectId: "eng-bd-elizeu",
+    storageBucket: "eng-bd-elizeu.firebasestorage.app",
+    messagingSenderId: "169199632971",
+    appId: "1:169199632971:web:4bca2feccd2e5b31db03ce"
+ };
+
+const app = initializeApp(firebaseConfig);
+
+// 🔥 ESSENCIAL
+window.db = getFirestore(app);
+</script>
 <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
 
 <script>
@@ -34,24 +52,7 @@ OneSignalDeferred.push(async function (OneSignal) {
 
 });
 </script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-const firebaseConfig = { 
-	apiKey: "AIzaSyCyhg8K7l48_k8sNTGuVxNf37sDf865T1A",
-    authDomain: "eng-bd-elizeu.firebaseapp.com",
-    projectId: "eng-bd-elizeu",
-    storageBucket: "eng-bd-elizeu.firebasestorage.app",
-    messagingSenderId: "169199632971",
-    appId: "1:169199632971:web:4bca2feccd2e5b31db03ce"
- };
-
-const app = initializeApp(firebaseConfig);
-
-// 🔥 ESSENCIAL
-window.db = getFirestore(app);
-</script>
 
 </head>
 
