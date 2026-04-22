@@ -433,10 +433,10 @@ function renderKanbanColumn(id, items) {
 }
 function abrirDetalhes(id) {
   const ticket = ticketsCache.find(t => t.id === id);
-  if (!ticket) {
-    console.warn("Chamado não encontrado:", id);
-    return;
-  }
+  if (!ticket) return;
+  appState.selectedTicket = ticket; // ✔ AQUI
+
+  console.log("Selecionado:", appState.selectedTicket);
 
   selectedTicket = ticket;
 
