@@ -13,23 +13,28 @@ const urlsToCache = [
 // 🔥 INSTALL
 self.addEventListener("fetch", (event) => {
   const req = event.request;
+  const url = new URL(req.url);
 
+  // 1. só HTTP/HTTPS
+  if (!url.protocol.startsWith("http")) return;
+
+  // 2. só GET
   if (req.method !== "GET") return;
 
   event.respondWith(
-    caches.open("meu-cache").then(async (cache) => {
+    caches.open("app-cache").then(async (cache) => {
       const cached = await cache.match(req);
       if (cached) return cached;
 
       const response = await fetch(req);
 
+      // segurança extra
       if (!response || response.status !== 200) {
         return response;
       }
 
-      const responseClone = response.clone();
-
-      await cache.put(req, responseClone);
+      const clone = response.clone();
+      await cache.put(req, clone);
 
       return response;
     })
