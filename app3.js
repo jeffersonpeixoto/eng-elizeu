@@ -1608,7 +1608,7 @@ function formatarHoras(horasDecimal) {
 }
 function switchView(view, el = null) {
 
-  const views = ["dashboard", "lista", "kanban", "lixeira"];
+  const views = ["dashboard", "lista", "kanban", "lixeira", "novo"];
 
   // 🔒 valida view
   if (!views.includes(view)) {
