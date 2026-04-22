@@ -11,17 +11,27 @@ const urlsToCache = [
 ];
 
 // 🔥 INSTALL
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
 
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      try {
-        await cache.addAll(urlsToCache);
-        console.log("✅ Cache inicial carregado");
-      } catch (err) {
-        console.warn("⚠️ Erro ao cachear:", err);
+  if (req.method !== "GET") return;
+
+  event.respondWith(
+    caches.open("meu-cache").then(async (cache) => {
+      const cached = await cache.match(req);
+      if (cached) return cached;
+
+      const response = await fetch(req);
+
+      if (!response || response.status !== 200) {
+        return response;
       }
+
+      const responseClone = response.clone();
+
+      await cache.put(req, responseClone);
+
+      return response;
     })
   );
 });
