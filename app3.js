@@ -972,7 +972,12 @@ document.addEventListener("DOMContentLoaded", () => {
   bindViewButtons?.();
   bindFilters?.();
   registerPWA?.();
-
+document.querySelectorAll(".kanban-header").forEach(header => {
+  header.addEventListener("click", (event) => {
+    const id = header.dataset.coluna;
+    toggleColuna(event, id);
+  });
+});
   // 📝 formulário
   const form = document.getElementById("ticketForm");
   if (form) {
