@@ -978,6 +978,11 @@ document.querySelectorAll(".kanban-header").forEach(header => {
     toggleColuna(event, id);
   });
 });
+const btnFechar = document.getElementById("btnFecharModal");
+
+if (btnFechar) {
+  btnFechar.addEventListener("click", fecharModal);
+}
   // 📝 formulário
   const form = document.getElementById("ticketForm");
   if (form) {
@@ -1909,3 +1914,29 @@ async function confirmarFinalizacao() {
     alert("Erro ao finalizar chamado");
   }
 }
+
+// ... todas suas funções acima ...
+
+async function iniciarChamado() { ... }
+async function pausarChamado() { ... }
+async function retomarChamado() { ... }
+async function abrirModalFinalizar() { ... }
+async function fecharModalFinalizar() { ... }
+async function confirmarFinalizacao() { ... }
+async function resetarFormulario(){...}
+async function exportarListaPDF(){...}
+async function exportarRelatorioMensal (){...}
+
+
+// 🔥 FINAL DO ARQUIVO
+Object.assign(window, {
+  iniciarChamado,
+  pausarChamado,
+  retomarChamado,
+  abrirModalFinalizar,
+  fecharModalFinalizar,
+  confirmarFinalizacao,
+  resetarFormulario,
+exportarListaPDF,
+exportarRelatorioMensal  // 👈 ESSENCIAL
+});

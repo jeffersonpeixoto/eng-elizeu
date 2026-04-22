@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="styles.css?v=6">
 
-<script type="module" src="app3.js?v=21"></script>
+<script type="module" src="app3.js?v=22"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
@@ -280,7 +280,7 @@ OneSignalDeferred.push(async function (OneSignal) {
     <h3 >Detalhes</h3>
     <p id="modalTicketId"></p> <!-- 🔥 AQUI -->
   </div>
-      <button onclick="fecharModal()" class="btn-close">X</button>
+      <button id="btnFecharModal" class="btn-close">X</button>
     </div>
 
     <div class="modal-body">
@@ -311,14 +311,14 @@ OneSignalDeferred.push(async function (OneSignal) {
 </div>
     </div>
 
-    <div class="modal-footer">
-  <button id="btnIniciar" class="iniciar" onclick="iniciarChamado()">Iniciar</button>
+<div class="modal-footer">
+  <button id="btnIniciar" class="iniciar">Iniciar</button>
 
-  <button id="btnPausar" class="pausar" onclick="pausarChamado()">Pausar</button>
+  <button id="btnPausar" class="pausar">Pausar</button>
 
-  <button id="btnRetomar" class="retomar" onclick="retomarChamado()">Retomar</button>
+  <button id="btnRetomar" class="retomar">Retomar</button>
 
-  <button id="btnFinalizar" class="finalizar" onclick="abrirModalFinalizar()">Finalizar</button>
+  <button id="btnFinalizar" class="finalizar">Finalizar</button>
 </div>
 
   </div>
@@ -328,7 +328,7 @@ OneSignalDeferred.push(async function (OneSignal) {
 
     <div class="modal-header">
       <h3>Finalizar chamado</h3>
-      <button onclick="fecharModalFinalizar()" class="btn-close">X</button>
+     <button id="btnFecharFinalizar" class="btn-close">X</button>
     </div>
 
     <div class="modal-body">
