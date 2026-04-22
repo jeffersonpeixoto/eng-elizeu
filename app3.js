@@ -1083,8 +1083,7 @@ if (btnFechar) {
   if (form) {
     form.addEventListener("submit", salvarChamado);
   }
-	document.addEventListener("click", (e) => {
-
+document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-action]");
   if (!btn) return;
 
@@ -1469,39 +1468,53 @@ const snapshot = await getDocs(q);
  // ✅ RETOMAR
 async function retomarChamado() {
   try {
-    if (!selectedTicket) return;
+    if (!selectedTicket?.id) {
+      alert("Chamado inválido");
+      return;
+    }
 
     const idChamado = selectedTicket.id;
-    const agora = new Date(); // 🔥 Firebase usa Date
+    const agora = serverTimestamp();
 
-  await addDoc(collection(db, "chamado_tempo"), {
-  chamado_id: idChamado,
-  inicio: serverTimestamp(), // melhor que new Date()
-  fim: null
-});
+    // 🔍 fecha qualquer período aberto antes
+    const snapshot = await getDocs(
+      query(
+        collection(db, "chamado_tempo"),
+        where("chamado_id", "==", idChamado),
+        where("fim", "==", null)
+      )
+    );
 
-  // 1. muda status
-await updateDoc(doc(db, "chamados", idChamado), {
-  status: "Em andamento"
-});
+    const batch = writeBatch(db);
 
-// 2. cria novo período de tempo
-await addDoc(collection(db, "chamado_tempo"), {
-  chamado_id: idChamado,
-  inicio: serverTimestamp(),
-  fim: null
-});
+    snapshot.forEach(docSnap => {
+      batch.update(doc(db, "chamado_tempo", docSnap.id), {
+        fim: agora
+      });
+    });
+
+    await batch.commit();
+
+    // 🔄 atualiza status
+    await updateDoc(doc(db, "chamados", idChamado), {
+      status: "Em andamento"
+    });
+
+    // ▶️ abre novo período (APENAS UMA VEZ)
+    await addDoc(collection(db, "chamado_tempo"), {
+      chamado_id: idChamado,
+      inicio: agora,
+      fim: null
+    });
 
     fecharModal();
 
-    // ⚠️ opcional se NÃO usar realtime
     if (typeof carregarDados === "function") {
       await carregarDados();
     }
 
     alert("▶️ Chamado retomado com sucesso!");
 
-    
   } catch (err) {
     console.error("Erro ao retomar:", err);
     alert("Erro ao retomar chamado.");
