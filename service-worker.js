@@ -11,32 +11,17 @@ const urlsToCache = [
 ];
 
 // 🔥 INSTALL
-self.addEventListener("fetch", (event) => {
-  const req = event.request;
-  const url = new URL(req.url);
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
 
-  // 1. só HTTP/HTTPS
-  if (!url.protocol.startsWith("http")) return;
-
-  // 2. só GET
-  if (req.method !== "GET") return;
-
-  event.respondWith(
-    caches.open("app-cache").then(async (cache) => {
-      const cached = await cache.match(req);
-      if (cached) return cached;
-
-      const response = await fetch(req);
-
-      // segurança extra
-      if (!response || response.status !== 200) {
-        return response;
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      try {
+        await cache.addAll(urlsToCache);
+        console.log("✅ Cache inicial carregado");
+      } catch (err) {
+        console.warn("⚠️ Erro ao cachear:", err);
       }
-
-      const clone = response.clone();
-      await cache.put(req, clone);
-
-      return response;
     })
   );
 });
@@ -84,12 +69,17 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-// 🔥 FETCH (CACHE INTELIGENTE)
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // ❌ ignora APIs externas (evita conflito)
+  // ❌ bloqueia tudo que não é HTTP/HTTPS
+  if (!url.protocol.startsWith("http")) return;
+
+  // ❌ bloqueia POST, PUT, DELETE etc
+  if (req.method !== "GET") return;
+
+  // ❌ ignora APIs externas pesadas (ok manter)
   if (
     url.hostname.includes("firebase") ||
     url.hostname.includes("supabase") ||
@@ -99,13 +89,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 🔥 navegação (SPA/PWA)
+  // 🔥 NAVEGAÇÃO (SPA)
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req)
         .then((res) => {
+          if (!res || res.status !== 200) return res;
+
           return caches.open(CACHE_NAME).then((cache) => {
-            cache.put("./index2.html", res.clone());
+            cache.put(req, res.clone());
             return res;
           });
         })
@@ -114,31 +106,32 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-event.respondWith(
-  caches.match(req).then((cached) => {
+  // 🔥 CACHE INTELIGENTE (ASSETS)
+  event.respondWith(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const cached = await cache.match(req);
 
-    const fetchPromise = fetch(req)
-      .then((networkRes) => {
+      const fetchPromise = fetch(req)
+        .then((networkRes) => {
+          if (
+            !networkRes ||
+            networkRes.status !== 200 ||
+            networkRes.type === "opaque"
+          ) {
+            return networkRes;
+          }
 
-        // 🔒 só cacheia resposta válida
-        if (
-          networkRes &&
-          networkRes.status === 200 &&
-          (networkRes.type === "basic" || networkRes.type === "cors")
-        ) {
-          const responseClone = networkRes.clone();
+          const clone = networkRes.clone();
 
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(req, responseClone);
+          cache.put(req, clone).catch(() => {
+            // evita crash silencioso do SW
           });
-        }
 
-        return networkRes;
-      })
-      .catch(() => cached);
+          return networkRes;
+        })
+        .catch(() => cached);
 
-    // ⚡ cache-first (rápido)
-    return cached || fetchPromise;
-  })
-);
+      return cached || fetchPromise;
+    })
+  );
 });
