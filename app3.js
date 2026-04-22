@@ -1478,8 +1478,6 @@ async function calcularDuracaoReal(chamadoId) {
 }
 // notificações
 
-import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
-
 let unsubscribeChamados = null;
 
 function escutarChamadosSeguro() {
