@@ -1,9 +1,11 @@
 const appState = {
-  deferredPrompt: null,
-  selectedTicket: null,
-  ticketsCache: []
+  ticketsCache: [],
+  selectedTicket: null
 };
 
+// ponte
+let ticketsCache = appState.ticketsCache;
+let selectedTicket = appState.selectedTicket;
 function escapeHtml(v) {
   if (v === null || v === undefined) return "";
 
