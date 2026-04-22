@@ -366,7 +366,7 @@ async function salvarChamado(event) {
     };
 
     // 🔥 SALVA NO FIREBASE
-    import { addDoc, collection } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+    
 
 await addDoc(collection(db, "chamados"), chamado);
 
@@ -1709,15 +1709,6 @@ window.toggleColuna = function (event, id) {
   }
 };
 
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  writeBatch,
-  doc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 async function restaurarParaConcluidos() {
   const confirmar = confirm("Restaurar TODOS os chamados da lixeira como CONCLUÍDOS?");
