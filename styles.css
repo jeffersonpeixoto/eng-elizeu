@@ -291,7 +291,7 @@ input[type="file"] {
 .btn-secondary {
   background: #e5e7eb;
 }
-#detal{
+.btn-detalhes{
 	background: linear-gradient(135deg, #22c55e, #16a34a);
     color: #FFFFFF;
     MARGIN-TOP: 20px;
