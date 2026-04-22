@@ -1465,7 +1465,6 @@ async function calcularDuracaoReal(chamadoId) {
 // notificações
 
 let unsubscribeChamados = null;
-let unsubscribeChamados = null;
 
 function escutarChamadosSeguro() {
   try {
