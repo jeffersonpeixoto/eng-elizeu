@@ -1265,15 +1265,7 @@ async function iniciarChamado() {
 
     alert("▶️ Chamado iniciado!");
 
-    // 🔔 PUSH
-    if (typeof enviarPushOneSignal === "function") {
-      enviarPushOneSignal(
-        "▶️ Chamado iniciado",
-        `${selectedTicket.unidade} - ${selectedTicket.setor}`,
-        selectedTicket.id
-      );
-    }
-
+   
   } catch (err) {
     console.error(err);
     alert("Erro ao iniciar chamado.");
@@ -1326,15 +1318,7 @@ async function pausarChamado() {
 
     alert("⏸️ Chamado pausado com sucesso!");
 
-    // 🔔 PUSH
-    if (typeof enviarPushOneSignal === "function") {
-      enviarPushOneSignal(
-        "⏸️ Chamado pausado",
-        `${selectedTicket.unidade} - ${selectedTicket.setor}`,
-        selectedTicket.id
-      );
-    }
-
+   
   } catch (err) {
     console.error("Erro real:", err);
     alert("Erro inesperado ao pausar.");
@@ -1371,15 +1355,7 @@ async function retomarChamado() {
 
     alert("▶️ Chamado retomado com sucesso!");
 
-    // 🔔 PUSH
-    if (typeof enviarPushOneSignal === "function") {
-      enviarPushOneSignal(
-        "▶️ Chamado retomado",
-        `${selectedTicket.unidade} - ${selectedTicket.setor}`,
-        selectedTicket.id
-      );
-    }
-
+    
   } catch (err) {
     console.error("Erro ao retomar:", err);
     alert("Erro ao retomar chamado.");
@@ -1427,18 +1403,7 @@ async function finalizarChamado() {
 
     alert("✅ Chamado finalizado!");
 
-    // 🔔 PUSH
-    if (typeof enviarPushOneSignal === "function") {
-      const userId = localStorage.getItem("user_id");
-
-      enviarPushOneSignal(
-        "✅ Chamado finalizado",
-        `${selectedTicket.unidade} - ${selectedTicket.setor}`,
-        selectedTicket.id,
-        userId
-      );
-    }
-
+    
   } catch (err) {
     console.error("Erro ao finalizar:", err);
     alert("Erro ao finalizar chamado.");
@@ -1504,23 +1469,7 @@ function escutarChamadosSeguro() {
           ...change.doc.data()
         };
 
-        // 🔔 PUSH
-        if (change.type === "added") {
-          enviarPushOneSignal?.(
-            "▶️ Chamado Aberto",
-            `${c.unidade} - ${c.setor}`,
-            c.id
-          );
-        }
-
-        if (change.type === "modified") {
-          enviarPushOneSignal?.(
-            "🔄 Status atualizado",
-            `${c.unidade} - ${c.status}`,
-            c.id
-          );
-        }
-
+         
         // 🚀 ATUALIZA CACHE LOCAL
         const index = ticketsCache.findIndex(t => t.id === c.id);
 
@@ -1937,17 +1886,7 @@ async function confirmarFinalizacao() {
 
     alert("✅ Chamado finalizado!");
 
-    // 🔔 PUSH
-    if (typeof enviarPushOneSignal === "function") {
-      const userId = localStorage.getItem("user_id");
-
-      enviarPushOneSignal(
-        "✅ Chamado finalizado",
-        `${selectedTicket.unidade} - ${selectedTicket.setor}`,
-        idChamado,
-        userId
-      );
-    }
+   
 
     // 🔄 limpar UI
     fecharModalFinalizar();
