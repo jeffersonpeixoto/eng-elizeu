@@ -438,7 +438,7 @@ function renderTicketList(){
 	<span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span>
 	</div>
 	<p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p>
-	<button class="btn btn-secondary" id="detal" onclick="abrirDetalhes('${ticket.id}')">  Detalhes </button>
+	<button class="btn-detalhes" data-id="${ticket.id}"> Detalhes  </button>
 	</div>
 	<div class="ticket-aside">
 	<div class="date-chip">
@@ -1083,7 +1083,31 @@ if (btnFechar) {
   if (form) {
     form.addEventListener("submit", salvarChamado);
   }
+	document.addEventListener("click", (e) => {
 
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+
+  const action = btn.dataset.action;
+
+  switch (action) {
+    case "iniciar":
+      iniciarChamado();
+      break;
+
+    case "pausar":
+      pausarChamado();
+      break;
+
+    case "retomar":
+      retomarChamado();
+      break;
+
+    case "finalizar":
+      abrirModalFinalizar();
+      break;
+  }
+});
   // 📊 tela inicial
   switchView?.("dashboard");
 
