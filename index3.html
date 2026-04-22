@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="styles.css?v=6">
 
-<script type="module" src="app3.js?v=25"></script>
+<script type="module" src="app3.js?v=26"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
@@ -28,10 +28,9 @@ const firebaseConfig = {
     appId: "1:169199632971:web:4bca2feccd2e5b31db03ce"
  };
 
+// 🔥 INICIALIZAÇÃO (AQUI É O LUGAR CERTO)
 const app = initializeApp(firebaseConfig);
-
-export const db = getFirestore(app);
-export const messaging = getMessaging(app);
+const db = getFirestore(app);
 
 // 🔥 ESSENCIAL
 window.db = getFirestore(app);

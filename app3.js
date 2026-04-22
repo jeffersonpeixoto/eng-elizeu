@@ -3,6 +3,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/fireba
 import {
   getFirestore,
   collection,
+  addDoc,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
   query,
   orderBy,
   limit,
@@ -364,7 +373,9 @@ async function salvarChamado(event) {
     };
 
     // 🔥 SALVA NO FIREBASE
-    await db.collection("chamados").add(chamado);
+    import { addDoc, collection } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+await addDoc(collection(db, "chamados"), chamado);
 
     // 🎉 SUCESSO
     alert("✅ Chamado aberto com sucesso!");
@@ -631,11 +642,12 @@ async function atualizarChamadoModal() {
     }
 
     // 🔥 FIREBASE
-    await db.collection("chamados")
-      .doc(selectedTicket.id)
-      .update(payload);
+   await updateDoc(
+  doc(db, "chamados", selectedTicket.id),
+  payload
+);
 
-    fecharModal();
+fecharModal();
 
     // ⚠️ opcional — só se NÃO estiver usando realtime
     if (typeof carregarDados === "function") {
@@ -652,12 +664,22 @@ async function atualizarChamadoModal() {
 async function carregarDados() {
   try {
 
-    const snapshot = await db.collection("chamados")
-      .orderBy("data_criacao", "desc")
-      .limit(50)
-      .get();
+const q = query(
+  collection(db, "chamados"),
+  orderBy("data_criacao", "desc"),
+  limit(50)
+);
 
-   ticketsCache.length = 0;
+const snapshot = await getDocs(q);
+
+ticketsCache.length = 0;
+
+snapshot.forEach(docSnap => {
+  ticketsCache.push({
+    id: docSnap.id,
+    ...docSnap.data()
+  });
+});
 
 snapshot.docs.forEach(doc => {
   ticketsCache.push({
@@ -714,9 +736,7 @@ async function deletarPermanente(id) {
 
   try {
 
-    await db.collection("chamados")
-      .doc(id)
-      .delete();
+   await deleteDoc(doc(db, "chamados", id));
 
     // 🔄 atualiza lixeira (se existir)
     if (typeof carregarLixeira === "function") {
@@ -731,10 +751,13 @@ async function deletarPermanente(id) {
 async function carregarLixeira() {
   try {
 
-    const snapshot = await db.collection("chamados")
-      .where("excluido", "==", true)
-      .orderBy("data_criacao", "desc")
-      .get();
+  const q = query(
+  collection(db, "chamados"),
+  where("excluido", "==", true),
+  orderBy("data_criacao", "desc")
+);
+
+const snapshot = await getDocs(q);
 
     const data = snapshot.docs.map(doc => ({
       id: doc.id,
@@ -793,9 +816,10 @@ async function restaurarChamado(id) {
 
   try {
 
-    await db.collection("chamados")
-      .doc(id)
-      .update({ excluido: false });
+  await updateDoc(
+  doc(db, "chamados", id),
+  { excluido: false }
+);
 
     // 🔄 atualiza lixeira
     if (typeof carregarLixeira === "function") {
@@ -1060,7 +1084,7 @@ async function exportarRelatorioMensal() {
   try {
 
     // 🔥 BUSCAR CHAMADOS (FIREBASE)
-    const snapshot = await db.collection("chamados").get();
+    const snapshot = await getDocs(collection(db, "chamados"));
 
     const data = snapshot.docs.map(doc => ({
       id: doc.id,
@@ -1092,9 +1116,14 @@ async function exportarRelatorioMensal() {
     }
 
     // 🔥 BUSCAR TEMPOS
-    const snapshotTempos = await db.collection("chamado_tempo").get();
+   const snapshotTempos = await getDocs(
+  collection(db, "chamado_tempo")
+);
 
-    const temposTodos = snapshotTempos.docs.map(doc => doc.data());
+   const temposTodos = snapshotTempos.docs.map(doc => ({
+  id: doc.id,
+  ...doc.data()
+}));
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("landscape");
@@ -1306,19 +1335,17 @@ async function iniciarChamado() {
     const agora = new Date(); // 🔥 Firebase usa Date
 
     // 🔥 inserir tempo
-    await db.collection("chamado_tempo").add({
-      chamado_id: idChamado,
-      inicio: agora,
-      fim: null
-    });
+  await addDoc(collection(db, "chamado_tempo"), {
+  chamado_id: idChamado,
+  inicio: agora,
+  fim: null
+});
 
     // 🔥 atualizar chamado
-    await db.collection("chamados")
-      .doc(idChamado)
-      .update({
-        status: "Em andamento",
-        data_inicio: selectedTicket.data_inicio || agora
-      });
+  await updateDoc(doc(db, "chamados", idChamado), {
+  status: "Em andamento",
+  data_inicio: selectedTicket?.data_inicio || agora
+});
 
     fecharModal();
 
@@ -1344,7 +1371,7 @@ async function pausarChamado() {
     const idChamado = selectedTicket.id;
 
     // 🔍 buscar período aberto (fim == null)
-    const snapshot = await db.collection("chamado_tempo")
+  const snapshot = await getDocs(collection(db, "chamado_tempo"));
       .where("chamado_id", "==", idChamado)
       .where("fim", "==", null)
       .orderBy("inicio", "desc")
@@ -1360,18 +1387,19 @@ async function pausarChamado() {
     const periodo = docPeriodo.data();
 
     // 🔥 atualizar fim
-    await db.collection("chamado_tempo")
-      .doc(docPeriodo.id)
-      .update({
-        fim: new Date() // 🔥 Firebase usa Date
-      });
+   await updateDoc(
+  doc(db, "chamado_tempo", docPeriodo.id),
+  {
+    fim: serverTimestamp()
+  });
 
     // 🔄 atualizar status do chamado
-    await db.collection("chamados")
-      .doc(idChamado)
-      .update({
-        status: "Pausado"
-      });
+   await updateDoc(
+  doc(db, "chamados", idChamado),
+  {
+    status: "Pausado"
+  }
+);
 
     fecharModal();
 
@@ -1396,19 +1424,23 @@ async function retomarChamado() {
     const idChamado = selectedTicket.id;
     const agora = new Date(); // 🔥 Firebase usa Date
 
-    // 🔥 cria novo período (continuação do tempo)
-    await db.collection("chamado_tempo").add({
-      chamado_id: idChamado,
-      inicio: agora,
-      fim: null
-    });
+  await addDoc(collection(db, "chamado_tempo"), {
+  chamado_id: idChamado,
+  inicio: serverTimestamp(), // melhor que new Date()
+  fim: null
+});
 
-    // 🔄 atualiza status
-    await db.collection("chamados")
-      .doc(idChamado)
-      .update({
-        status: "Em andamento"
-      });
+  // 1. muda status
+await updateDoc(doc(db, "chamados", idChamado), {
+  status: "Em andamento"
+});
+
+// 2. cria novo período de tempo
+await addDoc(collection(db, "chamado_tempo"), {
+  chamado_id: idChamado,
+  inicio: serverTimestamp(),
+  fim: null
+});
 
     fecharModal();
 
@@ -1425,80 +1457,93 @@ async function retomarChamado() {
     alert("Erro ao retomar chamado.");
   }
 }
- // ✅ FINALIZAR
+
 async function finalizarChamado() {
   try {
     if (!selectedTicket) return;
 
     const idChamado = selectedTicket.id;
-    const agora = new Date(); // 🔥 Firebase usa Date
 
-    // 🔍 buscar período aberto
-    const snapshot = await db.collection("chamado_tempo")
-      .where("chamado_id", "==", idChamado)
-      .where("fim", "==", null)
-      .get();
+    // 🔍 buscar períodos abertos
+    const q = query(
+      collection(db, "chamado_tempo"),
+      where("chamado_id", "==", idChamado),
+      where("fim", "==", null)
+    );
 
-    // 🔥 fechar todos os períodos abertos (segurança)
+    const snapshot = await getDocs(q);
+
+    // 🔥 fechar todos os períodos abertos
     if (!snapshot.empty) {
-      const batch = db.batch();
+      const batch = writeBatch(db);
 
-      snapshot.docs.forEach(doc => {
-        batch.update(doc.ref, { fim: agora });
+      snapshot.forEach((docItem) => {
+        batch.update(docItem.ref, {
+          fim: serverTimestamp()
+        });
       });
 
       await batch.commit();
     }
 
     // 🔄 atualizar chamado
-    await db.collection("chamados")
-      .doc(idChamado)
-      .update({
+    await updateDoc(
+      doc(db, "chamados", idChamado),
+      {
         status: "Concluído",
-        data_finalizacao: agora
-      });
+        data_finalizacao: serverTimestamp()
+      }
+    );
 
     fecharModal();
 
-    // ⚠️ opcional se NÃO usar realtime
+    // 🔄 recarregar dados (se não usar realtime)
     if (typeof carregarDados === "function") {
       await carregarDados();
     }
 
     alert("✅ Chamado finalizado!");
 
-    
   } catch (err) {
     console.error("Erro ao finalizar:", err);
     alert("Erro ao finalizar chamado.");
   }
 }
- // ✅ CALCULAR TEMPO REAL
+
+// 🔥 CALCULAR TEMPO REAL
 async function calcularDuracaoReal(chamadoId) {
   try {
     if (!chamadoId) return 0;
 
-    const snapshot = await db.collection("chamado_tempo")
-      .where("chamado_id", "==", chamadoId)
-      .get();
+    const q = query(
+      collection(db, "chamado_tempo"),
+      where("chamado_id", "==", chamadoId)
+    );
+
+    const snapshot = await getDocs(q);
 
     if (snapshot.empty) return 0;
 
-    let total = 0;
+    let totalMs = 0;
 
-    snapshot.forEach(doc => {
-      const t = doc.data();
+    snapshot.forEach((docItem) => {
+      const t = docItem.data();
 
-      if (t.inicio && t.fim) {
-        const inicio = t.inicio.toDate ? t.inicio.toDate() : new Date(t.inicio);
-        const fim = t.fim.toDate ? t.fim.toDate() : new Date(t.fim);
+      if (!t.inicio || !t.fim) return;
 
-        total += (fim - inicio);
-      }
+      const inicio = t.inicio.toDate
+        ? t.inicio.toDate()
+        : new Date(t.inicio);
+
+      const fim = t.fim.toDate
+        ? t.fim.toDate()
+        : new Date(t.fim);
+
+      totalMs += (fim.getTime() - inicio.getTime());
     });
 
-    // 🔥 retorna em horas (2 casas)
-    return (total / (1000 * 60 * 60)).toFixed(2);
+    // 🔥 retorna em horas
+    return Number((totalMs / (1000 * 60 * 60)).toFixed(2));
 
   } catch (err) {
     console.error("Erro ao calcular duração:", err);
@@ -1570,19 +1615,14 @@ async function excluirChamado(id) {
   if (!confirmar) return;
 
   try {
-    const agora = new Date(); // 🔥 Firebase usa Date
-
-    await db.collection("chamados")
-      .doc(id)
-      .update({
-        excluido: true,
-        status: "Concluído", // 🔥 força status
-        data_finalizacao: agora
-      });
+    await updateDoc(doc(db, "chamados", id), {
+      excluido: true,
+      status: "Concluído",
+      data_finalizacao: serverTimestamp()
+    });
 
     console.log("✔ Atualizado:", id);
 
-    // ⚠️ opcional se NÃO usar realtime
     if (typeof carregarDados === "function") {
       await carregarDados();
     }
@@ -1676,14 +1716,27 @@ window.toggleColuna = function (event, id) {
   }
 };
 
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  writeBatch,
+  doc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
 async function restaurarParaConcluidos() {
   const confirmar = confirm("Restaurar TODOS os chamados da lixeira como CONCLUÍDOS?");
   if (!confirmar) return;
 
   try {
-    const snapshot = await db.collection("chamados")
-      .where("excluido", "==", true)
-      .get();
+    const q = query(
+      collection(db, "chamados"),
+      where("excluido", "==", true)
+    );
+
+    const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
       alert("Nenhum chamado na lixeira.");
@@ -1694,19 +1747,19 @@ async function restaurarParaConcluidos() {
     const total = docs.length;
 
     let processados = 0;
-    const tamanhoLote = 400; // 🔥 margem segura (limite é 500)
+    const tamanhoLote = 400;
 
-    const agora = new Date();
+    // ⚠️ melhor que new Date()
+    const agora = serverTimestamp();
 
-    // 🔥 cria barra de progresso
     criarProgresso(total);
 
     for (let i = 0; i < total; i += tamanhoLote) {
-      const batch = db.batch();
+      const batch = writeBatch(db);
       const lote = docs.slice(i, i + tamanhoLote);
 
-      lote.forEach(doc => {
-        batch.update(doc.ref, {
+      lote.forEach((docItem) => {
+        batch.update(doc(db, "chamados", docItem.id), {
           excluido: false,
           status: "Concluído",
           data_finalizacao: agora
@@ -1716,10 +1769,8 @@ async function restaurarParaConcluidos() {
       await batch.commit();
 
       processados += lote.length;
-
       atualizarProgresso(processados, total);
 
-      // 🔥 pausa pequena (não travar UI)
       await new Promise(r => setTimeout(r, 50));
     }
 
@@ -1727,7 +1778,6 @@ async function restaurarParaConcluidos() {
 
     alert(`✔ ${total} chamados restaurados com sucesso!`);
 
-    // 🔄 atualiza telas
     await carregarLixeira?.();
     await carregarDados?.();
 
@@ -1891,17 +1941,14 @@ function configurarInstalacaoPWA() {
 }
 
 
-
 async function confirmarFinalizacao() {
-	
   try {
-    if (!selectedTicket || !selectedTicket.id) {
+    if (!selectedTicket?.id) {
       alert("Chamado inválido.");
       return;
     }
 
     const idChamado = selectedTicket.id;
-    const agora = new Date();
 
     const inputFile = document.getElementById("fotoFinal");
     const file = inputFile?.files?.[0];
@@ -1915,50 +1962,51 @@ async function confirmarFinalizacao() {
       console.log("✅ URL:", fotoFinalUrl);
     }
 
-    // 🔥 FECHA períodos abertos (IMPORTANTÍSSIMO)
-    const snapshot = await db.collection("chamado_tempo")
-      .where("chamado_id", "==", idChamado)
-      .where("fim", "==", null)
-      .get();
+    // 🔥 fechar períodos abertos
+    const q = query(
+      collection(db, "chamado_tempo"),
+      where("chamado_id", "==", idChamado),
+      where("fim", "==", null)
+    );
+
+    const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
-      const batch = db.batch();
+      const batch = writeBatch(db);
 
-      snapshot.docs.forEach(doc => {
-        batch.update(doc.ref, { fim: agora });
+      snapshot.forEach((docItem) => {
+        batch.update(doc(db, "chamado_tempo", docItem.id), {
+          fim: serverTimestamp()
+        });
       });
 
       await batch.commit();
     }
 
-    // 🔥 monta update
+    // 🔄 update chamado
     const updateData = {
       status: "Concluído",
-      data_finalizacao: agora
+      data_finalizacao: serverTimestamp()
     };
 
     if (fotoFinalUrl) {
       updateData.foto_final_url = fotoFinalUrl;
     }
 
-    // 🔄 atualiza chamado
-    await db.collection("chamados")
-      .doc(idChamado)
-      .update(updateData);
+    await updateDoc(
+      doc(db, "chamados", idChamado),
+      updateData
+    );
 
     console.log("✔ Atualizado no Firebase:", idChamado);
 
     alert("✅ Chamado finalizado!");
 
-   
-
-    // 🔄 limpar UI
     fecharModalFinalizar();
     fecharModal();
 
     if (inputFile) inputFile.value = "";
 
-    // ⚠️ opcional se NÃO usar realtime
     if (typeof carregarDados === "function") {
       await carregarDados();
     }
