@@ -1364,12 +1364,15 @@ async function pausarChamado() {
     const idChamado = selectedTicket.id;
 
     // 🔍 buscar período aberto (fim == null)
-  const snapshot = await getDocs(collection(db, "chamado_tempo"));
-      .where("chamado_id", "==", idChamado)
-      .where("fim", "==", null)
-      .orderBy("inicio", "desc")
-      .limit(1)
-      .get();
+  const q = query(
+  collection(db, "chamado_tempo"),
+  where("chamado_id", "==", idChamado),
+  where("fim", "==", null),
+  orderBy("inicio", "desc"),
+  limit(1)
+);
+
+const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
       alert("⚠️ Nenhum período em andamento.");
