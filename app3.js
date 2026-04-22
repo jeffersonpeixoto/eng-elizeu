@@ -1423,9 +1423,8 @@ async function pausarChamado() {
 
     const q = query(
       collection(db, "chamado_tempo"),
-      where("chamado_id", "==", id)
-	  where("fim", "==", null)
-      orderBy("inicio", "desc")
+      where("chamado_id", "==", idChamado),
+      where("fim", "==", null),
       limit(1)
     );
 
@@ -2080,4 +2079,3 @@ Object.assign(window, {
 exportarListaPDF,
 exportarRelatorioMensal  // 👈 ESSENCIAL
 });
-
