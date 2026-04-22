@@ -438,7 +438,7 @@ function renderTicketList(){
 	<span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span>
 	</div>
 	<p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p>
-	<button class="btn btn-secondary" id="detal" data-id="${ticket.id}"> Detalhes  </button>
+	<button class="btn-detalhes" data-id="${ticket.id}"> Detalhes</button>
 	</div>
 	<div class="ticket-aside">
 	<div class="date-chip">
@@ -1118,7 +1118,13 @@ if (btnFechar) {
     // fallback
     carregarDados?.();
   }
+document.addEventListener("click", (e) => {
 
+  const btn = e.target.closest(".btn-detalhes");
+  if (!btn) return;
+
+  abrirDetalhes(btn.dataset.id);
+});
 });
 // 🔥 EXPORTAR RELATÓRIO MENSAL (CORRIGIDO)
 async function exportarRelatorioMensal() {
