@@ -426,15 +426,34 @@ function getFilteredTickets(){
 // 📦 LISTA
 // =========================
 function renderTicketList(){
-  const list=document.getElementById("ticketList");
+	const list=document.getElementById("ticketList");
+	const filtered=getFilteredTickets();
+	if(!filtered.length){list.innerHTML='<div class="empty-state">Nenhum chamado encontrado com os filtros atuais.</div>';return}
+	list.innerHTML=filtered.map(ticket=>`<article class="ticket-card"><div><h4>${escapeHtml(ticket.unidade)} • ${escapeHtml(ticket.setor)}</h4>
+	<div class="ticket-meta">
+	<span class="badge badge-soft">${escapeHtml(ticket.id)}</span>
+	<span class="badge badge-soft">${escapeHtml(ticket.nome||"Sem nome")}</span>
+	<span class="badge badge-soft">${escapeHtml(ticket.tipo_manutencao||"—")}</span>
+	<span class="badge ${statusClass(ticket.status)}">${escapeHtml(ticket.status||"Aberto")}</span>
+	<span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span>
+	</div>
+	<p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p>
+	<button class="btn btn-secondary" id="detal" onclick="abrirDetalhes('${ticket.id}')">  Detalhes </button>
+	</div>
+	<div class="ticket-aside">
+	<div class="date-chip">
+	<strong>Criação:</strong><br>${formatDateTime(ticket.data_criacao)}
+	</div>
+	<div class="date-chip"><strong>Início:</strong><br>${formatDateTime(ticket.data_inicio)}</div>
+	<div class="date-chip"><strong>Finalização:</strong><br>${formatDateTime(ticket.data_finalizacao)}</div>
+	
 
-  list.innerHTML = ticketsCache.map(ticket=>`
-    <div class="ticket-card">
-      <strong>${ticket.unidade} • ${ticket.setor}</strong>
-      <p>${ticket.descricao || ""}</p>
-      <button onclick="abrirDetalhes('${ticket.id}')">Detalhes</button>
-    </div>
-  `).join("");
+${ticket.status === "Concluído" ? `
+  <button class="btn btn-danger" style="display:none;" onclick="excluirChamado('${ticket.id}')">
+    🗑️ Lixeira
+  </button>
+` : ""}
+</div></article>`).join("")
 }
 
 function renderKanban(){
