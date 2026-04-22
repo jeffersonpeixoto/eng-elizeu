@@ -1588,7 +1588,7 @@ function switchView(view, el = null) {
     renderMap[view]();
   }
 }
-function toggleColuna(event, id) {
+window.toggleColuna = function (event, id) {
   if (!event) return;
 
   const header = event.currentTarget;
@@ -1610,7 +1610,7 @@ function toggleColuna(event, id) {
     lista.classList.add("hidden");
     if (seta) seta.textContent = "⬇️";
   }
-}
+};
 
 async function restaurarParaConcluidos() {
   const confirmar = confirm("Restaurar TODOS os chamados da lixeira como CONCLUÍDOS?");
