@@ -4,7 +4,6 @@ const appState = {
   ticketsCache: []
 };
 appState.selectedTicket = ticket;
-appState.ticketsCache.push(item);
 function escapeHtml(v) {
   if (v === null || v === undefined) return "";
 
