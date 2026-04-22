@@ -1900,52 +1900,7 @@ async function registrarToken() {
   }
 }
 
-import { onDocumentWritten } from "firebase-functions/v2/firestore";
 
-
-export const notificarChamados = onDocumentWritten(
-  "chamados/{id}",
-  async (event) => {
-
-    const before = event.data.before?.data();
-    const after = event.data.after?.data();
-
-    if (!after) return;
-
-    let titulo = "";
-    let mensagem = "";
-
-    // 🔥 novo chamado
-    if (!before) {
-      titulo = "▶️ Novo chamado";
-      mensagem = `${after.unidade} - ${after.setor}`;
-    }
-
-    // 🔄 mudança de status
-    else if (before.status !== after.status) {
-      titulo = "🔄 Status atualizado";
-      mensagem = `${after.unidade} - ${after.status}`;
-    }
-
-    if (!titulo) return;
-
-    // 🔥 busca tokens
-    const snapshot = await db.collection("usuarios").get();
-
-    const tokens = snapshot.docs.map(doc => doc.data().token);
-
-    if (!tokens.length) return;
-
-    await getMessaging().sendEachForMulticast({
-      tokens,
-      notification: {
-        title: titulo,
-        body: mensagem
-      }
-    });
-
-  }
-);
 async function confirmarFinalizacao() {
 	
   try {
