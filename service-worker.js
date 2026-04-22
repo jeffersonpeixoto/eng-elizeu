@@ -1,4 +1,4 @@
-const CACHE_NAME = "app-chamados-v3";
+const CACHE_NAME = "app-chamados-v4";
 
 const urlsToCache = [
   "./",
@@ -10,6 +10,46 @@ const urlsToCache = [
   "./icon-512.png"
 ];
 
+// 🔥 IMPORT FIREBASE (COMPAT PRA SW)
+importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js");
+
+// 🔥 CONFIG (MESMO DO APP)
+firebase.initializeApp({
+  apiKey: "AIzaSyCyhg8K7l48_k8sNTGuVxNf37sDf865T1A",
+    authDomain: "eng-bd-elizeu.firebaseapp.com",
+    projectId: "eng-bd-elizeu",
+    storageBucket: "eng-bd-elizeu.firebasestorage.app",
+    messagingSenderId: "169199632971",
+    appId: "1:169199632971:web:4bca2feccd2e5b31db03ce"
+});
+
+const messaging = firebase.messaging();
+
+// 🔔 RECEBER PUSH EM BACKGROUND
+messaging.onBackgroundMessage((payload) => {
+  console.log("🔔 Push recebido:", payload);
+
+  const title = payload.notification?.title || "Novo evento";
+  const options = {
+    body: payload.notification?.body || "",
+    icon: "./icon-192.png",
+    data: payload.data
+  };
+
+  self.registration.showNotification(title, options);
+});
+import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging.js";
+
+const messaging = getMessaging(app);
+
+async function registrarPush() {
+  const token = await getToken(messaging, {
+    vapidKey: "SUA_PUBLIC_KEY"
+  });
+
+  console.log("Token:", token);
+}
 // 🔥 INSTALL
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -44,12 +84,22 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// 🔥 FETCH (estratégia profissional)
+// 🔥 CLICK NA NOTIFICAÇÃO
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const url = event.notification?.data?.url || "/";
+
+  event.waitUntil(
+    clients.openWindow(url)
+  );
+});
+
+// 🔥 FETCH (SEU CACHE)
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // 🚫 NÃO cache API / Firebase / OneSignal
   if (
     url.hostname.includes("firebase") ||
     url.hostname.includes("supabase") ||
@@ -58,7 +108,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 🧠 HTML (network first + fallback)
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req)
@@ -73,7 +122,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 📦 assets (cache first + update em background)
   event.respondWith(
     caches.match(req).then((cached) => {
       const fetchPromise = fetch(req)
