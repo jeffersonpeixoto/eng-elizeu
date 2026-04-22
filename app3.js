@@ -1414,20 +1414,22 @@ async function iniciarChamado() {
  // ✅ PAUSAR
 async function pausarChamado() {
   try {
-    if (!selectedTicket) return;
+    if (!selectedTicket?.id) {
+      alert("Chamado inválido");
+      return;
+    }
 
     const idChamado = selectedTicket.id;
 
-    // 🔍 buscar período aberto (fim == null)
-  const q = query(
-  collection(db, "chamado_tempo"),
-  where("chamado_id", "==", idChamado),
-  where("fim", "==", null),
-  orderBy("inicio", "desc"),
-  limit(1)
-);
+    const q = query(
+      collection(db, "chamado_tempo"),
+      where("chamado_id", "==", id)
+	  where("fim", "==", null)
+      orderBy("inicio", "desc")
+      limit(1)
+    );
 
-const snapshot = await getDocs(q);
+    const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
       alert("⚠️ Nenhum período em andamento.");
@@ -1435,35 +1437,25 @@ const snapshot = await getDocs(q);
     }
 
     const docPeriodo = snapshot.docs[0];
-    const periodo = docPeriodo.data();
 
-    // 🔥 atualizar fim
-   await updateDoc(
-  doc(db, "chamado_tempo", docPeriodo.id),
-  {
-    fim: serverTimestamp()
-  });
+    await updateDoc(doc(db, "chamado_tempo", docPeriodo.id), {
+      fim: serverTimestamp()
+    });
 
-    // 🔄 atualizar status do chamado
-   await updateDoc(
-  doc(db, "chamados", idChamado),
-  {
-    status: "Pausado"
-  }
-);
+    await updateDoc(doc(db, "chamados", idChamado), {
+      status: "Pausado"
+    });
 
     fecharModal();
 
-    // ⚠️ opcional se NÃO usar realtime
     if (typeof carregarDados === "function") {
       await carregarDados();
     }
 
     alert("⏸️ Chamado pausado com sucesso!");
 
-   
   } catch (err) {
-    console.error("Erro real:", err);
+    console.error("Erro ao pausar:", err);
     alert("Erro inesperado ao pausar.");
   }
 }
@@ -2088,3 +2080,86 @@ Object.assign(window, {
 exportarListaPDF,
 exportarRelatorioMensal  // 👈 ESSENCIAL
 });
+
+async function abrirPeriodo(idChamado) {
+  const ref = db.collection("chamados").doc(idChamado);
+
+  await db.runTransaction(async (tx) => {
+    const doc = await tx.get(ref);
+    if (!doc.exists) throw new Error("Chamado não existe");
+
+    const data = doc.data();
+
+    // já tem período aberto? não duplica
+    if (data.periodoAtual?.ativo) return;
+
+    const agora = new Date();
+
+    tx.update(ref, {
+      status: "EM_ANDAMENTO",
+      periodoAtual: {
+        inicio: agora,
+        ativo: true
+      }
+    });
+  });
+}
+
+async function fecharPeriodo(idChamado) {
+  const ref = db.collection("chamados").doc(idChamado);
+  const periodosRef = ref.collection("periodos");
+
+  await db.runTransaction(async (tx) => {
+    const doc = await tx.get(ref);
+    if (!doc.exists) throw new Error("Chamado não existe");
+
+    const data = doc.data();
+    const atual = data.periodoAtual;
+
+    // nada aberto → nada a fazer
+    if (!atual?.ativo) return;
+
+    const agora = new Date();
+    const inicio = atual.inicio.toDate?.() || atual.inicio;
+
+    const duracaoMs = agora - inicio;
+
+    const novoPeriodo = periodosRef.doc();
+
+    tx.set(novoPeriodo, {
+      inicio,
+      fim: agora,
+      duracao: duracaoMs
+    });
+
+    tx.update(ref, {
+      status: "ABERTO",
+      periodoAtual: {
+        inicio: null,
+        ativo: false
+      }
+    });
+  });
+}
+
+async function estadoAtual(idChamado) {
+  const doc = await db.collection("chamados").doc(idChamado).get();
+  if (!doc.exists) return null;
+
+  const data = doc.data();
+
+  const ativo = data.periodoAtual?.ativo || false;
+
+  let tempoAtual = 0;
+
+  if (ativo) {
+    const inicio = data.periodoAtual.inicio.toDate?.() || data.periodoAtual.inicio;
+    tempoAtual = Date.now() - inicio;
+  }
+
+  return {
+    status: data.status,
+    periodoAberto: ativo,
+    tempoAtualMs: tempoAtual
+  };
+}
