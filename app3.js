@@ -438,7 +438,7 @@ function renderTicketList(){
 	<span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span>
 	</div>
 	<p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p>
-	<button class="btn-detalhes" data-id="${ticket.id}"> Detalhes</button>
+	<button class="btn btn-detalhes" data-id="${ticket.id}"> Detalhes</button>
 	</div>
 	<div class="ticket-aside">
 	<div class="date-chip">
