@@ -96,58 +96,19 @@ function renderDashboard(){
 async function salvarChamado(event){
   event.preventDefault();
 
-  const btn = event.target.querySelector("button[type='submit']");
-  btn.disabled = true;
-  btn.textContent = "Salvando...";
+  const chamado = {
+    nome: document.getElementById("nome").value,
+    unidade: document.getElementById("unidade").value,
+    setor: document.getElementById("setor").value,
+    descricao: document.getElementById("descricao").value,
+    status: "Aberto",
+    excluido: false,
+    data_criacao: new Date()
+  };
 
-  try {
-
-    // 👇 AQUI É O LUGAR CERTO
-    const file = document.getElementById("foto").files[0];
-
-    let fotoUrl = null;
-
-    if (file) {
-      fotoUrl = await uploadFoto(file);
-    }
-
-    const chamado = {
-      id: "CH-" + Date.now(),
-      nome: document.getElementById("nome").value.trim(),
-      unidade: document.getElementById("unidade").value,
-      setor: document.getElementById("setor").value,
-      setor_problema: document.getElementById("setorProblema").value.trim(),
-      tipo_manutencao: document.getElementById("tipoManutencao").value,
-      gravidade: document.getElementById("gravidade").value,
-      descricao: document.getElementById("descricao").value.trim(),
-      foto_url: fotoUrl, // 👈 já tratado
-      status: "Aberto",
-      data_criacao: new Date().toISOString(),
-      data_inicio: null,
-      data_finalizacao: null
-    };
-
-    const { error } = await window.supabaseClient
-      .from("chamados")
-      .insert([chamado]);
-
-    if (error) throw error;
-
-    alert("Chamado salvo com sucesso!");
-	// 🔥 AQUI É O SEGREDO
-resetarFormulario();
-await carregarDados();
-switchView("lista");
-
-  } catch (error) {
-    console.error(error);
-    alert("Erro: " + error.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Salvar chamado";
-  }
+  await db.collection("chamados").add(chamado);
+  alert("Salvo!");
 }
-
 function getFilteredTickets(){
 	const busca=document.getElementById("busca")?.value.toLowerCase().trim()||"";
 	const filtroStatus=document.getElementById("filtroStatus")?.value||"";
@@ -179,35 +140,19 @@ function getFilteredTickets(){
 
 
 
+// =========================
+// 📦 LISTA
+// =========================
 function renderTicketList(){
-	const list=document.getElementById("ticketList");
-	const filtered=getFilteredTickets();
-	if(!filtered.length){list.innerHTML='<div class="empty-state">Nenhum chamado encontrado com os filtros atuais.</div>';return}
-	list.innerHTML=filtered.map(ticket=>`<article class="ticket-card"><div><h4>${escapeHtml(ticket.unidade)} • ${escapeHtml(ticket.setor)}</h4>
-	<div class="ticket-meta">
-	<span class="badge badge-soft">${escapeHtml(ticket.id)}</span>
-	<span class="badge badge-soft">${escapeHtml(ticket.nome||"Sem nome")}</span>
-	<span class="badge badge-soft">${escapeHtml(ticket.tipo_manutencao||"—")}</span>
-	<span class="badge ${statusClass(ticket.status)}">${escapeHtml(ticket.status||"Aberto")}</span>
-	<span class="badge ${priorityClass(ticket.gravidade)}">${escapeHtml(ticket.gravidade||"Baixa")}</span>
-	</div>
-	<p class="ticket-desc">${escapeHtml(ticket.descricao||"")}</p>
-	<button class="btn btn-secondary" id="detal" onclick="abrirDetalhes('${ticket.id}')">  Detalhes </button>
-	</div>
-	<div class="ticket-aside">
-	<div class="date-chip">
-	<strong>Criação:</strong><br>${formatDateTime(ticket.data_criacao)}
-	</div>
-	<div class="date-chip"><strong>Início:</strong><br>${formatDateTime(ticket.data_inicio)}</div>
-	<div class="date-chip"><strong>Finalização:</strong><br>${formatDateTime(ticket.data_finalizacao)}</div>
-	
+  const list=document.getElementById("ticketList");
 
-${ticket.status === "Concluído" ? `
-  <button class="btn btn-danger" style="display:none;"  onclick="excluirChamado('${ticket.id}')">
-    🗑️ Lixeira
-  </button>
-` : ""}
-</div></article>`).join("")
+  list.innerHTML = ticketsCache.map(ticket=>`
+    <div class="ticket-card">
+      <strong>${ticket.unidade} • ${ticket.setor}</strong>
+      <p>${ticket.descricao || ""}</p>
+      <button onclick="abrirDetalhes('${ticket.id}')">Detalhes</button>
+    </div>
+  `).join("");
 }
 
 function renderKanban(){
