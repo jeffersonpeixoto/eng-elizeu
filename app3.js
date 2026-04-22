@@ -312,21 +312,75 @@ function renderDashboard(){
     ticketsCache.filter(t => t.gravidade === "Crítica" && !t.excluido).length;
 }
 
-async function salvarChamado(event){
+async function salvarChamado(event) {
   event.preventDefault();
 
-  const chamado = {
-    nome: document.getElementById("nome").value,
-    unidade: document.getElementById("unidade").value,
-    setor: document.getElementById("setor").value,
-    descricao: document.getElementById("descricao").value,
-    status: "Aberto",
-    excluido: false,
-    data_criacao: new Date()
-  };
+  const btn = event.target.querySelector("button[type='submit']");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Salvando...";
+  }
 
-  await db.collection("chamados").add(chamado);
-  alert("Salvo!");
+  try {
+    // 🔹 CAPTURA CAMPOS
+    const nome = document.getElementById("nome").value.trim();
+    const unidade = document.getElementById("unidade").value;
+    const setor = document.getElementById("setor").value;
+    const gravidade = document.getElementById("gravidade").value;
+    const setorProblema = document.getElementById("setorProblema").value.trim();
+    const tipoManutencao = document.getElementById("tipoManutencao").value;
+    const descricao = document.getElementById("descricao").value.trim();
+    const file = document.getElementById("foto").files[0];
+
+    // 🔒 VALIDAÇÃO PESADA (sem dó)
+    if (!nome || !unidade || !setor || !gravidade || !setorProblema || !tipoManutencao || !descricao) {
+      throw new Error("Preencha todos os campos obrigatórios.");
+    }
+
+    // 📸 UPLOAD (se tiver imagem)
+    let fotoUrl = null;
+
+    if (file) {
+      fotoUrl = await uploadFoto(file);
+    }
+
+    // 🔥 OBJETO FINAL
+    const chamado = {
+      nome,
+      unidade,
+      setor,
+      gravidade,
+      setor_problema: setorProblema,
+      tipo_manutencao: tipoManutencao,
+      descricao,
+      foto_url: fotoUrl || null,
+
+      status: "Aberto",
+      excluido: false,
+      data_criacao: new Date(),
+
+      data_inicio: null,
+      data_finalizacao: null
+    };
+
+    // 🔥 SALVA NO FIREBASE
+    await db.collection("chamados").add(chamado);
+
+    // 🎉 SUCESSO
+    alert("✅ Chamado aberto com sucesso!");
+
+    resetarFormulario();
+    switchView("dashboard");
+
+  } catch (error) {
+    console.error(error);
+    alert("Erro: " + error.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Salvar chamado";
+    }
+  }
 }
 function getFilteredTickets(){
 	const busca=document.getElementById("busca")?.value.toLowerCase().trim()||"";
