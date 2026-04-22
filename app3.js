@@ -12,10 +12,13 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // 🔄 VARIÁVEIS
-let selectedTicket = null;
-let ticketsCache = [];
+let deferredPrompt=null;
+let selectedTicket=null;
+let ticketsCache=[];
 
+// =========================
 // 🔧 UTIL
+// =========================
 function escapeHtml(v){return String(v??"")}
 function formatDateTime(v){
   if(!v) return "—";
@@ -23,7 +26,9 @@ function formatDateTime(v){
   return d.toLocaleString("pt-BR");
 }
 
+// =========================
 // 📊 DASHBOARD
+// =========================
 function renderDashboard(){
   document.getElementById("metricTotal").textContent =
     ticketsCache.filter(t => !t.excluido).length;
@@ -38,8 +43,11 @@ function renderDashboard(){
     ticketsCache.filter(t => t.status === "Concluído" && !t.excluido).length;
 }
 
-// 📥 REALTIME
+// =========================
+// 📡 REALTIME (SUBSTITUI SUPABASE)
+// =========================
 function escutarChamadosSeguro() {
+
   db.collection("chamados")
     .orderBy("data_criacao", "desc")
     .limit(50)
@@ -56,31 +64,9 @@ function escutarChamadosSeguro() {
     });
 }
 
-// 📥 LISTA
-function renderTicketList(){
-  const list = document.getElementById("ticketList");
-
-  list.innerHTML = ticketsCache.map(ticket => `
-    <div class="ticket-card">
-      <strong>${ticket.unidade} - ${ticket.setor}</strong>
-      <p>${ticket.descricao || ""}</p>
-      <button onclick="abrirDetalhes('${ticket.id}')">Detalhes</button>
-    </div>
-  `).join("");
-}
-
-// 📦 KANBAN
-function renderKanban(){
-  // simples (mantém lógica)
-}
-
-// 📂 DETALHES
-function abrirDetalhes(id){
-  selectedTicket = ticketsCache.find(t => t.id === id);
-  alert("Chamado: " + selectedTicket.id);
-}
-
+// =========================
 // ➕ SALVAR
+// =========================
 async function salvarChamado(event){
   event.preventDefault();
 
@@ -95,11 +81,12 @@ async function salvarChamado(event){
   };
 
   await db.collection("chamados").add(chamado);
-
   alert("Salvo!");
 }
 
-// 🔄 ATUALIZAR
+// =========================
+// 🔄 ATUALIZAR STATUS
+// =========================
 async function atualizarChamadoModal(){
   if(!selectedTicket) return;
 
@@ -111,21 +98,70 @@ async function atualizarChamadoModal(){
     });
 }
 
-// ❌ EXCLUIR
+// =========================
+// ❌ EXCLUIR (LÓGICO)
+// =========================
 async function excluirChamado(id){
   await db.collection("chamados")
     .doc(id)
-    .update({ excluido: true });
+    .update({
+      excluido: true,
+      status: "Concluído",
+      data_finalizacao: new Date()
+    });
 }
 
-// 🗑️ DELETAR DEFINITIVO
+// =========================
+// ♻️ RESTAURAR
+// =========================
+async function restaurarChamado(id){
+  await db.collection("chamados")
+    .doc(id)
+    .update({ excluido: false });
+}
+
+// =========================
+// 🗑️ EXCLUIR DEFINITIVO
+// =========================
 async function deletarPermanente(id){
   await db.collection("chamados")
     .doc(id)
     .delete();
 }
 
+// =========================
+// 📦 LISTA
+// =========================
+function renderTicketList(){
+  const list=document.getElementById("ticketList");
+
+  list.innerHTML = ticketsCache.map(ticket=>`
+    <div class="ticket-card">
+      <strong>${ticket.unidade} • ${ticket.setor}</strong>
+      <p>${ticket.descricao || ""}</p>
+      <button onclick="abrirDetalhes('${ticket.id}')">Detalhes</button>
+    </div>
+  `).join("");
+}
+
+// =========================
+// 📂 DETALHES
+// =========================
+function abrirDetalhes(id){
+  selectedTicket = ticketsCache.find(t=>t.id===id);
+  alert("Chamado: " + selectedTicket.id);
+}
+
+// =========================
+// 📦 KANBAN
+// =========================
+function renderKanban(){
+  // mantém sua lógica original
+}
+
+// =========================
 // 🔧 INIT
+// =========================
 document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("ticketForm")
