@@ -3,7 +3,7 @@ const appState = {
   selectedTicket: null,
   ticketsCache: []
 };
-appState.selectedTicket = ticket;
+
 function escapeHtml(v) {
   if (v === null || v === undefined) return "";
 
