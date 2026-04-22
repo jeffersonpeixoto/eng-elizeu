@@ -1901,7 +1901,7 @@ async function registrarToken() {
 }
 
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
-import { getMessaging } from "firebase-admin/messaging";
+
 
 export const notificarChamados = onDocumentWritten(
   "chamados/{id}",
