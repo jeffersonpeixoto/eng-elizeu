@@ -1,11 +1,14 @@
 {
-  "name": "Chamados de Engenharia Completo",
-  "short_name": "Chamadoss",
-  "start_url": "./index2.html?source=pwa",
+  "name": "Chamados Engenharia",
+  "short_name": "Chamados",
+  "start_url": "./",
   "scope": "./",
-  "display": "browser",
+  "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
+  "orientation": "portrait",
+  "description": "Sistema de chamados de engenharia com controle de manutenção e operação.",
+
   "icons": [
     {
       "src": "icon-192.png",
@@ -16,6 +19,12 @@
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

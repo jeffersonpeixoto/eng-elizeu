@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="styles.css?v=6">
 
-<script defer src="app3.js?v=3"></script>
+<script defer src="app3.js?v=4"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
@@ -34,26 +34,25 @@ OneSignalDeferred.push(async function (OneSignal) {
 
 });
 </script>
-
 <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyCyhg8K7l48_k8sNTGuVxNf37sDf865T1A",
+const firebaseConfig = { 
+	apiKey: "AIzaSyCyhg8K7l48_k8sNTGuVxNf37sDf865T1A",
     authDomain: "eng-bd-elizeu.firebaseapp.com",
     projectId: "eng-bd-elizeu",
     storageBucket: "eng-bd-elizeu.firebasestorage.app",
     messagingSenderId: "169199632971",
     appId: "1:169199632971:web:4bca2feccd2e5b31db03ce"
-  };
+ };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+
+// 🔥 ESSENCIAL
+window.db = getFirestore(app);
 </script>
+
 </head>
 
 <body>
@@ -74,10 +73,10 @@ OneSignalDeferred.push(async function (OneSignal) {
   </div>
 
   <div class="menu-grid">
-    <button class="menu-btn active" onclick="switchView('dashboard', this)">Dashboard</button>
-    <button class="menu-btn" onclick="switchView('novo', this)">Novo Chamado</button>
-    <button class="menu-btn" onclick="switchView('lista', this)">Lista de Chamados</button>
-    <button class="menu-btn" onclick="switchView('kanban', this)">Quadro Operacional</button>
+   <button class="menu-btn active" data-view-btn="dashboard">Dashboard</button>
+<button class="menu-btn" data-view-btn="novo">Novo Chamado</button>
+<button class="menu-btn" data-view-btn="lista">Lista de Chamados</button>
+<button class="menu-btn" data-view-btn="kanban">Quadro Operacional</button>
   </div>
 
   <div class="dynamic-area">
@@ -204,7 +203,7 @@ OneSignalDeferred.push(async function (OneSignal) {
 
           <div id="ticketList" class="ticket-list"></div>
         </div>
-		<div id="ticketList"></div>
+		
     </div>
 
     <!-- KANBAN -->
@@ -221,7 +220,7 @@ OneSignalDeferred.push(async function (OneSignal) {
          <div class="kanban-grid">
 
   <div class="kanban-column">
-   <div class="kanban-header" onclick="toggleColuna(event, 'kanbanAberto')">
+   <div class="kanban-header" onclick="toggleColuna(event,'kanbanAberto')">
   <span>Aberto</span>
   <strong id="kanbanCountAberto">0</strong>
   <span class="seta">⬇️</span>
@@ -230,7 +229,7 @@ OneSignalDeferred.push(async function (OneSignal) {
   </div>
 
   <div class="kanban-column">
-    <div class="kanban-header" onclick="toggleColuna(event, 'kanbanAndamento')">
+    <div class="kanban-header" onclick="toggleColuna(event,'kanbanAndamento')">
       <span>Em andamento</span>
       <strong id="kanbanCountAndamento">0</strong>
       <span class="seta">⬇️</span>
@@ -239,7 +238,7 @@ OneSignalDeferred.push(async function (OneSignal) {
   </div>
 
   <div class="kanban-column">
-    <div class="kanban-header" onclick="toggleColuna( event,'kanbanPausado')">
+    <div class="kanban-header" onclick="toggleColuna(event,'kanbanPausado')">
       <span>Pausado</span>
       <strong id="kanbanCountPausado">0</strong>
       <span class="seta">⬇️</span>
@@ -320,7 +319,7 @@ OneSignalDeferred.push(async function (OneSignal) {
 
   </div>
 </div>
-<div id="modalFinalizar" class="modal">
+<div id="modalFinalizar" class="modal" tabindex="-1">
   <div class="modal-box">
 
     <div class="modal-header">
@@ -333,7 +332,7 @@ OneSignalDeferred.push(async function (OneSignal) {
         📸 Foto do serviço concluído (opcional)
       </p>
 
-      <input type="file" id="fotoFinal" accept="image/*">
+     <input type="file" id="fotoFinal" accept="image/*" capture="environment">
     </div>
 
     <div class="modal-footer">
@@ -349,29 +348,6 @@ OneSignalDeferred.push(async function (OneSignal) {
     margin: 0 auto;
     text-align: center;"><img src="logo.png" style="width:30vh;"></div>
 	
-	<script>
-function toggleColuna(event, id) {
-  const header = event.currentTarget;
-  const lista = document.getElementById(id);
-  const seta = header.querySelector(".seta");
 
-  if (!lista) return;
-
-  if (lista.classList.contains("hidden")) {
-    lista.classList.remove("hidden");
-    if (seta) seta.textContent = "⬆️";
-  } else {
-    lista.classList.add("hidden");
-    if (seta) seta.textContent = "⬇️";
-  }
-}
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(reg => reg.unregister());
-  });
-}
-</script>
 </body>
 </html>
