@@ -1876,29 +1876,7 @@ function configurarInstalacaoPWA() {
     btn.classList.add("hidden");
   });
 }
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging.js";
 
-const messaging = getMessaging();
-
-async function registrarToken() {
-  try {
-    const token = await getToken(messaging, {
-      vapidKey: "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"
-    });
-
-    if (token) {
-      console.log("🔔 Token:", token);
-
-      // salva no banco
-      await db.collection("usuarios").doc(token).set({
-        token
-      });
-    }
-
-  } catch (err) {
-    console.error("Erro token:", err);
-  }
-}
 
 
 async function confirmarFinalizacao() {
