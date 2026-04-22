@@ -1470,75 +1470,76 @@ async function calcularDuracaoReal(chamadoId) {
 
 let unsubscribeChamados = null;
 
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
+
+let unsubscribeChamados = null;
+
 function escutarChamadosSeguro() {
   try {
 
-    // 🔥 evita múltiplos listeners
+    // 🔥 remove listener anterior
     if (unsubscribeChamados) {
       unsubscribeChamados();
       unsubscribeChamados = null;
     }
 
-    // 🔥 trava global (igual você usava)
-    if (window.__realtimeAtivo) return;
-    window.__realtimeAtivo = true;
+    const q = query(
+      collection(db, "chamados"),
+      orderBy("data_criacao", "desc"),
+      limit(50)
+    );
 
-    unsubscribeChamados = db.collection("chamados")
-      .orderBy("data_criacao", "desc")
-      .limit(50)
-      .onSnapshot(snapshot => {
+    unsubscribeChamados = onSnapshot(q, (snapshot) => {
 
-        snapshot.docChanges().forEach(change => {
+      snapshot.docChanges().forEach(change => {
 
-          const c = {
-            id: change.doc.id,
-            ...change.doc.data()
+        const c = {
+          id: change.doc.id,
+          ...change.doc.data()
+        };
+
+        // 🔔 PUSH
+        if (change.type === "added") {
+          enviarPushOneSignal?.(
+            "▶️ Chamado Aberto",
+            `${c.unidade} - ${c.setor}`,
+            c.id
+          );
+        }
+
+        if (change.type === "modified") {
+          enviarPushOneSignal?.(
+            "🔄 Status atualizado",
+            `${c.unidade} - ${c.status}`,
+            c.id
+          );
+        }
+
+        // 🚀 ATUALIZA CACHE LOCAL
+        const index = ticketsCache.findIndex(t => t.id === c.id);
+
+        if (index !== -1) {
+          ticketsCache[index] = {
+            ...ticketsCache[index],
+            ...c
           };
+        } else {
+          ticketsCache.unshift(c);
+        }
 
-          // 🔔 PUSH
-          if (change.type === "added") {
-            enviarPushOneSignal?.(
-              "▶️ Chamado Aberto",
-              `${c.unidade} - ${c.setor}`,
-              c.id
-            );
-          }
-
-          if (change.type === "modified") {
-            enviarPushOneSignal?.(
-              "🔄 Status atualizado",
-              `${c.unidade} - ${c.status}`,
-              c.id
-            );
-          }
-
-          // 🚀 ATUALIZA LOCAL (SEM CONSULTA)
-          const index = ticketsCache.findIndex(t => t.id === c.id);
-
-          if (index !== -1) {
-            ticketsCache[index] = {
-              ...ticketsCache[index],
-              ...c
-            };
-          } else {
-            if (!ticketsCache.find(t => t.id === c.id)) {
-  ticketsCache.unshift(c);
-}
-          }
-
-        });
-
-        // 🔄 render uma única vez (performance)
-        renderDashboard();
-        renderTicketList();
-        renderKanban();
       });
+
+      // 🔄 render (1 vez)
+      renderDashboard();
+      renderTicketList();
+      renderKanban();
+
+    });
 
   } catch (e) {
     console.warn("Erro realtime:", e);
   }
 }
-
 async function enviarPushOneSignal(titulo, mensagem, id, userId = null) {
   try {
 
