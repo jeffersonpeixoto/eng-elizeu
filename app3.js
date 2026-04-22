@@ -1474,7 +1474,7 @@ async function retomarChamado() {
     }
 
     const idChamado = selectedTicket.id;
-    const agora = serverTimestamp();
+    const agora = new Date();
 
     // 🔍 fecha qualquer período aberto antes
     const snapshot = await getDocs(
