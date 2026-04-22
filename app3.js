@@ -12,7 +12,9 @@ import {
   where,
   orderBy,
   limit,
-  onSnapshot
+  onSnapshot,
+  writeBatch,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const appState = {
