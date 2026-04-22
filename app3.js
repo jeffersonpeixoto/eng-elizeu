@@ -3,11 +3,16 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/fireba
 import {
   getFirestore,
   collection,
-  addDoc,
   getDocs,
-  doc,
+  addDoc,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  doc,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const appState = {
