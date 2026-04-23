@@ -1094,6 +1094,38 @@ document.addEventListener("DOMContentLoaded", () => {
   const id = btn.dataset.delete;
   excluirChamado(id);
 });
+
+
+ window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+  OneSignalDeferred.push(async function(OneSignal) {
+
+    // 🔥 INIT
+    await OneSignal.init({
+      appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5"
+    });
+
+    // 🔔 verifica permissão atual
+    const permission = OneSignal.Notifications.permission;
+
+    if (permission === "granted") {
+      await OneSignal.User.addTag("usuario_ativo", "true");
+    }
+
+    // 🚀 EXTRA (COLOCA AQUI)
+    OneSignal.Notifications.addEventListener("permissionChange", async (permission) => {
+
+      if (permission === "granted") {
+        await OneSignal.User.addTag("usuario_ativo", "true");
+      } else {
+        await OneSignal.User.addTag("usuario_ativo", "false");
+      }
+
+    });
+
+  });
+
+
 document.getElementById("btnConfirmarFinalizacao")
   ?.addEventListener("click", confirmarFinalizacao);
 document.querySelectorAll(".kanban-header").forEach(header => {
@@ -2054,7 +2086,10 @@ async function enviarNotificacao({ titulo, mensagem, url }) {
       body: JSON.stringify({
         app_id: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
 
-        included_segments: ["All"],
+        // 🔥 ESSENCIAL (QUEM RECEBE)
+        filters: [
+          { field: "tag", key: "usuario_ativo", relation: "=", value: "true" }
+        ],
 
         headings: {
           pt: titulo,
