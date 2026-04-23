@@ -2128,7 +2128,6 @@ Object.assign(window, {
   resetarFormulario,
 exportarListaPDF,
 exportarRelatorioMensal  // 👈 ESSENCIAL
-=======
 
 const appState = {
   ticketsCache: [],
