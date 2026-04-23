@@ -3230,7 +3230,11 @@ document.addEventListener("click", (e) => {
 });
   // 📊 tela inicial
   switchView?.("dashboard");
-
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./service-worker.js").then((reg) => {
+    reg.update();
+  });
+}
   // 🔥 FIREBASE REALTIME (substitui carregarDados)
   if (typeof escutarChamadosSeguro === "function") {
     escutarChamadosSeguro();
