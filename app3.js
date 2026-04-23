@@ -573,36 +573,63 @@ function abrirDetalhes(id) {
   const modalFoto = document.getElementById("modalFoto");
   const wrapper = document.getElementById("compareWrapper");
 
-  if (wrapper && modalFoto) {
+ if (wrapper && modalFoto) {
 
-    if (antes && depois) {
-      // 🔥 slider
-      wrapper.style.display = "block";
-      modalFoto.classList.add("hidden");
+  // 🔥 CASO: duas imagens
+  if (antes && depois) {
+    wrapper.style.display = "flex";
+    wrapper.style.justifyContent = "center";
+    wrapper.style.gap = "10px";
 
-      const imgAntes = document.getElementById("imgAntes");
-      const imgDepois = document.getElementById("imgDepois");
+    wrapper.innerHTML = `
+      <div style="text-align:center;">
+        <strong>Antes</strong><br>
+        <img src="${antes}" style="max-width:280px; border-radius:8px;">
+      </div>
+      <div style="text-align:center;">
+        <strong>Depois</strong><br>
+        <img src="${depois}" style="max-width:280px; border-radius:8px;">
+      </div>
+    `;
 
-      if (imgAntes) imgAntes.src = antes;
-      if (imgDepois) imgDepois.src = depois;
-
-      // 🔥 evita bug de múltiplos sliders
-      if (typeof iniciarSlider === "function") {
-        setTimeout(() => iniciarSlider(), 100);
-      }
-
-    } else {
-      // 🔥 fallback imagem única
-      wrapper.style.display = "none";
-
-      if (antes) {
-        modalFoto.src = antes;
-        modalFoto.classList.remove("hidden");
-      } else {
-        modalFoto.classList.add("hidden");
-      }
-    }
+    modalFoto.classList.add("hidden");
   }
+
+  // 🔥 CASO: só tem foto final
+  else if (!antes && depois) {
+    wrapper.style.display = "block";
+
+    wrapper.innerHTML = `
+      <div style="text-align:center;">
+        <strong>Imagem</strong><br>
+        <img src="${depois}" style="max-width:280px; border-radius:8px;">
+      </div>
+    `;
+
+    modalFoto.classList.add("hidden");
+  }
+
+  // 🔥 CASO: só tem foto inicial
+  else if (antes && !depois) {
+    wrapper.style.display = "block";
+
+    wrapper.innerHTML = `
+      <div style="text-align:center;">
+        <strong>Imagem</strong><br>
+        <img src="${antes}" style="max-width:280px; border-radius:8px;">
+      </div>
+    `;
+
+    modalFoto.classList.add("hidden");
+  }
+
+  // 🔥 CASO: nenhuma imagem
+  else {
+    wrapper.style.display = "block";
+    wrapper.innerHTML = `<div class="empty-state">Sem imagens</div>`;
+    modalFoto.classList.add("hidden");
+  }
+}
 
   // 🔹 ABRIR MODAL
   const modal = document.getElementById("detailModal");
@@ -619,21 +646,19 @@ function fecharModal() {
 
   modal.style.display = "none";
 
-  // 🔄 limpa estado do ticket selecionado
+  // 🔄 limpa estado
   selectedTicket = null;
 
-  // 🔓 libera scroll da página (caso tenha bloqueado ao abrir)
+  // 🔓 libera scroll
   document.body.style.overflow = "";
 
-  // 🧼 opcional: limpa imagens (evita carregar lixo)
+  // 🧼 limpa imagem única (se existir)
   const modalFoto = document.getElementById("modalFoto");
   if (modalFoto) modalFoto.src = "";
 
-  const imgAntes = document.getElementById("imgAntes");
-  const imgDepois = document.getElementById("imgDepois");
-
-  if (imgAntes) imgAntes.src = "";
-  if (imgDepois) imgDepois.src = "";
+  // 🧼 limpa container das imagens lado a lado
+  const wrapper = document.getElementById("compareWrapper");
+  if (wrapper) wrapper.innerHTML = "";
 }
 
 async function atualizarChamadoModal() {
@@ -1862,53 +1887,6 @@ function atualizarProgresso(atual, total) {
 function finalizarProgresso() {
   const box = document.getElementById("progressBox");
   if (box) box.remove();
-}
-function iniciarSlider() {
-  const container = document.querySelector(".compare-container");
-  const overlay = document.getElementById("overlay");
-  const slider = document.getElementById("slider");
-
-  if (!container || !overlay || !slider) return;
-
-  // 🔥 evita duplicação (importantíssimo)
-  if (slider.dataset.active) return;
-  slider.dataset.active = "true";
-
-  let isDragging = false;
-
-  function mover(x) {
-    const rect = container.getBoundingClientRect();
-
-    let pos = x - rect.left;
-
-    // 🔒 limita dentro da área
-    pos = Math.max(0, Math.min(pos, rect.width));
-
-    const percent = (pos / rect.width) * 100;
-
-    overlay.style.width = percent + "%";
-    slider.style.left = percent + "%";
-  }
-
-  // 🔥 Pointer Events (substitui mouse + touch)
-  slider.addEventListener("pointerdown", () => {
-    isDragging = true;
-    slider.setPointerCapture?.(event.pointerId);
-  });
-
-  window.addEventListener("pointerup", () => {
-    isDragging = false;
-  });
-
-  window.addEventListener("pointermove", (e) => {
-    if (!isDragging) return;
-    mover(e.clientX);
-  });
-
-  // 🔥 clique direto no container (UX melhor)
-  container.addEventListener("click", (e) => {
-    mover(e.clientX);
-  });
 }
 
 function abrirModalFinalizar() {
