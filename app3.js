@@ -2117,23 +2117,6 @@ async function enviarNotificacao({ titulo, mensagem, url }) {
 // ... todas suas funções acima ...
 
 
-// 🔥 FINAL DO ARQUIVO
-Object.assign(window, {
-  iniciarChamado,
-  pausarChamado,
-  retomarChamado,
-  abrirModalFinalizar,
-  fecharModalFinalizar,
-  confirmarFinalizacao,
-  resetarFormulario,
-exportarListaPDF,
-exportarRelatorioMensal  // 👈 ESSENCIAL
-
-const appState = {
-  ticketsCache: [],
-  selectedTicket: null
-};
-
 // ponte
 let ticketsCache = appState.ticketsCache;
 let selectedTicket = appState.selectedTicket;
