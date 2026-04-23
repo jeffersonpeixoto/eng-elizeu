@@ -2092,7 +2092,7 @@ async function enviarNotificacao({ titulo, mensagem, url }) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Basic cszxursx2ua7fj4vfrr67kkm3"
+        "Authorization": "Basic os_v2_app_tyxrxtimw5flhgtl527qf3dmwximdzxkmyuufuuihowmvft2ku6m7e2m5nlbsgqnggxq3eu2frskvbvw2hoh5hzv4ggtrgvserm7f5q"
       },
       body: JSON.stringify({
         app_id: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
