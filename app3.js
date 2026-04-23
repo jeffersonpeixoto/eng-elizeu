@@ -2069,46 +2069,22 @@ async function confirmarFinalizacao() {
 }
 async function enviarNotificacao({ titulo, mensagem, url }) {
   try {
-    const response = await fetch("https://hook.eu1.make.com/1wwkrqa16u256vyni67cpx38afusqads", {
+    await fetch("https://hook.eu1.make.com/1wwkrqa16u256vyni67cpx38afusqads", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Basic os_v2_app_tyxrxtimw5flhgtl527qf3dmwximdzxkmyuufuuihowmvft2ku6m7e2m5nlbsgqnggxq3eu2frskvbvw2hoh5hzv4ggtrgvserm7f5q"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        app_id: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
-
-        included_segments: ["Subscribed Users"],
-
-        headings: {
-          pt: titulo,
-          en: titulo
-        },
-        contents: {
-          pt: mensagem,
-          en: mensagem
-        },
-
-        url: url,
-
-        chrome_web_icon: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png",
-        chrome_web_badge: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png",
-
-        priority: 10
+        titulo,
+        mensagem,
+        url
       })
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error("❌ Erro OneSignal:", data);
-      throw new Error(data.errors?.[0] || "Erro ao enviar notificação");
-    }
-
-    console.log("✅ Notificação enviada:", data.id);
+    console.log("✅ Enviado para o Make");
 
   } catch (error) {
-    console.error("🚨 Falha ao enviar push:", error.message);
+    console.error("🚨 Falha:", error.message);
   }
 }
 // ... todas suas funções acima ...
