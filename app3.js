@@ -379,7 +379,14 @@ await addDoc(collection(db, "chamados"), chamado);
 
     // 🎉 SUCESSO
     alert("✅ Chamado aberto com sucesso!");
+const docRef = await addDoc(collection(db, "chamados"), chamado);
+const chamadoId = docRef.id;
 
+await enviarNotificacao({
+  titulo: `📍 ${unidade} - ${setor}`,
+  mensagem: `Novo chamado aberto por ${nome}`,
+  url: `https://jeffersonpeixoto.github.io/eng-elizeu/index3.html?id=${chamadoId}`
+});
     resetarFormulario();
     switchView("dashboard");
 
@@ -1452,7 +1459,11 @@ async function pausarChamado() {
     }
 
     alert("⏸️ Chamado pausado com sucesso!");
-
+	await enviarNotificacao({
+  titulo: `⏸️ Pausado - ${selectedTicket.unidade}`,
+  mensagem: `Setor: ${selectedTicket.setor} | Chamado pausado`,
+  url: `https://jeffersonpeixoto.github.io/eng-elizeu/index3.html?id=${selectedTicket.id}`
+});
   } catch (err) {
     console.error("Erro ao pausar:", err);
     alert("Erro inesperado ao pausar.");
@@ -1507,7 +1518,11 @@ async function retomarChamado() {
     }
 
     alert("▶️ Chamado retomado com sucesso!");
-
+	await enviarNotificacao({
+  titulo: `🔁 Retomado - ${selectedTicket.unidade}`,
+  mensagem: `Setor: ${selectedTicket.setor} | Chamado retomado`,
+  url: `https://jeffersonpeixoto.github.io/eng-elizeu/index3.html?id=${selectedTicket.id}`
+});
   } catch (err) {
     console.error("Erro ao retomar:", err);
     alert("Erro ao retomar chamado.");
@@ -1559,7 +1574,11 @@ async function finalizarChamado() {
     }
 
     alert("✅ Chamado finalizado!");
-
+await enviarNotificacao({
+  titulo: `✅ Finalizado - ${selectedTicket.unidade}`,
+  mensagem: `Setor: ${selectedTicket.setor} | Chamado concluído`,
+  url: `https://jeffersonpeixoto.github.io/eng-elizeu/index3.html?id=${selectedTicket.id}`
+});
   } catch (err) {
     console.error("Erro ao finalizar:", err);
     alert("Erro ao finalizar chamado.");
@@ -2048,7 +2067,11 @@ async function confirmarFinalizacao() {
     console.log("✔ Atualizado no Firebase:", idChamado);
 
     alert("✅ Chamado finalizado!");
-
+await enviarNotificacao({
+  titulo: `📸 Finalizado - ${selectedTicket.unidade}`,
+  mensagem: `Setor: ${selectedTicket.setor} | Chamado finalizado com evidência`,
+  url: `https://jeffersonpeixoto.github.io/eng-elizeu/index3.html?id=${selectedTicket.id}`
+});
     fecharModalFinalizar();
     fecharModal();
 
@@ -2063,7 +2086,50 @@ async function confirmarFinalizacao() {
     alert("Erro ao finalizar chamado");
   }
 }
+async function enviarNotificacao({ titulo, mensagem, url }) {
+  try {
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Basic cszxursx2ua7fj4vfrr67kkm3"
+      },
+      body: JSON.stringify({
+        app_id: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
 
+        included_segments: ["All"],
+
+        headings: {
+          pt: titulo,
+          en: titulo
+        },
+        contents: {
+          pt: mensagem,
+          en: mensagem
+        },
+
+        url: url,
+
+        chrome_web_icon: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png",
+        chrome_web_badge: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png",
+
+        priority: 10
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("❌ Erro OneSignal:", data);
+      throw new Error(data.errors?.[0] || "Erro ao enviar notificação");
+    }
+
+    console.log("✅ Notificação enviada:", data.id);
+
+  } catch (error) {
+    console.error("🚨 Falha ao enviar push:", error.message);
+  }
+}
 // ... todas suas funções acima ...
 
 
