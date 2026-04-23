@@ -451,7 +451,7 @@ function renderTicketList(){
 	
 
 ${ticket.status === "Concluído" ? `
-<button class="btn btn-danger" data-delete="${ticket.id}">
+<button class="btn btn-danger" style="display:none;" data-delete="${ticket.id}">
   🗑️ Lixeira
 </button>
 ` : ""}
