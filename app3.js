@@ -375,18 +375,11 @@ async function salvarChamado(event) {
     // 🔥 SALVA NO FIREBASE
     
 
-await addDoc(collection(db, "chamados"), chamado);
-
     // 🎉 SUCESSO
     alert("✅ Chamado aberto com sucesso!");
 const docRef = await addDoc(collection(db, "chamados"), chamado);
 const chamadoId = docRef.id;
 
-await enviarNotificacao({
-  titulo: `📍 ${unidade} - ${setor}`,
-  mensagem: `Novo chamado aberto por ${nome}`,
-  url: `https://jeffersonpeixoto.github.io/eng-elizeu/index3.html?id=${chamadoId}`
-});
     resetarFormulario();
     switchView("dashboard");
 
@@ -2116,54 +2109,6 @@ async function enviarNotificacao({ titulo, mensagem, url }) {
 }
 // ... todas suas funções acima ...
 
-
-// ponte
-let ticketsCache = appState.ticketsCache.push(ticket);
-let selectedTicket = appState.selectedTicket;
-function escapeHtml(v) {
-  if (v === null || v === undefined) return "";
-
-  const mapa = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  };
-
-  return String(v).replace(/[&<>"']/g, (m) => mapa[m]);
-}
-function formatDateTime(v) {
-  if (!v) return "—";
-
-  try {
-    let d;
-
-    // 🔥 Firestore Timestamp
-    if (typeof v === "object" && typeof v.toDate === "function") {
-      d = v.toDate();
-    } 
-    // 🔥 Date normal
-    else if (v instanceof Date) {
-      d = v;
-    } 
-    // 🔥 string ou número
-    else {
-      d = new Date(v);
-    }
-
-    if (Number.isNaN(d.getTime())) return v;
-
-    return d.toLocaleString("pt-BR", {
-      dateStyle: "short",
-      timeStyle: "short"
-    });
-
-  } catch (err) {
-    console.warn("Erro formatDateTime:", err);
-    return v;
-  }
-}
 function statusClass(s) {
   if (!s) return "status-aberto";
 
