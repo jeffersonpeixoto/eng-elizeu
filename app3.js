@@ -1069,6 +1069,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const id = btn.dataset.delete;
   excluirChamado(id);
 });
+document.getElementById("btnConfirmarFinalizacao")
+  ?.addEventListener("click", confirmarFinalizacao);
 document.querySelectorAll(".kanban-header").forEach(header => {
   header.addEventListener("click", (event) => {
     const id = header.dataset.coluna;
