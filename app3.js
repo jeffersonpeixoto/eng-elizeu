@@ -686,19 +686,12 @@ async function carregarDados() {
 const q = query(
   collection(db, "chamados"),
   orderBy("data_criacao", "desc"),
-  limit(50)
+  
 );
 
 const snapshot = await getDocs(q);
 
 ticketsCache.length = 0;
-
-snapshot.forEach(docSnap => {
-  ticketsCache.push({
-    id: docSnap.id,
-    ...docSnap.data()
-  });
-});
 
 snapshot.docs.forEach(doc => {
   ticketsCache.push({
@@ -1425,7 +1418,7 @@ async function pausarChamado() {
       collection(db, "chamado_tempo"),
       where("chamado_id", "==", idChamado),
       where("fim", "==", null),
-      limit(1)
+     
     );
 
     const snapshot = await getDocs(q);
@@ -1622,7 +1615,7 @@ function escutarChamadosSeguro() {
     const q = query(
       collection(db, "chamados"),
       orderBy("data_criacao", "desc"),
-      limit(50)
+      
     );
 
     unsubscribeChamados = onSnapshot(q, (snapshot) => {
