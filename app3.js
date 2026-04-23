@@ -23,7 +23,7 @@ const appState = {
 };
 
 // ponte
-let ticketsCache = appState.ticketsCache;
+let ticketsCache = appState.ticketsCache || [];
 let selectedTicket = appState.selectedTicket;
 function escapeHtml(v) {
   if (v === null || v === undefined) return "";
@@ -2118,7 +2118,7 @@ async function enviarNotificacao({ titulo, mensagem, url }) {
 
 
 // ponte
-let ticketsCache = appState.ticketsCache;
+let ticketsCache = appState.ticketsCache.push(ticket);
 let selectedTicket = appState.selectedTicket;
 function escapeHtml(v) {
   if (v === null || v === undefined) return "";
