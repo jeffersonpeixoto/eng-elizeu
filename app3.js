@@ -451,9 +451,9 @@ function renderTicketList(){
 	
 
 ${ticket.status === "Concluído" ? `
-  <button class="btn btn-danger"  onclick="excluirChamado('${ticket.id}')">
-    🗑️ Lixeira
-  </button>
+<button class="btn btn-danger" data-delete="${ticket.id}">
+  🗑️ Lixeira
+</button>
 ` : ""}
 </div></article>`).join("")
 }
@@ -1062,6 +1062,13 @@ document.addEventListener("DOMContentLoaded", () => {
   bindViewButtons?.();
   bindFilters?.();
   registerPWA?.();
+  document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-delete]");
+  if (!btn) return;
+
+  const id = btn.dataset.delete;
+  excluirChamado(id);
+});
 document.querySelectorAll(".kanban-header").forEach(header => {
   header.addEventListener("click", (event) => {
     const id = header.dataset.coluna;
