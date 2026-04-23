@@ -2078,10 +2078,7 @@ async function enviarNotificacao({ titulo, mensagem, url }) {
       body: JSON.stringify({
         app_id: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
 
-        // 🔥 ESSENCIAL (QUEM RECEBE)
-        filters: [
-          { field: "tag", key: "usuario_ativo", relation: "=", value: "true" }
-        ],
+        included_segments: ["Subscribed Users"],
 
         headings: {
           pt: titulo,
