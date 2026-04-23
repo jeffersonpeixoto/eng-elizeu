@@ -1,137 +1,92 @@
-const CACHE_NAME = "app-chamados-v5";
+const CACHE_VERSION = "eng-elizeu-v1";
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
-const urlsToCache = [
+const FILES_TO_CACHE = [
   "./",
-  "./index2.html",
-  "./styles.css?v=6",
-  "./app3.js?v=16",
-  "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png"
+  "./index.html",
+  "./style.css",
+  "./app.js"
 ];
 
-// 🔥 INSTALL
+// =========================
+// INSTALL (cache inicial)
+// =========================
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
-
   event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      try {
-        await cache.addAll(urlsToCache);
-        console.log("✅ Cache inicial carregado");
-      } catch (err) {
-        console.warn("⚠️ Erro ao cachear:", err);
-      }
+    caches.open(STATIC_CACHE).then((cache) => {
+      return cache.addAll(FILES_TO_CACHE);
     })
   );
+
+  // 🔥 força ativação imediata
+  self.skipWaiting();
 });
 
-// 🔥 ACTIVATE
+// =========================
+// ACTIVATE (limpa lixo antigo)
+// =========================
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    (async () => {
-      const keys = await caches.keys();
-
-      await Promise.all(
+    caches.keys().then((keys) =>
+      Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            console.log("🧹 Removendo cache antigo:", key);
+          if (!key.includes(CACHE_VERSION)) {
             return caches.delete(key);
           }
         })
-      );
-
-      await self.clients.claim();
-      console.log("🚀 Service Worker ativo");
-    })()
+      )
+    )
   );
+
+  // 🔥 assume controle de todas abas
+  self.clients.claim();
 });
 
-// 🔥 CLICK NA NOTIFICAÇÃO (OneSignal usa isso também)
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-
-  const url = event.notification?.data?.url || "/";
-
-  event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      
-      // 🔥 se já tiver aba aberta, foca nela
-      for (const client of clientList) {
-        if (client.url.includes(url) && "focus" in client) {
-          return client.focus();
-        }
-      }
-
-      // 🔥 senão abre nova
-      return clients.openWindow(url);
-    })
-  );
-});
-
+// =========================
+// FETCH STRATEGY INTELIGENTE
+// =========================
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // ❌ bloqueia tudo que não é HTTP/HTTPS
-  if (!url.protocol.startsWith("http")) return;
-
-  // ❌ bloqueia POST, PUT, DELETE etc
-  if (req.method !== "GET") return;
-
-  // ❌ ignora APIs externas pesadas (ok manter)
+  // ❌ IGNORA FIREBASE / API / ONE SIGNAL (NUNCA CACHEIA)
   if (
     url.hostname.includes("firebase") ||
-    url.hostname.includes("supabase") ||
+    url.hostname.includes("firestore") ||
+    url.hostname.includes("googleapis") ||
     url.hostname.includes("onesignal") ||
     url.hostname.includes("cloudinary")
   ) {
+    event.respondWith(fetch(req));
     return;
   }
 
-  // 🔥 NAVEGAÇÃO (SPA)
+  // 🔥 HTML -> NETWORK FIRST (sempre atual)
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          if (!res || res.status !== 200) return res;
-
-          return caches.open(CACHE_NAME).then((cache) => {
-            cache.put(req, res.clone());
-            return res;
-          });
+          const copy = res.clone();
+          caches.open(STATIC_CACHE).then((cache) => cache.put(req, copy));
+          return res;
         })
-        .catch(() => caches.match("./index2.html"))
+        .catch(() => caches.match("./index.html"))
     );
     return;
   }
 
-  // 🔥 CACHE INTELIGENTE (ASSETS)
+  // 🔥 JS / CSS / IMAGEM -> CACHE FIRST COM UPDATE
   event.respondWith(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      const cached = await cache.match(req);
-
-      const fetchPromise = fetch(req)
-        .then((networkRes) => {
-          if (
-            !networkRes ||
-            networkRes.status !== 200 ||
-            networkRes.type === "opaque"
-          ) {
-            return networkRes;
-          }
-
-          const clone = networkRes.clone();
-
-          cache.put(req, clone).catch(() => {
-            // evita crash silencioso do SW
-          });
-
-          return networkRes;
+    caches.match(req).then((cached) => {
+      const networkFetch = fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(STATIC_CACHE).then((cache) => cache.put(req, copy));
+          return res;
         })
         .catch(() => cached);
 
-      return cached || fetchPromise;
+      return cached || networkFetch;
     })
   );
 });
