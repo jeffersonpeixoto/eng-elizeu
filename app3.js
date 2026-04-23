@@ -1095,35 +1095,27 @@ document.addEventListener("DOMContentLoaded", () => {
   excluirChamado(id);
 });
 
+window.OneSignalDeferred = window.OneSignalDeferred || [];
 
- window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
 
-  OneSignalDeferred.push(async function(OneSignal) {
+  // 🔔 verifica permissão
+  const permission = OneSignal.Notifications.permission;
 
-    // 🔥 INIT
-    await OneSignal.init({
-      appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5"
-    });
+  if (permission === "granted") {
+    await OneSignal.User.addTag("usuario_ativo", "true");
+  }
 
-    // 🔔 verifica permissão atual
-    const permission = OneSignal.Notifications.permission;
-
+  // 🔄 listener automático
+  OneSignal.Notifications.addEventListener("permissionChange", async (permission) => {
     if (permission === "granted") {
       await OneSignal.User.addTag("usuario_ativo", "true");
+    } else {
+      await OneSignal.User.addTag("usuario_ativo", "false");
     }
-
-    // 🚀 EXTRA (COLOCA AQUI)
-    OneSignal.Notifications.addEventListener("permissionChange", async (permission) => {
-
-      if (permission === "granted") {
-        await OneSignal.User.addTag("usuario_ativo", "true");
-      } else {
-        await OneSignal.User.addTag("usuario_ativo", "false");
-      }
-
-    });
-
   });
+
+});
 
 
 document.getElementById("btnConfirmarFinalizacao")
