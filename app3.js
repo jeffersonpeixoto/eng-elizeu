@@ -2069,7 +2069,7 @@ async function confirmarFinalizacao() {
 }
 async function enviarNotificacao({ titulo, mensagem, url }) {
   try {
-    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+    const response = await fetch("https://hook.eu1.make.com/1wwkrqa16u256vyni67cpx38afusqads", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
