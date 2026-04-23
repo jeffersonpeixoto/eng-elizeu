@@ -4295,5 +4295,5 @@ Object.assign(window, {
   resetarFormulario,
 exportarListaPDF,
 exportarRelatorioMensal  // 👈 ESSENCIAL
->>>>>>> 4c851a0 (Adiciona functions)
+
 });
