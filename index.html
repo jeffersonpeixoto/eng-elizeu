@@ -7,30 +7,44 @@
   <meta name="description" content="Sistema de chamados de engenharia com PWA, PDF, quadro operacional e detalhes." />
   <title>Chamados de Engenharia • Completo</title>
   <link rel="manifest" href="manifest.json" />
-<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="styles.css?v=7">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script defer src="supabase.js"></script>
-<script defer src="app2.js?v=46"></script>
+<script type="module" src="app3.js?v=55"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <link rel="icon" type="image/png" href="favicon.png">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getMessaging } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-messaging.js";
 
+const firebaseConfig = { 
+	apiKey: "AIzaSyCyhg8K7l48_k8sNTGuVxNf37sDf865T1A",
+    authDomain: "eng-bd-elizeu.firebaseapp.com",
+    projectId: "eng-bd-elizeu",
+    storageBucket: "eng-bd-elizeu.firebasestorage.app",
+    messagingSenderId: "169199632971",
+    appId: "1:169199632971:web:4bca2feccd2e5b31db03ce"
+ };
+
+// 🔥 INICIALIZAÇÃO (AQUI É O LUGAR CERTO)
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 🔥 ESSENCIAL
+window.db = getFirestore(app);
+</script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
-      safari_web_id: "web.onesignal.auto.4b99c5db-a7c9-461a-8333-facb0838095d",
-      notifyButton: {
-        enable: true,
-      },
     });
   });
 </script>
+
 
 </head>
 
@@ -52,10 +66,10 @@
   </div>
 
   <div class="menu-grid">
-    <button class="menu-btn active" onclick="switchView('dashboard', this)">Dashboard</button>
-    <button class="menu-btn" onclick="switchView('novo', this)">Novo Chamado</button>
-    <button class="menu-btn" onclick="switchView('lista', this)">Lista de Chamados</button>
-    <button class="menu-btn" onclick="switchView('kanban', this)">Quadro Operacional</button>
+   <button class="menu-btn active" data-view-btn="dashboard">Dashboard</button>
+<button class="menu-btn" data-view-btn="novo">Novo Chamado</button>
+<button class="menu-btn" data-view-btn="lista">Lista de Chamados</button>
+<button class="menu-btn" data-view-btn="kanban">Quadro Operacional</button>
   </div>
 
   <div class="dynamic-area">
@@ -199,7 +213,7 @@
          <div class="kanban-grid">
 
   <div class="kanban-column">
-   <div class="kanban-header" onclick="toggleColuna(event, 'kanbanAberto')">
+  <div class="kanban-header" data-coluna="kanbanAberto">
   <span>Aberto</span>
   <strong id="kanbanCountAberto">0</strong>
   <span class="seta">⬇️</span>
@@ -208,7 +222,7 @@
   </div>
 
   <div class="kanban-column">
-    <div class="kanban-header" onclick="toggleColuna(event, 'kanbanAndamento')">
+   <div class="kanban-header" data-coluna="kanbanAndamento">
       <span>Em andamento</span>
       <strong id="kanbanCountAndamento">0</strong>
       <span class="seta">⬇️</span>
@@ -217,7 +231,7 @@
   </div>
 
   <div class="kanban-column">
-    <div class="kanban-header" onclick="toggleColuna( event,'kanbanPausado')">
+    <div class="kanban-header" data-coluna="kanbanPausado">
       <span>Pausado</span>
       <strong id="kanbanCountPausado">0</strong>
       <span class="seta">⬇️</span>
@@ -226,7 +240,7 @@
   </div>
 
   <div class="kanban-column">
-    <div class="kanban-header" onclick="toggleColuna(event, 'kanbanConcluido')">
+   <div class="kanban-header" data-coluna="kanbanConcluido">
       <span>Concluído</span>
       <strong id="kanbanCountConcluido">0</strong>
       <span class="seta">⬇️</span>
@@ -255,7 +269,7 @@
     <h3 >Detalhes</h3>
     <p id="modalTicketId"></p> <!-- 🔥 AQUI -->
   </div>
-      <button onclick="fecharModal()" class="btn-close">X</button>
+      <button id="btnFecharModal" class="btn-close">X</button>
     </div>
 
     <div class="modal-body">
@@ -286,24 +300,24 @@
 </div>
     </div>
 
-    <div class="modal-footer">
-  <button id="btnIniciar" class="iniciar" onclick="iniciarChamado()">Iniciar</button>
+<div class="modal-footer">
+  <button id="btnIniciar" class="iniciar" data-action="iniciar">Iniciar</button>
 
-  <button id="btnPausar" class="pausar" onclick="pausarChamado()">Pausar</button>
+  <button id="btnPausar" class="pausar" data-action="pausar">Pausar</button>
 
-  <button id="btnRetomar" class="retomar" onclick="retomarChamado()">Retomar</button>
+  <button id="btnRetomar" class="retomar" data-action="retomar">Retomar</button>
 
-  <button id="btnFinalizar" class="finalizar" onclick="abrirModalFinalizar()">Finalizar</button>
+  <button id="btnFinalizar" class="finalizar" data-action="finalizar">Finalizar</button>
 </div>
 
   </div>
 </div>
-<div id="modalFinalizar" class="modal">
+<div id="modalFinalizar" class="modal" tabindex="-1">
   <div class="modal-box">
 
     <div class="modal-header">
       <h3>Finalizar chamado</h3>
-      <button onclick="fecharModalFinalizar()" class="btn-close">X</button>
+     <button id="btnFecharFinalizar" class="btn-close">X</button>
     </div>
 
     <div class="modal-body">
@@ -311,13 +325,13 @@
         📸 Foto do serviço concluído (opcional)
       </p>
 
-      <input type="file" id="fotoFinal" accept="image/*">
+     <input type="file" id="fotoFinal" accept="image/*" capture="environment">
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="confirmarFinalizacao()">
-        Confirmar finalização
-      </button>
+     <button id="btnConfirmarFinalizacao" class="btn btn-primary">
+  Confirmar finalização
+</button>
     </div>
 
   </div>
@@ -327,29 +341,6 @@
     margin: 0 auto;
     text-align: center;"><img src="logo.png" style="width:30vh;"></div>
 	
-	<script>
-function toggleColuna(event, id) {
-  const header = event.currentTarget;
-  const lista = document.getElementById(id);
-  const seta = header.querySelector(".seta");
 
-  if (!lista) return;
-
-  if (lista.classList.contains("hidden")) {
-    lista.classList.remove("hidden");
-    if (seta) seta.textContent = "⬆️";
-  } else {
-    lista.classList.add("hidden");
-    if (seta) seta.textContent = "⬇️";
-  }
-}
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(reg => reg.unregister());
-  });
-}
-</script>
 </body>
 </html>
