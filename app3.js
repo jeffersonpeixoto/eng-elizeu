@@ -21,7 +21,26 @@ const appState = {
   ticketsCache: [],
   selectedTicket: null
 };
+window.enviarNotificacao = async function({ titulo, mensagem, url }) {
+  try {
+    await fetch("https://hook.eu1.make.com/1wwkrqa16u256vyni67cpx38afusqads", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        titulo,
+        mensagem,
+        url
+      })
+    });
 
+    console.log("✅ Enviado para o Make");
+
+  } catch (error) {
+    console.error("🚨 Falha:", error.message);
+  }
+};
 // ponte
 let ticketsCache = appState.ticketsCache || [];
 let selectedTicket = appState.selectedTicket;
@@ -2067,24 +2086,5 @@ async function confirmarFinalizacao() {
     alert("Erro ao finalizar chamado");
   }
 }
-async function enviarNotificacao({ titulo, mensagem, url }) {
-  try {
-    await fetch("https://hook.eu1.make.com/1wwkrqa16u256vyni67cpx38afusqads", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        titulo,
-        mensagem,
-        url
-      })
-    });
 
-    console.log("✅ Enviado para o Make");
-
-  } catch (error) {
-    console.error("🚨 Falha:", error.message);
-  }
-}
 // ... todas suas funções acima ...
