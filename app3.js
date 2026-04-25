@@ -21,9 +21,9 @@ const appState = {
   ticketsCache: [],
   selectedTicket: null
 };
-window.enviarNotificacao = async function({ titulo, mensagem, url }) {
+window.enviarNotificacao = async function({ titulo, mensagem, chamadoId }) {
   try {
-    await fetch("https://hook.eu1.make.com/1wwkrqa16u256vyni67cpx38afusqads", {
+    await fetch("https://bubcilkbujuycpvysico.supabase.co/functions/v1/enviar-push", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -31,14 +31,14 @@ window.enviarNotificacao = async function({ titulo, mensagem, url }) {
       body: JSON.stringify({
         titulo,
         mensagem,
-        url
+        chamadoId
       })
     });
 
-    console.log("✅ Enviado para o Make");
+    console.log("✅ Push disparado");
 
   } catch (error) {
-    console.error("🚨 Falha:", error.message);
+    console.error("🚨 Erro ao enviar push:", error.message);
   }
 };
 // ponte
