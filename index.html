@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.json" />
 <link rel="stylesheet" href="styles.css?v=7">
 
-<script type="module" src="app3.js?v=58"></script>
+<script type="module" src="app3.js?v=59"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
@@ -36,13 +36,31 @@ const db = getFirestore(app);
 window.db = getFirestore(app);
 </script>
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
-    });
+
+<script id="onesignal-init">
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+OneSignalDeferred.push(async function(OneSignal) {
+
+  await OneSignal.init({
+    appId: "9e2f1bcd-0cb7-4ab3-9a6b-eebf02ec6cb5",
   });
+
+  // pede permissão
+  await OneSignal.Notifications.requestPermission();
+
+  // controla status
+  const permission = await OneSignal.Notifications.permission;
+
+  if (permission === "granted") {
+    await OneSignal.User.addTag("usuario_ativo", "true");
+  }
+
+  OneSignal.Notifications.addEventListener("permissionChange", async (perm) => {
+    await OneSignal.User.addTag("usuario_ativo", perm === "granted" ? "true" : "false");
+  });
+
+});
 </script>
 
 

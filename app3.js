@@ -1114,27 +1114,7 @@ document.addEventListener("DOMContentLoaded", () => {
   excluirChamado(id);
 });
 
-window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-OneSignalDeferred.push(async function(OneSignal) {
-
-  // 🔔 verifica permissão
-  const permission = OneSignal.Notifications.permission;
-
-  if (permission === "granted") {
-    await OneSignal.User.addTag("usuario_ativo", "true");
-  }
-
-  // 🔄 listener automático
-  OneSignal.Notifications.addEventListener("permissionChange", async (permission) => {
-    if (permission === "granted") {
-      await OneSignal.User.addTag("usuario_ativo", "true");
-    } else {
-      await OneSignal.User.addTag("usuario_ativo", "false");
-    }
-  });
-
-});
 
 
 document.getElementById("btnConfirmarFinalizacao")

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "eng-elizeu-v12";
+const CACHE_VERSION = "eng-elizeu-v13";
 
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 
